@@ -33,22 +33,22 @@
 - [x] Implementar página de alertas
 
 ## Fase 5: Funcionalidades de Tempo Real
-- [ ] Integrar WebSocket para atualizações em tempo real
-- [ ] Implementar atualização automática do dashboard
-- [ ] Criar notificações push no painel
-- [ ] Implementar sistema de alertas por e-mail
-- [ ] Adicionar indicadores de status (online/offline)
+- [ ] Integrar WebSocket no servidor principal
+- [ ] Conectar WebSocket nas páginas do dashboard
+- [ ] Implementar push real (FCM/OneSignal)
+- [ ] Integrar alertas por e-mail no fluxo de eventos
+- [ ] Adicionar testes de integração de tempo real
 
 ## Fase 6: Testes e Segurança
 - [x] Escrever testes unitários para backend
 - [x] Validar autenticação e autorização
 - [x] Testar geração de tokens
 - [x] Validar integridade de dados
-- [ ] Testar WebSocket e tempo real
+- [ ] Testar WebSocket e tempo real (pendente integração)
 
 ## Fase 7: Documentação e Entrega
-- [ ] Documentar API e endpoints
-- [ ] Criar guia de instalação do agente
-- [ ] Documentar fluxo de autenticação
-- [ ] Criar guia de uso do painel
-- [ ] Preparar checkpoint final
+- [x] Documentar arquitetura e endpoints (ARCHITECTURE.md)
+- [x] Criar guia de instalação do agente (AGENT_INSTALLATION.md)
+- [x] Criar documentação API completa com exemplos (API_DOCUMENTATION.md)
+- [x] Criar guia de uso do painel (USER_GUIDE.md)
+- [ ] Preparar checkpoint final após resolver pendencias de WebSocket

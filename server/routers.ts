@@ -211,6 +211,101 @@ const alertRouter = router({
     }),
 });
 
+// ============= DEVICE REPORT ROUTER (Public API) =============
+
+const reportRouter = router({
+  reportStatus: publicProcedure
+    .input(
+      z.object({
+        token: z.string(),
+        status: z.enum(["online", "offline", "error"]),
+        batteryLevel: z.number().optional(),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+        accuracy: z.number().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      // Verify token
+      const tokenRecord = await db.getInstallationTokenByToken(input.token);
+      
+      if (!tokenRecord || tokenRecord.isUsed) {
+        throw new Error("Invalid or already used token");
+      }
+      
+      if (tokenRecord.expiresAt && new Date(tokenRecord.expiresAt) < new Date()) {
+        throw new Error("Token expired");
+      }
+      
+      const deviceId = tokenRecord.deviceId;
+      if (!deviceId) {
+        throw new Error("Device not associated with token");
+      }
+      
+      // Update device status
+      const lastLocation = input.latitude && input.longitude ? {
+        latitude: input.latitude,
+        longitude: input.longitude,
+        accuracy: input.accuracy,
+        timestamp: new Date().toISOString(),
+      } : undefined;
+      
+      await db.updateDeviceStatus(deviceId, input.status, lastLocation);
+      
+      // Create event
+      await db.createEvent(tokenRecord.userId, deviceId, {
+        eventType: "status_change",
+        eventData: {
+          status: input.status,
+          batteryLevel: input.batteryLevel,
+        },
+        latitude: input.latitude,
+        longitude: input.longitude,
+        accuracy: input.accuracy,
+      });
+      
+      return { success: true };
+    }),
+
+  reportEvent: publicProcedure
+    .input(
+      z.object({
+        token: z.string(),
+        eventType: z.string(),
+        eventData: z.record(z.string(), z.any()),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+        accuracy: z.number().optional(),
+        description: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      // Verify token
+      const tokenRecord = await db.getInstallationTokenByToken(input.token);
+      
+      if (!tokenRecord || tokenRecord.isUsed) {
+        throw new Error("Invalid or already used token");
+      }
+      
+      const deviceId = tokenRecord.deviceId;
+      if (!deviceId) {
+        throw new Error("Device not associated with token");
+      }
+      
+      // Create event
+      await db.createEvent(tokenRecord.userId, deviceId, {
+        eventType: input.eventType,
+        eventData: input.eventData,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        accuracy: input.accuracy,
+        description: input.description,
+      });
+      
+      return { success: true };
+    }),
+});
+
 // ============= INSTALLATION TOKEN ROUTER =============
 
 const tokenRouter = router({
@@ -282,6 +377,7 @@ export const appRouter = router({
   event: eventRouter,
   alert: alertRouter,
   token: tokenRouter,
+  report: reportRouter,
 });
 
 export type AppRouter = typeof appRouter;
