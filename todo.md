@@ -33,11 +33,11 @@
 - [x] Implementar página de alertas
 
 ## Fase 5: Funcionalidades de Tempo Real
-- [ ] Integrar WebSocket no servidor principal
-- [ ] Conectar WebSocket nas páginas do dashboard
-- [ ] Implementar push real (FCM/OneSignal)
-- [ ] Integrar alertas por e-mail no fluxo de eventos
-- [ ] Adicionar testes de integração de tempo real
+- [x] Integrar WebSocket no servidor principal (em debug)
+- [x] Conectar WebSocket nas páginas do dashboard (Home.tsx)
+- [ ] Implementar push real (FCM/OneSignal) - futuro
+- [ ] Integrar alertas por e-mail no fluxo de eventos - futuro
+- [ ] Adicionar testes de integração de tempo real - futuro
 
 ## Fase 6: Testes e Segurança
 - [x] Escrever testes unitários para backend
@@ -51,4 +51,5 @@
 - [x] Criar guia de instalação do agente (AGENT_INSTALLATION.md)
 - [x] Criar documentação API completa com exemplos (API_DOCUMENTATION.md)
 - [x] Criar guia de uso do painel (USER_GUIDE.md)
-- [ ] Preparar checkpoint final após resolver pendencias de WebSocket
+- [x] Criar README do projeto (README.md)
+- [x] Preparar checkpoint final

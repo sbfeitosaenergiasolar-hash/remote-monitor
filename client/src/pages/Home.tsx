@@ -6,6 +6,7 @@ import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
+import { useWebSocket } from "@/hooks/useWebSocket";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -13,6 +14,9 @@ export default function Home() {
 
   const devicesQuery = trpc.device.list.useQuery(undefined, { enabled: isAuthenticated });
   const alertsQuery = trpc.alert.list.useQuery({ unreadOnly: true }, { enabled: isAuthenticated });
+  
+  // Setup WebSocket for real-time updates
+  const { isConnected } = useWebSocket(user?.id, devicesQuery.data?.[0]?.id);
 
   useEffect(() => {
     if (devicesQuery.data) {
@@ -24,6 +28,24 @@ export default function Home() {
       });
     }
   }, [devicesQuery.data, alertsQuery.data]);
+  
+  // Listen for real-time updates
+  useEffect(() => {
+    const handleUpdate = () => {
+      devicesQuery.refetch();
+      alertsQuery.refetch();
+    };
+    
+    window.addEventListener('device-update', handleUpdate);
+    window.addEventListener('device-event', handleUpdate);
+    window.addEventListener('device-alert', handleUpdate);
+    
+    return () => {
+      window.removeEventListener('device-update', handleUpdate);
+      window.removeEventListener('device-event', handleUpdate);
+      window.removeEventListener('device-alert', handleUpdate);
+    };
+  }, [devicesQuery, alertsQuery]);
 
   if (loading) {
     return (
@@ -121,12 +143,16 @@ export default function Home() {
           <Card className="card-neon p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground uppercase tracking-wider">Status</p>
-                <p className="text-3xl font-bold neon-glow-cyan">ATIVO</p>
+                <p className="text-sm text-muted-foreground uppercase tracking-wider">WebSocket</p>
+                <p className="text-3xl font-bold neon-glow-cyan">{isConnected ? 'ONLINE' : 'OFFLINE'}</p>
               </div>
-              <Activity className="text-green-400 animate-pulse" size={40} />
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isConnected ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                <Activity className={`${isConnected ? 'text-green-400 animate-pulse' : 'text-red-400'}`} size={24} />
+              </div>
             </div>
-            <div className="text-sm text-green-400">Sistema operacional</div>
+            <div className={`text-sm ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
+              {isConnected ? 'Tempo real ativado' : 'Desconectado'}
+            </div>
           </Card>
         </div>
 
