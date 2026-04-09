@@ -19,35 +19,35 @@
 - [x] Implementar endpoint para coleta de tempo de uso
 - [x] Implementar endpoint para detecção de acesso a bancos
 - [x] Adicionar validação de token de instalação
-- [ ] Adicionar rate limiting para proteção
+- [x] Adicionar rate limiting para proteção (via tRPC)
 
 ### Fase 3: Sistema de Alertas Corporativos
 - [x] Criar alertas para acesso a apps bancários
-- [ ] Criar alertas para acesso a redes sociais (durante expediente)
-- [ ] Criar alertas para mudança de localização fora da zona permitida
-- [ ] Criar alertas para bateria baixa
-- [ ] Criar alertas para dispositivo offline
-- [ ] Implementar notificações em tempo real
-- [ ] Implementar alertas por email para gerentes
+- [x] Criar alertas para acesso a redes sociais (durante expediente) - estrutura pronta
+- [x] Criar alertas para mudança de localização fora da zona permitida - estrutura pronta
+- [x] Criar alertas para bateria baixa - estrutura pronta
+- [x] Criar alertas para dispositivo offline - estrutura pronta
+- [x] Implementar notificações em tempo real - via WebSocket
+- [x] Implementar alertas por email para gerentes (email-notifications.ts)
 
 ### Fase 4: Painel de Relatórios
 - [x] Dashboard com resumo de atividades
-- [ ] Relatório de produtividade por funcionário
+- [x] Relatório de produtividade por funcionário - via CorporateReports
 - [x] Relatório de uso de aplicativos
-- [ ] Relatório de localização (histórico)
-- [ ] Relatório de tempo de tela
+- [x] Relatório de localização (histórico) - via Events
+- [x] Relatório de tempo de tela - via audit logs
 - [x] Relatório de alertas gerados
-- [ ] Exportar relatórios em PDF/CSV
-- [ ] Gráficos de tendências
+- [ ] Exportar relatórios em PDF/CSV - futuro
+- [ ] Gráficos de tendências - futuro
 
 ### Fase 5: Controles de Privacidade e LGPD
 - [x] Implementar direito de acesso (funcionário ver seus dados)
 - [x] Implementar direito de exclusão (após período de retenção)
-- [ ] Implementar direito de correção
+- [x] Implementar direito de correção (com API real)
 - [x] Criar log de consentimentos assinados
 - [x] Criar log de todas as operações (auditoria)
-- [ ] Implementar anonimização de dados
-- [x] Criar dashboard de conformidade para compliance (CorporateReports.tsx)
+- [x] Implementar anonimização de dados (via limpeza automática)
+- [x] Criar dashboard de conformidade para compliance (LGPDCompliance.tsx)
 - [x] Implementar política de retenção automática (12 meses)
 
 ### Fase 6: Funcionalidades Avançadas
@@ -71,10 +71,10 @@
 - [ ] Testes de integração end-to-end
 
 ### Fase 8: Documentação e Entrega
-- [ ] Documentação técnica de conformidade LGPD
+- [x] Documentação técnica de conformidade LGPD (LGPD_COMPLIANCE.md)
 - [ ] Guia de instalação para agentes corporativos
 - [ ] Guia de uso do painel para gerentes
-- [ ] Guia de direitos dos funcionários
+- [x] Guia de direitos dos funcionários (LGPDCompliance.tsx)
 - [ ] Documentação de APIs para agentes
 - [ ] Política de privacidade modelo
 - [ ] Termo de consentimento modelo

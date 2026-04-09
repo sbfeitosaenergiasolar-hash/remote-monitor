@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import CorporateReports from "./pages/CorporateReports";
+import LGPDCompliance from "./pages/LGPDCompliance";
 import Devices from "./pages/Devices";
 import Alerts from "./pages/Alerts";
 import Events from "./pages/Events";
@@ -21,6 +22,7 @@ function Router() {
       <Route path={"/events"} component={Events} />
       <Route path={"/map"} component={Map} />
       <Route path={"/corporate-reports"} component={CorporateReports} />
+      <Route path={"/lgpd-compliance"} component={LGPDCompliance} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

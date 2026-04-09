@@ -6,6 +6,7 @@ import { z } from "zod";
 import * as db from "./db";
 import { nanoid } from "nanoid";
 import { corporateRouter } from "./routers/corporate";
+import { lgpdRequestsRouter } from "./routers/lgpd-requests";
 
 // ============= DEVICE ROUTER =============
 
@@ -380,6 +381,7 @@ export const appRouter = router({
   token: tokenRouter,
   report: reportRouter,
   corporate: corporateRouter,
+  lgpd: lgpdRequestsRouter,
 });
 
 export type AppRouter = typeof appRouter;
