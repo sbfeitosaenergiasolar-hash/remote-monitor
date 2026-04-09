@@ -32,10 +32,11 @@ function Router() {
     return null;
   }
 
-  // Se não autenticado, mostrar apenas página de login
+  // Se não autenticado, mostrar apenas página de login (exceto /countries)
   if (!isAuthenticated) {
     return (
       <Switch>
+        <Route path={"/countries"} component={CountrySelection} />
         <Route path={"*"} component={Login} />
       </Switch>
     );
