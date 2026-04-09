@@ -110,6 +110,12 @@
 - [ ] Adicionar link do gerador de APK na navegação principal
 - [ ] Destacar botão "Gerar APK" no painel
 
+### APK Builder Simplificado
+- [x] Criar interface de APK Builder no painel
+- [x] Campos para nome da empresa, URL e logo
+- [x] Barra de progresso de compilação
+- [x] Download direto do APK gerado
+
 ### Gerenciamento de Dispositivos
 - [ ] Permitir múltiplos dispositivos por cliente
 - [ ] Adicionar sistema de organização por cliente

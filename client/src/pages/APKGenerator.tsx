@@ -1,67 +1,63 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Download, Copy, CheckCircle } from 'lucide-react';
+import { Loader2, Download, Copy, CheckCircle, AlertCircle } from 'lucide-react';
+import MainLayout from '@/components/MainLayout';
 
 export default function APKGenerator() {
-  const [panelUrl, setPanelUrl] = useState('https://remotemon-vhmaxpe6.manus.space');
-  const [appName, setAppName] = useState('FazTudo Monitor');
-  const [packageName, setPackageName] = useState('com.faztudo.monitor');
+  const [companyName, setCompanyName] = useState('FazTudo');
+  const [companyUrl, setCompanyUrl] = useState('https://faztudo.com.br');
+  const [logoUrl, setLogoUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [buildId, setBuildId] = useState<string | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
 
   const generateAPK = trpc.apk.generate.useMutation();
   const checkBuildStatus = trpc.apk.status.useQuery(
     { buildId: buildId || '' },
-    { enabled: !!buildId && !downloadUrl, refetchInterval: 3000 }
+    { enabled: !!buildId && !downloadUrl, refetchInterval: 2000 }
   );
 
   useEffect(() => {
     if (checkBuildStatus.data?.status === 'completed' && checkBuildStatus.data?.downloadUrl) {
       setDownloadUrl(checkBuildStatus.data.downloadUrl);
+      setProgress(100);
+    } else if (checkBuildStatus.data?.status === 'building') {
+      setProgress(50);
     }
   }, [checkBuildStatus.data]);
 
   const handleGenerateAPK = async () => {
     setError(null);
 
-    if (!panelUrl.trim()) {
-      setError('Por favor, insira a URL do painel');
+    if (!companyName.trim()) {
+      setError('Por favor, insira o nome da empresa');
       return;
     }
 
-    if (!appName.trim()) {
-      setError('Por favor, insira o nome do app');
-      return;
-    }
-
-    if (!packageName.trim()) {
-      setError('Por favor, insira o nome do pacote');
-      return;
-    }
-
-    // Validar formato do package name
-    if (!/^[a-z][a-z0-9_]*(\.[a-z0-9_]+)*$/.test(packageName)) {
-      setError('Nome do pacote inválido. Use formato: com.empresa.app');
+    if (!companyUrl.trim()) {
+      setError('Por favor, insira a URL da empresa');
       return;
     }
 
     setLoading(true);
+    setProgress(10);
 
     try {
       const result = await generateAPK.mutateAsync({
-        panelUrl,
-        appName,
-        packageName,
+        panelUrl: 'https://remotemon-vhmaxpe6.manus.space',
+        appName: `${companyName} Monitor`,
+        packageName: `com.${companyName.toLowerCase()}.monitor`,
       });
 
       if (result.buildId) {
         setBuildId(result.buildId);
+        setProgress(30);
       }
     } catch (err) {
       setError('Não foi possível iniciar a geração do APK');
@@ -72,236 +68,169 @@ export default function APKGenerator() {
 
   if (downloadUrl) {
     return (
-      <div className="min-h-screen bg-black p-6">
+      <MainLayout>
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
             <CheckCircle className="w-16 h-16 text-cyan-400 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-pink-500 mb-2">APK Gerado com Sucesso!</h1>
+            <h1 className="text-3xl font-bold text-cyan-300 mb-2">APK Gerado com Sucesso! ✅</h1>
+            <p className="text-slate-300 mb-6">Seu APK está pronto para download</p>
           </div>
 
-          <Card className="bg-gray-900 border-cyan-400 p-6 mb-6">
-            <div className="space-y-4">
-              <div>
-                <p className="text-cyan-400 font-semibold text-sm">App:</p>
-                <p className="text-gray-300">{appName}</p>
-              </div>
-              <div>
-                <p className="text-cyan-400 font-semibold text-sm">Pacote:</p>
-                <p className="text-gray-300 font-mono text-sm">{packageName}</p>
-              </div>
-              <div>
-                <p className="text-cyan-400 font-semibold text-sm">Painel:</p>
-                <p className="text-gray-300 text-sm break-all">{panelUrl}</p>
-              </div>
-            </div>
-          </Card>
-
-          <div className="space-y-3 mb-6">
-            <Button
-              onClick={() => window.open(downloadUrl, '_blank')}
-              className="w-full bg-cyan-400 text-black hover:bg-cyan-500 font-bold"
+          <Card className="bg-slate-800/50 border-cyan-400/20 p-8 text-center">
+            <a
+              href={downloadUrl}
+              download
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold py-3 px-8 rounded-lg transition-all"
             >
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-5 h-5" />
               Baixar APK
-            </Button>
-
-            <Button
-              onClick={() => {
-                navigator.clipboard.writeText(downloadUrl);
-                alert('Link copiado para a área de transferência!');
-              }}
-              variant="outline"
-              className="w-full border-pink-500 text-pink-500 hover:bg-pink-500/10"
-            >
-              <Copy className="w-4 h-4 mr-2" />
-              Copiar Link
-            </Button>
-          </div>
-
-          <Card className="bg-gray-900 border-pink-500 border-l-4 p-4 mb-6">
-            <h3 className="text-pink-500 font-bold mb-3">📱 Como Instalar:</h3>
-            <ol className="text-gray-300 text-sm space-y-2 list-decimal list-inside">
-              <li>Baixe o APK</li>
-              <li>Transfira para seu Android</li>
-              <li>Ative "Fontes desconhecidas" nas configurações</li>
-              <li>Clique no APK para instalar</li>
-              <li>Abra o app e cole seu token de instalação</li>
-            </ol>
+            </a>
+            <p className="text-slate-400 mt-6 text-sm">
+              Compartilhe este link com seus clientes para que eles baixem o app
+            </p>
           </Card>
 
           <Button
             onClick={() => {
-              setBuildId(null);
               setDownloadUrl(null);
-              setPanelUrl('https://remotemon-vhmaxpe6.manus.space');
-              setAppName('FazTudo Monitor');
-              setPackageName('com.faztudo.monitor');
+              setBuildId(null);
+              setProgress(0);
             }}
-            className="w-full bg-pink-500 text-black hover:bg-pink-600 font-bold"
+            variant="outline"
+            className="w-full mt-6 border-cyan-400/30 text-cyan-300 hover:bg-slate-700/50"
           >
-            ➕ Gerar Outro APK
+            Gerar Outro APK
           </Button>
         </div>
-      </div>
-    );
-  }
-
-  if (buildId && !downloadUrl) {
-    const progress = checkBuildStatus.data?.progress || 0;
-    const message = checkBuildStatus.data?.message || 'Compilando...';
-    const isFailed = checkBuildStatus.data?.status === 'failed';
-
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-6">
-        <div className="max-w-md w-full text-center">
-          {!isFailed ? (
-            <>
-              <Loader2 className="w-12 h-12 text-cyan-400 mx-auto mb-4 animate-spin" />
-              <h2 className="text-2xl font-bold text-pink-500 mb-2">Gerando APK...</h2>
-              <p className="text-4xl font-bold text-cyan-400 mb-4">{progress}%</p>
-
-              <div className="w-full bg-gray-800 rounded-full h-2 mb-4 overflow-hidden">
-                <div
-                  className="bg-cyan-400 h-full transition-all duration-500"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-
-              <p className="text-gray-400 text-sm">{message}</p>
-            </>
-          ) : (
-            <>
-              <p className="text-xl font-bold text-red-500 mb-4">❌ Erro na Geração</p>
-              <p className="text-gray-400 mb-6">{message}</p>
-              <Button
-                onClick={() => {
-                  setBuildId(null);
-                  setDownloadUrl(null);
-                }}
-                className="w-full bg-pink-500 text-black hover:bg-pink-600"
-              >
-                🔄 Tentar Novamente
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
+      </MainLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black p-6">
+    <MainLayout>
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-pink-500 mb-2">📦 Gerador de APK</h1>
-          <p className="text-cyan-400">Crie seu próprio agente Android customizado</p>
+          <h1 className="text-3xl font-bold text-cyan-300 mb-2">🔨 APK Builder</h1>
+          <p className="text-slate-300">Crie seu APK customizado em poucos cliques</p>
         </div>
 
         {error && (
-          <Alert className="bg-red-900/20 border-red-500 mb-6">
-            <AlertDescription className="text-red-400">{error}</AlertDescription>
+          <Alert className="mb-6 bg-red-900/20 border-red-500/50">
+            <AlertCircle className="w-4 h-4 text-red-400" />
+            <AlertDescription className="text-red-300">{error}</AlertDescription>
           </Alert>
         )}
 
-        <Card className="bg-gray-900 border-cyan-400 p-6 mb-8">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-cyan-400 font-semibold text-sm mb-2">
-                URL do Painel *
-              </label>
-              <Input
-                type="url"
-                placeholder="https://seu-painel.com"
-                value={panelUrl}
-                onChange={(e) => setPanelUrl(e.target.value)}
-                disabled={loading}
-                className="bg-black border-gray-700 text-white"
-              />
+        <Card className="bg-slate-800/50 border-cyan-400/20 p-8 mb-6">
+          <div className="space-y-6">
+            {/* Company Info Section */}
+            <div className="border-b border-cyan-400/20 pb-6">
+              <h2 className="text-lg font-bold text-cyan-300 mb-4">Informações da Empresa</h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-cyan-300 mb-2">
+                    Nome da Empresa *
+                  </label>
+                  <Input
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="Ex: FazTudo"
+                    className="bg-slate-700/50 border-cyan-400/30 text-white"
+                    disabled={loading || !!buildId}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-cyan-300 mb-2">
+                    URL da Empresa *
+                  </label>
+                  <Input
+                    value={companyUrl}
+                    onChange={(e) => setCompanyUrl(e.target.value)}
+                    placeholder="Ex: https://faztudo.com.br"
+                    className="bg-slate-700/50 border-cyan-400/30 text-white"
+                    disabled={loading || !!buildId}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-cyan-300 mb-2">
+                    Logo da Empresa (URL)
+                  </label>
+                  <Input
+                    value={logoUrl}
+                    onChange={(e) => setLogoUrl(e.target.value)}
+                    placeholder="Ex: https://faztudo.com.br/logo.png"
+                    className="bg-slate-700/50 border-cyan-400/30 text-white"
+                    disabled={loading || !!buildId}
+                  />
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-cyan-400 font-semibold text-sm mb-2">
-                Nome do App *
-              </label>
-              <Input
-                type="text"
-                placeholder="FazTudo Monitor"
-                value={appName}
-                onChange={(e) => setAppName(e.target.value)}
-                disabled={loading}
-                className="bg-black border-gray-700 text-white"
-              />
+            {/* Preview Section */}
+            <div className="border-b border-cyan-400/20 pb-6">
+              <h2 className="text-lg font-bold text-cyan-300 mb-4">Prévia do App</h2>
+              <div className="bg-slate-700/30 rounded-lg p-6 text-center">
+                {logoUrl && (
+                  <img
+                    src={logoUrl}
+                    alt="Logo"
+                    className="w-16 h-16 mx-auto mb-4 rounded-lg"
+                    onError={() => setLogoUrl('')}
+                  />
+                )}
+                <p className="text-cyan-300 font-bold text-lg">{companyName} Monitor</p>
+                <p className="text-slate-400 text-sm mt-2">{companyUrl}</p>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-cyan-400 font-semibold text-sm mb-2">
-                Nome do Pacote *
-              </label>
-              <Input
-                type="text"
-                placeholder="com.empresa.app"
-                value={packageName}
-                onChange={(e) => setPackageName(e.target.value)}
-                disabled={loading}
-                className="bg-black border-gray-700 text-white font-mono text-sm"
-              />
-              <p className="text-gray-500 text-xs mt-1">
-                Formato: com.empresa.app (apenas letras, números e pontos)
-              </p>
-            </div>
+            {/* Build Status */}
+            {buildId && !downloadUrl && (
+              <div className="border-b border-cyan-400/20 pb-6">
+                <h2 className="text-lg font-bold text-cyan-300 mb-4">Status da Compilação</h2>
+                <div className="space-y-4">
+                  <div className="w-full bg-slate-700/50 rounded-full h-2">
+                    <div
+                      className="bg-gradient-to-r from-blue-600 to-cyan-600 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-slate-300 text-sm text-center">
+                    {progress < 50 && 'Iniciando compilação...'}
+                    {progress >= 50 && progress < 100 && 'Compilando APK...'}
+                    {progress === 100 && 'Concluído!'}
+                  </p>
+                </div>
+              </div>
+            )}
 
+            {/* Build Button */}
             <Button
               onClick={handleGenerateAPK}
-              disabled={loading}
-              className="w-full bg-cyan-400 text-black hover:bg-cyan-500 font-bold"
+              disabled={loading || !!buildId}
+              className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold py-3 text-lg"
             >
-              {loading ? (
+              {loading || buildId ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Gerando...
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  {loading ? 'Iniciando...' : 'Compilando...'}
                 </>
               ) : (
-                <>🚀 Gerar APK</>
+                '▶ Build APK'
               )}
             </Button>
           </div>
         </Card>
 
-        <div className="space-y-4">
-          <h2 className="text-lg font-bold text-pink-500 mb-4">ℹ️ Informações</h2>
-
-          <Card className="bg-gray-900 border-gray-700 p-4">
-            <h3 className="text-cyan-400 font-bold mb-2">O que é gerado?</h3>
-            <p className="text-gray-300 text-sm">
-              Um APK customizado com seu painel integrado. Quando o usuário instalar, ele se
-              conectará automaticamente ao seu painel.
-            </p>
-          </Card>
-
-          <Card className="bg-gray-900 border-gray-700 p-4">
-            <h3 className="text-cyan-400 font-bold mb-2">Tempo de geração?</h3>
-            <p className="text-gray-300 text-sm">
-              Geralmente 2-5 minutos. Você pode fechar esta página e voltar depois.
-            </p>
-          </Card>
-
-          <Card className="bg-gray-900 border-gray-700 p-4">
-            <h3 className="text-cyan-400 font-bold mb-2">Segurança?</h3>
-            <p className="text-gray-300 text-sm">
-              O APK é assinado digitalmente e seguro. Você pode distribuir para seus funcionários
-              com confiança.
-            </p>
-          </Card>
-
-          <Card className="bg-gray-900 border-gray-700 p-4">
-            <h3 className="text-cyan-400 font-bold mb-2">Conformidade?</h3>
-            <p className="text-gray-300 text-sm">
-              Todos os APKs gerados incluem consentimento LGPD e direitos dos funcionários
-              garantidos.
-            </p>
-          </Card>
-        </div>
+        <Alert className="bg-blue-900/20 border-blue-500/50">
+          <AlertCircle className="w-4 h-4 text-blue-400" />
+          <AlertDescription className="text-blue-300">
+            Após gerar o APK, você poderá compartilhar o link de download com seus clientes
+          </AlertDescription>
+        </Alert>
       </div>
-    </div>
+    </MainLayout>
   );
 }
