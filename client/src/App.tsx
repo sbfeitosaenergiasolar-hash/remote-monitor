@@ -12,11 +12,19 @@ import Alerts from "./pages/Alerts";
 import Events from "./pages/Events";
 import Map from "./pages/Map";
 import APKGenerator from "./pages/APKGenerator";
+import Login from "./pages/Login";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
+  const isAuthenticated = typeof window !== 'undefined' && localStorage.getItem('auth_token');
+
+  if (!isAuthenticated && typeof window !== 'undefined' && window.location.pathname !== '/login') {
+    return <Login />;
+  }
+
   return (
     <Switch>
+      <Route path={"/login"} component={Login} />
       <Route path={"/"} component={Home} />
       <Route path={"/devices"} component={Devices} />
       <Route path={"/alerts"} component={Alerts} />

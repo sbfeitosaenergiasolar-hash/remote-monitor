@@ -95,3 +95,30 @@
 - ✅ 29 testes unitários
 
 **Próximo:** Expandir para funcionalidades corporativas com conformidade LGPD/GDPR
+
+
+## MELHORIAS SOLICITADAS - SPRINT ATUAL
+
+### Autenticação e UI
+- [ ] Implementar login com usuário/senha (admin/Mm102030@@)
+- [ ] Remover OAuth e usar autenticação local
+- [ ] Adicionar página de login customizada
+
+### Design e Navegação
+- [ ] Mudar tema de roxo para azul
+- [ ] Atualizar paleta de cores (azul + cyan)
+- [ ] Adicionar link do gerador de APK na navegação principal
+- [ ] Destacar botão "Gerar APK" no painel
+
+### Gerenciamento de Dispositivos
+- [ ] Permitir múltiplos dispositivos por cliente
+- [ ] Adicionar sistema de organização por cliente
+- [ ] Criar dashboard por cliente
+- [ ] Adicionar filtros por cliente
+- [ ] Implementar permissões por cliente
+
+### Melhorias Gerais
+- [ ] Testar fluxo completo de login
+- [ ] Testar gerador de APK no painel
+- [ ] Validar múltiplos dispositivos
+- [ ] Verificar responsividade do novo tema
