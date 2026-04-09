@@ -12,6 +12,8 @@ import Alerts from "./pages/Alerts";
 import Events from "./pages/Events";
 import Map from "./pages/Map";
 import APKGenerator from "./pages/APKGenerator";
+import DownloadAPK from "./pages/DownloadAPK";
+import Features from "./pages/Features";
 import Login from "./pages/Login";
 import { useEffect, useState } from "react";
 
@@ -49,6 +51,8 @@ function Router() {
       <Route path={"/corporate-reports"} component={CorporateReports} />
       <Route path={"/lgpd-compliance"} component={LGPDCompliance} />
       <Route path={"/apk-generator"} component={APKGenerator} />
+      <Route path={"/download-apk"} component={DownloadAPK} />
+      <Route path={"/features"} component={Features} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

@@ -36,6 +36,7 @@ export default function Navigation() {
     { label: 'Relatórios', icon: BarChart3, path: '/corporate-reports' },
     { label: 'Conformidade', icon: Shield, path: '/lgpd-compliance' },
     { label: 'Gerar APK', icon: Download, path: '/apk-generator', highlight: true },
+    { label: 'Funcionalidades', icon: Smartphone, path: '/features' },
   ];
 
   return (
