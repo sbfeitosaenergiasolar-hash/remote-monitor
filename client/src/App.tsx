@@ -11,6 +11,7 @@ import Devices from "./pages/Devices";
 import Alerts from "./pages/Alerts";
 import Events from "./pages/Events";
 import Map from "./pages/Map";
+import APKGenerator from "./pages/APKGenerator";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -23,6 +24,7 @@ function Router() {
       <Route path={"/map"} component={Map} />
       <Route path={"/corporate-reports"} component={CorporateReports} />
       <Route path={"/lgpd-compliance"} component={LGPDCompliance} />
+      <Route path={"/apk-generator"} component={APKGenerator} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

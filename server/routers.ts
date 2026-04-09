@@ -7,6 +7,7 @@ import * as db from "./db";
 import { nanoid } from "nanoid";
 import { corporateRouter } from "./routers/corporate";
 import { lgpdRequestsRouter } from "./routers/lgpd-requests";
+import { apkRouter } from "./routers/apk";
 
 // ============= DEVICE ROUTER =============
 
@@ -382,6 +383,7 @@ export const appRouter = router({
   report: reportRouter,
   corporate: corporateRouter,
   lgpd: lgpdRequestsRouter,
+  apk: apkRouter,
 });
 
 export type AppRouter = typeof appRouter;
