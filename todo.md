@@ -1,55 +1,97 @@
-# Projeto: Software de Monitoramento Remoto
+# Projeto TODO - Painel de Monitoramento Corporativo
+## FazTudo Tecnologia Ltda - CNAE 6311-9/00
 
-## Fase 1: Arquitetura e Design
-- [x] Definir arquitetura técnica completa (tRPC, WebSocket, autenticação)
-- [x] Documentar estrutura de dados e relacionamentos
-- [x] Criar design system cyberpunk (cores, tipografia, componentes)
-
-## Fase 2: Banco de Dados
-- [x] Criar schema de usuários com roles e permissões
-- [x] Criar schema de dispositivos (Android/iOS)
-- [x] Criar schema de eventos e histórico de atividades
-- [x] Criar schema de alertas e notificações
-- [x] Criar schema de tokens de instalação
+### Fase 1: Expansão do Schema de Banco de Dados
+- [x] Adicionar tabela de screenshots capturados
+- [x] Adicionar tabela de apps abertos/instalados
+- [x] Adicionar tabela de bloqueios de tela
+- [x] Adicionar tabela de alertas de acesso a bancos
+- [x] Adicionar tabela de conformidade LGPD (consentimentos, acessos, exclusões)
+- [x] Adicionar tabela de logs de auditoria
+- [x] Criar índices para performance
 - [x] Executar migrações SQL
 
-## Fase 3: Backend
-- [x] Implementar autenticação e autorização
-- [x] Criar rotas tRPC para gerenciamento de dispositivos
-- [x] Criar rotas tRPC para recebimento de dados de dispositivos
-- [x] Implementar geração de tokens de instalação
-- [x] Criar sistema de alertas e notificações
-- [ ] Implementar WebSocket para atualização em tempo real
-- [x] Criar helpers de banco de dados
+### Fase 2: APIs para Captura de Dados
+- [x] Implementar endpoint para upload de screenshots
+- [x] Implementar endpoint para lista de apps abertos
+- [x] Implementar endpoint para bloqueio remoto de tela
+- [x] Implementar endpoint para desbloqueio com senha
+- [x] Implementar endpoint para coleta de tempo de uso
+- [x] Implementar endpoint para detecção de acesso a bancos
+- [x] Adicionar validação de token de instalação
+- [ ] Adicionar rate limiting para proteção
 
-## Fase 4: Frontend - Dashboard Cyberpunk
-- [x] Criar tema cyberpunk com Tailwind CSS
-- [ ] Implementar layout principal com sidebar
-- [x] Criar dashboard com visão geral de dispositivos
-- [x] Implementar página de listagem de dispositivos
-- [ ] Criar página de detalhes do dispositivo
-- [x] Implementar mapa em tempo real com localização
-- [x] Criar página de histórico de eventos
-- [x] Implementar página de alertas
+### Fase 3: Sistema de Alertas Corporativos
+- [x] Criar alertas para acesso a apps bancários
+- [ ] Criar alertas para acesso a redes sociais (durante expediente)
+- [ ] Criar alertas para mudança de localização fora da zona permitida
+- [ ] Criar alertas para bateria baixa
+- [ ] Criar alertas para dispositivo offline
+- [ ] Implementar notificações em tempo real
+- [ ] Implementar alertas por email para gerentes
 
-## Fase 5: Funcionalidades de Tempo Real
-- [x] Integrar WebSocket no servidor principal (em debug)
-- [x] Conectar WebSocket nas páginas do dashboard (Home.tsx)
-- [ ] Implementar push real (FCM/OneSignal) - futuro
-- [ ] Integrar alertas por e-mail no fluxo de eventos - futuro
-- [ ] Adicionar testes de integração de tempo real - futuro
+### Fase 4: Painel de Relatórios
+- [x] Dashboard com resumo de atividades
+- [ ] Relatório de produtividade por funcionário
+- [x] Relatório de uso de aplicativos
+- [ ] Relatório de localização (histórico)
+- [ ] Relatório de tempo de tela
+- [x] Relatório de alertas gerados
+- [ ] Exportar relatórios em PDF/CSV
+- [ ] Gráficos de tendências
 
-## Fase 6: Testes e Segurança
-- [x] Escrever testes unitários para backend
-- [x] Validar autenticação e autorização
-- [x] Testar geração de tokens
-- [x] Validar integridade de dados
-- [ ] Testar WebSocket e tempo real (pendente integração)
+### Fase 5: Controles de Privacidade e LGPD
+- [x] Implementar direito de acesso (funcionário ver seus dados)
+- [x] Implementar direito de exclusão (após período de retenção)
+- [ ] Implementar direito de correção
+- [x] Criar log de consentimentos assinados
+- [x] Criar log de todas as operações (auditoria)
+- [ ] Implementar anonimização de dados
+- [x] Criar dashboard de conformidade para compliance (CorporateReports.tsx)
+- [x] Implementar política de retenção automática (12 meses)
 
-## Fase 7: Documentação e Entrega
-- [x] Documentar arquitetura e endpoints (ARCHITECTURE.md)
-- [x] Criar guia de instalação do agente (AGENT_INSTALLATION.md)
-- [x] Criar documentação API completa com exemplos (API_DOCUMENTATION.md)
-- [x] Criar guia de uso do painel (USER_GUIDE.md)
-- [x] Criar README do projeto (README.md)
-- [x] Preparar checkpoint final
+### Fase 6: Funcionalidades Avançadas
+- [ ] Bloqueio remoto de tela com PIN
+- [ ] Desbloqueio remoto com senha
+- [ ] Captura de screenshot sob demanda
+- [ ] Captura automática periódica
+- [ ] Geolocalização em tempo real
+- [ ] Detecção de mudança de localização
+- [ ] Monitoramento de conectividade
+- [ ] Sincronização de dados
+
+### Fase 7: Segurança e Testes
+- [ ] Testes de criptografia de dados
+- [ ] Testes de autenticação e autorização
+- [ ] Testes de conformidade LGPD
+- [ ] Testes de performance com múltiplos dispositivos
+- [ ] Testes de segurança (penetration testing)
+- [ ] Validação de conformidade com GDPR
+- [ ] Auditoria de código
+- [ ] Testes de integração end-to-end
+
+### Fase 8: Documentação e Entrega
+- [ ] Documentação técnica de conformidade LGPD
+- [ ] Guia de instalação para agentes corporativos
+- [ ] Guia de uso do painel para gerentes
+- [ ] Guia de direitos dos funcionários
+- [ ] Documentação de APIs para agentes
+- [ ] Política de privacidade modelo
+- [ ] Termo de consentimento modelo
+- [ ] Checkpoint final
+
+---
+
+## Status Atual
+
+**Checkpoint Anterior:** d40aba5f (Painel base completo)
+- ✅ Dashboard cyberpunk
+- ✅ Gerenciamento de dispositivos
+- ✅ Sistema de eventos
+- ✅ Sistema de alertas
+- ✅ Mapa em tempo real
+- ✅ APIs públicas
+- ✅ Autenticação OAuth
+- ✅ 29 testes unitários
+
+**Próximo:** Expandir para funcionalidades corporativas com conformidade LGPD/GDPR

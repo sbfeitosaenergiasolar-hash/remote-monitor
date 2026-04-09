@@ -5,6 +5,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
 import { nanoid } from "nanoid";
+import { corporateRouter } from "./routers/corporate";
 
 // ============= DEVICE ROUTER =============
 
@@ -378,6 +379,7 @@ export const appRouter = router({
   alert: alertRouter,
   token: tokenRouter,
   report: reportRouter,
+  corporate: corporateRouter,
 });
 
 export type AppRouter = typeof appRouter;

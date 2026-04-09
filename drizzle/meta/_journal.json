@@ -15,6 +15,13 @@
       "when": 1775754481356,
       "tag": "0001_blushing_fat_cobra",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1775757157521,
+      "tag": "0002_lying_retro_girl",
+      "breakpoints": true
     }
   ]
 }
