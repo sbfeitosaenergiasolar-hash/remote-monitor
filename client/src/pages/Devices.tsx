@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Smartphone, Copy, Trash2, MapPin, Clock, Battery, Wifi } from "lucide-react";
+import { Loader2, Plus, Smartphone, Copy, Trash2, MapPin, Clock, Battery, Wifi, Globe } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
@@ -23,6 +23,7 @@ export default function Devices() {
     osVersion: "",
     manufacturer: "",
     model: "",
+    country: "BR" as string,
   });
 
   const devicesQuery = trpc.device.list.useQuery(undefined, { enabled: isAuthenticated });
@@ -36,6 +37,7 @@ export default function Devices() {
         osVersion: "",
         manufacturer: "",
         model: "",
+        country: "BR",
       });
       setIsOpen(false);
       toast.success("Dispositivo criado com sucesso!");
@@ -160,6 +162,23 @@ export default function Devices() {
                     value={formData.model}
                     onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="country" className="text-slate-300">País</Label>
+                  <Select value={formData.country} onValueChange={(value: any) => setFormData({ ...formData, country: value })}>
+                    <SelectTrigger className="bg-slate-700/50 border-cyan-400/30 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BR">🇧🇷 Brasil</SelectItem>
+                      <SelectItem value="MX">🇲🇽 México</SelectItem>
+                      <SelectItem value="ES">🇪🇸 Espanha</SelectItem>
+                      <SelectItem value="PT">🇵🇹 Portugal</SelectItem>
+                      <SelectItem value="US">🇺🇸 Estados Unidos</SelectItem>
+                      <SelectItem value="AR">🇦🇷 Argentina</SelectItem>
+                      <SelectItem value="DE">🇩🇪 Alemanha</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Button
                   type="submit"
