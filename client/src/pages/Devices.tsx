@@ -214,6 +214,17 @@ export default function Devices() {
                     <div>
                       <h3 className="text-lg font-bold text-cyan-300">{device.deviceName}</h3>
                       <p className="text-xs text-slate-400">{device.deviceType.toUpperCase()}</p>
+                      {device.country && (
+                        <p className="text-lg mt-1">
+                          {device.country === 'BR' && '🇧🇷'}
+                          {device.country === 'MX' && '🇲🇽'}
+                          {device.country === 'ES' && '🇪🇸'}
+                          {device.country === 'PT' && '🇵🇹'}
+                          {device.country === 'US' && '🇺🇸'}
+                          {device.country === 'AR' && '🇦🇷'}
+                          {device.country === 'DE' && '🇩🇪'}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className={`flex items-center gap-1 ${getStatusColor(device)}`}>
