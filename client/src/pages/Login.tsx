@@ -24,7 +24,9 @@ export default function Login() {
         // Armazenar token de sessão
         localStorage.setItem('auth_token', 'admin-token-' + Date.now());
         localStorage.setItem('username', username);
-        setLocation('/');
+        // Aguardar um pouco antes de redirecionar
+        await new Promise(resolve => setTimeout(resolve, 500));
+        window.location.href = '/';
       } else {
         setError('Usuário ou senha incorretos');
       }
@@ -107,13 +109,7 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-cyan-400/20">
-            <p className="text-center text-slate-400 text-sm">
-              Credenciais de teste:
-              <br />
-              <span className="text-cyan-300 font-mono">admin / Mm102030@@</span>
-            </p>
-          </div>
+
         </Card>
 
         <div className="mt-8 text-center text-slate-400 text-xs">

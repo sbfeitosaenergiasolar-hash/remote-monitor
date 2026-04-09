@@ -13,18 +13,34 @@ import Events from "./pages/Events";
 import Map from "./pages/Map";
 import APKGenerator from "./pages/APKGenerator";
 import Login from "./pages/Login";
+import { useEffect, useState } from "react";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
-  const isAuthenticated = typeof window !== 'undefined' && localStorage.getItem('auth_token');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-  if (!isAuthenticated && typeof window !== 'undefined' && window.location.pathname !== '/login') {
-    return <Login />;
+  useEffect(() => {
+    // Verificar autenticação no cliente
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    setIsAuthenticated(!!token);
+  }, []);
+
+  // Aguardar verificação de autenticação
+  if (isAuthenticated === null) {
+    return null;
   }
 
+  // Se não autenticado, mostrar apenas página de login
+  if (!isAuthenticated) {
+    return (
+      <Switch>
+        <Route path={"*"} component={Login} />
+      </Switch>
+    );
+  }
+
+  // Se autenticado, mostrar todas as rotas
   return (
     <Switch>
-      <Route path={"/login"} component={Login} />
       <Route path={"/"} component={Home} />
       <Route path={"/devices"} component={Devices} />
       <Route path={"/alerts"} component={Alerts} />
@@ -39,11 +55,6 @@ function Router() {
     </Switch>
   );
 }
-
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
 
 function App() {
   return (
