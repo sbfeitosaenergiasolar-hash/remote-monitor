@@ -23,19 +23,34 @@ export const appRouter = router({
     login: publicProcedure
       .input(z.object({ email: z.string().email(), password: z.string() }))
       .mutation(async ({ input, ctx }) => {
+        console.log("[Login] Attempting login for:", input.email);
+        
         const user = await getUserByEmail(input.email);
+        console.log("[Login] User found:", user ? `${user.email} (id: ${user.id})` : "NOT FOUND");
+        
         if (!user || !user.passwordHash) {
+          console.log("[Login] User or passwordHash missing");
           throw new Error("Invalid email or password");
         }
 
-        const passwordMatch = crypto
+        const inputHash = crypto
           .createHash("sha256")
           .update(input.password)
-          .digest("hex") === user.passwordHash;
+          .digest("hex");
+        
+        console.log("[Login] Password comparison:");
+        console.log("  Input hash:  ", inputHash);
+        console.log("  Stored hash: ", user.passwordHash);
+        console.log("  Match:       ", inputHash === user.passwordHash);
+
+        const passwordMatch = inputHash === user.passwordHash;
 
         if (!passwordMatch) {
+          console.log("[Login] Password mismatch!");
           throw new Error("Invalid email or password");
         }
+
+        console.log("[Login] Password match! Creating session...");
 
         const sessionToken = await sdk.signSession({
           userId: user.id,
@@ -49,6 +64,8 @@ export const appRouter = router({
           ...cookieOptions,
           maxAge: ONE_YEAR_MS,
         });
+
+        console.log("[Login] Session created successfully");
 
         return {
           success: true,
@@ -83,32 +100,25 @@ export const appRouter = router({
         });
         return { success: true };
       }),
-    
+
     delete: protectedProcedure
       .input(z.object({ keylogId: z.number() }))
       .mutation(async ({ input }) => {
         await deleteKeylog(input.keylogId);
         return { success: true };
       }),
-    
+
     restore: protectedProcedure
       .input(z.object({ keylogId: z.number() }))
       .mutation(async ({ input }) => {
         await restoreKeylog(input.keylogId);
         return { success: true };
       }),
-    
-    deleted: protectedProcedure
+
+    getDeleted: protectedProcedure
       .input(z.object({ deviceId: z.string() }))
       .query(async ({ input }) => {
         return await getDeletedKeylogs(input.deviceId);
-      }),
-    
-    startSimulator: protectedProcedure
-      .input(z.object({ deviceId: z.string() }))
-      .mutation(async ({ input, ctx }) => {
-        await startKeylogSimulator(input.deviceId, ctx.user.id);
-        return { success: true, message: "Simulador de keylogs iniciado" };
       }),
   }),
 });
