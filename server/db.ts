@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, keylogs, InsertKeylog } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -87,6 +87,98 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+// Keylog helpers
+export async function createKeylog(keylog: InsertKeylog): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create keylog: database not available");
+    return;
+  }
+
+  try {
+    await db.insert(keylogs).values(keylog);
+  } catch (error) {
+    console.error("[Database] Failed to create keylog:", error);
+    throw error;
+  }
+}
+
+export async function getKeylogsByDevice(deviceId: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get keylogs: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(keylogs)
+      .where(and(eq(keylogs.deviceId, deviceId), eq(keylogs.isDeleted, 0)))
+      .orderBy(keylogs.createdAt);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get keylogs:", error);
+    return [];
+  }
+}
+
+export async function deleteKeylog(keylogId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot delete keylog: database not available");
+    return;
+  }
+
+  try {
+    await db
+      .update(keylogs)
+      .set({ isDeleted: 1 })
+      .where(eq(keylogs.id, keylogId));
+  } catch (error) {
+    console.error("[Database] Failed to delete keylog:", error);
+    throw error;
+  }
+}
+
+export async function restoreKeylog(keylogId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot restore keylog: database not available");
+    return;
+  }
+
+  try {
+    await db
+      .update(keylogs)
+      .set({ isDeleted: 0 })
+      .where(eq(keylogs.id, keylogId));
+  } catch (error) {
+    console.error("[Database] Failed to restore keylog:", error);
+    throw error;
+  }
+}
+
+export async function getDeletedKeylogs(deviceId: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get deleted keylogs: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(keylogs)
+      .where(and(eq(keylogs.deviceId, deviceId), eq(keylogs.isDeleted, 1)))
+      .orderBy(keylogs.createdAt);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get deleted keylogs:", error);
+    return [];
+  }
 }
 
 // TODO: add feature queries here as your schema grows.

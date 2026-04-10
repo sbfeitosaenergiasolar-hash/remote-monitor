@@ -110,3 +110,14 @@
 - [x] Testar keylogs em tempo real
 - [x] Testar visualização ao vivo com mockup
 - [x] Salvar checkpoint final
+
+
+## Fase 15: Keylogs em Tempo Real com Backend
+- [x] Criar schema de keylogs no banco de dados (drizzle)
+- [x] Migração SQL para tabela de keylogs
+- [x] Implementar procedures tRPC para criar/listar/deletar/restaurar keylogs
+- [x] Integrar keylogs do backend no frontend (remover mock)
+- [x] Implementar WebSocket/SSE para sincronização em tempo real
+- [x] Criar simulador de envio de keylogs do app mobile
+- [x] Testar keylogs em tempo real no painel
+- [x] Salvar checkpoint com keylogs tempo real implementados
