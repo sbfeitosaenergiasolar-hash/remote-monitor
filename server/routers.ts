@@ -1,6 +1,7 @@
 import z from "zod";
 import fs from "fs";
 import path from "path";
+import { storagePut } from "./storage";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { COOKIE_NAME } from "../shared/const";
 import { systemRouter } from "./_core/systemRouter";
@@ -123,7 +124,7 @@ export const appRouter = router({
       }),
   }),
 
-  apk: router({
+apk: router({
     build: publicProcedure
       .input(z.object({
         companyName: z.string().min(1),
@@ -133,27 +134,21 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         try {
-          // Criar conteúdo do APK (simulado)
-          const apkContent = JSON.stringify({
-            companyName: input.companyName,
-            companyUrl: input.companyUrl,
-            logoUrl: input.logoUrl,
-            buildDate: new Date().toISOString(),
-            version: "1.0.0",
-            protectFromUninstall: input.protectFromUninstall,
-            features: {
-              protecao: input.protectFromUninstall ? "App será reinstalado automaticamente se removido" : "App pode ser desinstalado normalmente",
-            },
-          });
-
-          // Salvar APK no servidor
+          // Ler arquivo APK do disco
           const apkPath = path.join(process.cwd(), "FazTudo-Monitor.apk");
-          fs.writeFileSync(apkPath, apkContent);
+          const apkBuffer = fs.readFileSync(apkPath);
+
+          // Salvar APK no S3
+          const { url } = await storagePut(
+            `apk/FazTudo-Monitor-${Date.now()}.apk`,
+            apkBuffer,
+            "application/vnd.android.package-archive"
+          );
 
           // Retornar URL de download permanente
           return {
             success: true,
-            downloadUrl: "/download-apk",
+            downloadUrl: url,
             message: "APK gerado com sucesso!",
           };
         } catch (error) {
