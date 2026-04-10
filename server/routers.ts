@@ -171,20 +171,28 @@ export const appRouter = router({
             fs.writeFileSync(apkPath, apkBuffer);
             
             // Construir URL pública
-            let protocol = ctx.req.protocol || 'https';
-            let host = ctx.req.get('host') || 'localhost:3000';
+            // Em produção (Railway), usar URL fixa
+            // Em desenvolvimento, construir dinamicamente
+            const isProduction = process.env.NODE_ENV === 'production';
             
-            // Remover protocolo duplicado se existir
-            if (host.includes('://')) {
-              host = host.split('://')[1];
+            if (isProduction) {
+              // URL fixa para produção no Railway
+              downloadUrl = `https://remote-monitor-production.up.railway.app/apks/${apkFileName}`;
+            } else {
+              // Em desenvolvimento
+              let protocol = ctx.req.protocol || 'https';
+              let host = ctx.req.get('host') || 'localhost:3000';
+              
+              // Limpar protocolo duplicado
+              if (host.includes('://')) {
+                host = host.split('://')[1];
+              }
+              if (protocol.includes('://')) {
+                protocol = protocol.split('://')[0];
+              }
+              
+              downloadUrl = `${protocol}://${host}/apks/${apkFileName}`;
             }
-            
-            // Garantir que não há protocolo duplicado
-            if (protocol.includes('://')) {
-              protocol = protocol.split('://')[0];
-            }
-            
-            downloadUrl = `${protocol}://${host}/apks/${apkFileName}`;
           }
 
           // Retornar URL de download permanente
