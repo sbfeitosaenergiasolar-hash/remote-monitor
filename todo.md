@@ -174,3 +174,7 @@
 - [x] Implementar página de Eventos com backend tRPC
 - [x] Implementar página de Relatórios com gráficos
 - [x] Testar todas as páginas
+
+
+## Bugs Resolvidos (Continuação 3)
+- [x] Alertas e Keylogs redirecionam para Dashboard ao terminar de carregar - resolvido com URL-based routing
