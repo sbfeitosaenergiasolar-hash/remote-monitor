@@ -22,7 +22,9 @@ export async function getDb() {
         waitForConnections: true,
         connectionLimit: 10,
         queueLimit: 0,
-        ssl: {}, // Enable SSL for Railway/TiDB
+        ssl: {
+          rejectUnauthorized: false, // Disable SSL verification for Railway
+        },
       });
 
       // Initialize drizzle with the pool
