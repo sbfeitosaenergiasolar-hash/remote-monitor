@@ -1,10 +1,20 @@
 import { useState, useEffect } from "react";
+import { Router, Route } from "wouter";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
+import Devices from "./pages/Devices";
+import DeviceDetails from "./pages/DeviceDetails";
+import Keylogs from "./pages/Keylogs";
+import Alerts from "./pages/Alerts";
+import Events from "./pages/Events";
+import Map from "./pages/Map";
+import Reports from "./pages/Reports";
+import Compliance from "./pages/Compliance";
+import APKBuilder from "./pages/APKBuilder";
 
 interface User {
   email: string;
@@ -111,11 +121,54 @@ function App() {
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
-          {!isAuthenticated ? (
-            <Login onLogin={handleLogin} loading={false} />
-          ) : (
-            <Home user={user} onLogout={handleLogout} />
-          )}
+          <Router>
+            {!isAuthenticated ? (
+              // Rota de login
+              <Route path="*">
+                <Login onLogin={handleLogin} loading={false} />
+              </Route>
+            ) : (
+              // Rotas autenticadas
+              <>
+                <Route path="/">
+                  <Home user={user} onLogout={handleLogout} />
+                </Route>
+                <Route path="/dispositivos">
+                  <Devices user={user} onLogout={handleLogout} />
+                </Route>
+                <Route path="/dispositivos/:id">
+                  {(params) => (
+                    <DeviceDetails deviceId={params.id} user={user} onLogout={handleLogout} />
+                  )}
+                </Route>
+                <Route path="/keylogs">
+                  <Keylogs user={user} onLogout={handleLogout} />
+                </Route>
+                <Route path="/alertas">
+                  <Alerts user={user} onLogout={handleLogout} />
+                </Route>
+                <Route path="/eventos">
+                  <Events user={user} onLogout={handleLogout} />
+                </Route>
+                <Route path="/mapa">
+                  <Map user={user} onLogout={handleLogout} />
+                </Route>
+                <Route path="/relatorios">
+                  <Reports user={user} onLogout={handleLogout} />
+                </Route>
+                <Route path="/conformidade">
+                  <Compliance user={user} onLogout={handleLogout} />
+                </Route>
+                <Route path="/apk-builder">
+                  <APKBuilder user={user} onLogout={handleLogout} />
+                </Route>
+                {/* Rota padrão */}
+                <Route path="*">
+                  <Home user={user} onLogout={handleLogout} />
+                </Route>
+              </>
+            )}
+          </Router>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

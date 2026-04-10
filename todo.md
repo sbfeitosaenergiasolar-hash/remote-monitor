@@ -147,3 +147,10 @@
 - [x] localStorage mantém token antigo - fazer login automático mesmo após logout
 - [x] Clique em Dispositivos volta para Dashboard - erro na navegação ou autenticação
 - [x] Página de login não aparece quando localStorage está limpo no Railway
+
+
+## Fase 18: URL-based Routing
+- [ ] Implementar URL-based routing com wouter
+- [ ] Manter página ao recarregar (F5)
+- [ ] Sincronizar URL com estado de página
+- [ ] Testar navegação e reload
