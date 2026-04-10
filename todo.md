@@ -220,3 +220,14 @@
 - [ ] Integrar Device Admin API no app Android para proteção real
 - [ ] Deploy em produção (Railway) após validação em staging
 - [ ] Testar proteção contra desinstalação em dispositivo real
+
+
+## Fase 24: APK Real com MIT App Inventor
+- [ ] Criar projeto MIT App Inventor
+- [ ] Implementar interface de monitoramento
+- [ ] Configurar comunicação com servidor
+- [ ] Implementar registro automático de dispositivos
+- [ ] Gerar APK real assinado
+- [ ] Criar endpoints no servidor para receber dados
+- [ ] Testar APK no celular
+- [ ] Integrar com gerador de APK

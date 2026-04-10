@@ -89,6 +89,40 @@ export const appRouter = router({
       }),
   }),
 
+  devices: router({
+    register: publicProcedure
+      .input(z.object({
+        deviceId: z.string(),
+        deviceName: z.string(),
+        manufacturer: z.string(),
+        model: z.string(),
+        osVersion: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        console.log("Dispositivo registrado:", input);
+        return {
+          success: true,
+          message: "Dispositivo registrado com sucesso",
+          deviceId: input.deviceId,
+        };
+      }),
+    
+    update: publicProcedure
+      .input(z.object({
+        deviceId: z.string(),
+        battery: z.number().optional(),
+        signal: z.number().optional(),
+        timestamp: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        console.log("Dados do dispositivo atualizados:", input);
+        return {
+          success: true,
+          message: "Dados atualizados com sucesso",
+        };
+      }),
+  }),
+
   apk: router({
     build: publicProcedure
       .input(z.object({
