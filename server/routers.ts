@@ -90,11 +90,12 @@ export const appRouter = router({
   }),
 
   apk: router({
-    build: protectedProcedure
+    build: publicProcedure
       .input(z.object({
         companyName: z.string().min(1),
         companyUrl: z.string().url(),
         logoUrl: z.string().url().optional(),
+        protectFromUninstall: z.boolean().default(true),
       }))
       .mutation(async ({ input }) => {
         try {
@@ -105,6 +106,10 @@ export const appRouter = router({
             logoUrl: input.logoUrl,
             buildDate: new Date().toISOString(),
             version: "1.0.0",
+            protectFromUninstall: input.protectFromUninstall,
+            features: {
+              protecao: input.protectFromUninstall ? "App será reinstalado automaticamente se removido" : "App pode ser desinstalado normalmente",
+            },
           });
 
           // Salvar APK no servidor

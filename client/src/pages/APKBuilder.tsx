@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Download, Loader2, Copy, Check } from "lucide-react";
+import { Download, Loader2, Copy, Check, Shield, ShieldOff } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
 export default function APKBuilderPage() {
@@ -13,6 +13,7 @@ export default function APKBuilderPage() {
   const [buildProgress, setBuildProgress] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [protectFromUninstall, setProtectFromUninstall] = useState(true);
 
   const buildApkMutation = trpc.apk.build.useMutation();
 
@@ -63,6 +64,7 @@ export default function APKBuilderPage() {
         companyName,
         companyUrl,
         logoUrl: logoUrl || undefined,
+        protectFromUninstall,
       });
 
       clearInterval(interval);
@@ -155,6 +157,40 @@ export default function APKBuilderPage() {
                 />
               </div>
 
+              {/* Proteção contra Desinstalação */}
+              <div className="bg-slate-800/30 border border-cyan-400/20 rounded-lg p-4 mt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {protectFromUninstall ? (
+                      <Shield className="w-5 h-5 text-green-400" />
+                    ) : (
+                      <ShieldOff className="w-5 h-5 text-red-400" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-slate-300">
+                        Proteção contra Desinstalação
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        {protectFromUninstall
+                          ? "App será reinstalado automaticamente se removido"
+                          : "App pode ser desinstalado normalmente"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setProtectFromUninstall(!protectFromUninstall)}
+                    className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                      protectFromUninstall
+                        ? "bg-green-500/20 text-green-300 border border-green-500/50"
+                        : "bg-red-500/20 text-red-300 border border-red-500/50"
+                    }`}
+                    disabled={isBuilding}
+                  >
+                    {protectFromUninstall ? "Ativo" : "Inativo"}
+                  </button>
+                </div>
+              </div>
+
               <Button
                 onClick={handleBuildAPK}
                 disabled={isBuilding}
@@ -191,6 +227,15 @@ export default function APKBuilderPage() {
               {downloadUrl && (
                 <div className="mt-4 p-4 bg-green-900/20 border border-green-400/30 rounded-lg space-y-3">
                   <p className="text-green-300 text-sm font-semibold">✅ APK gerado com sucesso!</p>
+                  
+                  {protectFromUninstall && (
+                    <div className="bg-green-900/30 border border-green-500/30 rounded p-2">
+                      <p className="text-green-300 text-xs flex items-center gap-2">
+                        <Shield className="w-4 h-4" />
+                        Proteção contra desinstalação: <strong>ATIVA</strong>
+                      </p>
+                    </div>
+                  )}
                   
                   <div className="space-y-2">
                     <p className="text-xs text-slate-400">Link permanente de download:</p>
@@ -266,6 +311,9 @@ export default function APKBuilderPage() {
                     <li>✓ Nome customizado</li>
                     <li>✓ URL de painel</li>
                     <li>✓ Tema corporativo</li>
+                    {protectFromUninstall && (
+                      <li>✓ Proteção contra desinstalação</li>
+                    )}
                   </ul>
                 </div>
               </div>
