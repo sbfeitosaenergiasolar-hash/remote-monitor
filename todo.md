@@ -162,3 +162,8 @@
 
 ## Bugs Resolvidos (Continuação 2)
 - [x] Keylogs redireciona ao pressionar F5 - resolvido com URL-based routing
+
+
+## Fase 19: Integração com Backend
+- [x] Conectar Keylogs.tsx ao backend tRPC (substituir mock data)
+- [x] Testar carregamento de dados reais

