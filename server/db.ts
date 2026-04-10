@@ -1,40 +1,18 @@
 import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import mysql from "mysql2/promise";
 import { InsertUser, users, keylogs, InsertKeylog } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
-let _db: any = null;
-let _pool: mysql.Pool | null = null;
+let _db: ReturnType<typeof drizzle> | null = null;
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      // Parse DATABASE_URL and create a proper mysql2 pool
-      const url = new URL(process.env.DATABASE_URL);
-      
-      _pool = mysql.createPool({
-        host: url.hostname,
-        user: url.username,
-        password: url.password,
-        database: url.pathname.slice(1),
-        waitForConnections: true,
-        connectionLimit: 10,
-        queueLimit: 0,
-        ssl: {
-          rejectUnauthorized: false, // Disable SSL verification for Railway
-        },
-      });
-
-      // Initialize drizzle with the pool
-      _db = drizzle(_pool);
-      
-      console.log("[Database] Connected successfully");
+      _db = drizzle(process.env.DATABASE_URL);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
-      _pool = null;
     }
   }
   return _db;
@@ -106,13 +84,9 @@ export async function getUserByOpenId(openId: string) {
     return undefined;
   }
 
-  try {
-    const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-    return result.length > 0 ? result[0] : undefined;
-  } catch (error) {
-    console.error("[Database] Failed to get user by openId:", error);
-    return undefined;
-  }
+  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
 }
 
 export async function getUserById(id: number) {
@@ -122,29 +96,9 @@ export async function getUserById(id: number) {
     return undefined;
   }
 
-  try {
-    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
-    return result.length > 0 ? result[0] : undefined;
-  } catch (error) {
-    console.error("[Database] Failed to get user by id:", error);
-    return undefined;
-  }
-}
+  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
 
-export async function getUserByEmail(email: string) {
-  const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot get user: database not available");
-    return undefined;
-  }
-
-  try {
-    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
-    return result.length > 0 ? result[0] : undefined;
-  } catch (error) {
-    console.error("[Database] Failed to get user by email:", error);
-    return undefined;
-  }
+  return result.length > 0 ? result[0] : undefined;
 }
 
 // Keylog helpers
