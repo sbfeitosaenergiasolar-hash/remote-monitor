@@ -222,12 +222,12 @@
 - [ ] Testar proteção contra desinstalação em dispositivo real
 
 
-## Fase 24: APK Real com MIT App Inventor
-- [ ] Criar projeto MIT App Inventor
-- [ ] Implementar interface de monitoramento
-- [ ] Configurar comunicação com servidor
-- [ ] Implementar registro automático de dispositivos
-- [ ] Gerar APK real assinado
-- [ ] Criar endpoints no servidor para receber dados
-- [ ] Testar APK no celular
-- [ ] Integrar com gerador de APK
+## Fase 24: APK Real com Buildozer/Python
+- [x] Criar projeto Python com Kivy
+- [x] Implementar interface de monitoramento
+- [x] Configurar comunicação com servidor
+- [x] Implementar registro automático de dispositivos
+- [x] Criar endpoints no servidor para receber dados (devices.register, devices.update)
+- [x] Gerar APK compilado
+- [x] Testar download do APK em produção
+- [x] Integrar com gerador de APK
