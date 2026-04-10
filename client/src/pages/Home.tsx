@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LogOut, Menu, X } from "lucide-react";
@@ -14,17 +15,8 @@ import APKBuilderPage from "./APKBuilder";
 
 type PageType = "dashboard" | "devices" | "alerts" | "events" | "map" | "reports" | "compliance" | "apk-builder";
 
-interface User {
-  email: string;
-  name: string;
-}
-
-interface HomeProps {
-  user?: User;
-  onLogout: () => void;
-}
-
-export default function Home({ user, onLogout }: HomeProps) {
+export default function Home() {
+  const { user, logout } = useAuth();
   const [currentPage, setCurrentPage] = useState<PageType>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -81,7 +73,7 @@ export default function Home({ user, onLogout }: HomeProps) {
         onClose={() => setSidebarOpen(false)}
         currentPage={currentPage}
         onNavigate={handleNavigate}
-        onLogout={onLogout}
+        onLogout={logout}
         user={user}
       />
 
@@ -111,7 +103,7 @@ export default function Home({ user, onLogout }: HomeProps) {
                 <p className="text-xs text-slate-400">{user?.email || "admin@faztudo.com"}</p>
               </div>
               <Button
-                onClick={onLogout}
+                onClick={logout}
                 variant="outline"
                 className="border-red-400/30 text-red-300 hover:bg-red-900/20"
               >

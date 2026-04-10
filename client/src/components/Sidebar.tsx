@@ -15,8 +15,8 @@ import {
 type PageType = "dashboard" | "devices" | "alerts" | "events" | "map" | "reports" | "compliance" | "apk-builder";
 
 interface User {
-  email?: string;
-  name?: string;
+  email?: string | null;
+  name?: string | null;
 }
 
 interface SidebarProps {
@@ -25,7 +25,7 @@ interface SidebarProps {
   currentPage: PageType;
   onNavigate: (page: PageType) => void;
   onLogout: () => void;
-  user?: User;
+  user?: User | null;
 }
 
 const menuItems = [

@@ -2,21 +2,38 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import { useLocation } from "wouter";
 
-interface LoginProps {
-  onLogin: (email: string, password: string) => void;
-  loading?: boolean;
-}
-
-export default function Login({ onLogin, loading = false }: LoginProps) {
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [, setLocation] = useLocation();
+  const utils = trpc.useUtils();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const loginMutation = trpc.auth.login.useMutation({
+    onSuccess: async () => {
+      // Atualizar cache de usuário
+      await utils.auth.me.invalidate();
+      // Redirecionar para dashboard
+      setLocation("/");
+    },
+    onError: (error) => {
+      setError(error.message || "Erro ao fazer login");
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password) {
-      onLogin(email, password);
+    setError("");
+    
+    if (!email || !password) {
+      setError("Por favor, preencha todos os campos");
+      return;
     }
+
+    await loginMutation.mutateAsync({ email, password });
   };
 
   return (
@@ -43,7 +60,7 @@ export default function Login({ onLogin, loading = false }: LoginProps) {
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
+                disabled={loginMutation.isPending}
                 className="bg-slate-800/50 border-cyan-400/30 text-white placeholder:text-slate-500"
               />
             </div>
@@ -57,17 +74,23 @@ export default function Login({ onLogin, loading = false }: LoginProps) {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
+                disabled={loginMutation.isPending}
                 className="bg-slate-800/50 border-cyan-400/30 text-white placeholder:text-slate-500"
               />
             </div>
 
+            {error && (
+              <div className="p-3 bg-red-900/20 border border-red-400/30 rounded-lg">
+                <p className="text-sm text-red-300">{error}</p>
+              </div>
+            )}
+
             <Button
               type="submit"
-              disabled={loading || !email || !password}
+              disabled={loginMutation.isPending || !email || !password}
               className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold py-2 rounded-lg disabled:opacity-50"
             >
-              {loading ? (
+              {loginMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Entrando...
@@ -80,7 +103,7 @@ export default function Login({ onLogin, loading = false }: LoginProps) {
 
           <div className="mt-6 pt-6 border-t border-cyan-400/20">
             <p className="text-xs text-slate-400 text-center">
-              Credenciais de teste: admin / Mm102030@@
+              Credenciais de teste: admin@faztudo.com / Mm102030@@
             </p>
           </div>
         </div>

@@ -3,10 +3,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import DashboardLayout from "./components/DashboardLayout";
+import Login from "./pages/Login";
 import { useAuth } from "./_core/hooks/useAuth";
+import { useLocation } from "wouter";
 
 function App() {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, loading } = useAuth();
+  const [location] = useLocation();
 
   if (loading) {
     return (
@@ -19,13 +22,42 @@ function App() {
     );
   }
 
+  // Se está na página de login, mostrar login
+  if (location === "/login") {
+    return (
+      <ErrorBoundary>
+        <ThemeProvider defaultTheme="dark">
+          <TooltipProvider>
+            <Toaster />
+            <Login />
+          </TooltipProvider>
+        </ThemeProvider>
+      </ErrorBoundary>
+    );
+  }
+
+  // Se não está autenticado, redirecionar para login
+  if (!user) {
+    return (
+      <ErrorBoundary>
+        <ThemeProvider defaultTheme="dark">
+          <TooltipProvider>
+            <Toaster />
+            <Login />
+          </TooltipProvider>
+        </ThemeProvider>
+      </ErrorBoundary>
+    );
+  }
+
+  // Se está autenticado, mostrar dashboard
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
           <DashboardLayout>
-            {/* O DashboardLayout gerencia autenticação e navegação */}
+            {/* O DashboardLayout gerencia navegação */}
           </DashboardLayout>
         </TooltipProvider>
       </ThemeProvider>
