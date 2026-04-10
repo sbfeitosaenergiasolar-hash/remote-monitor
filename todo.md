@@ -77,3 +77,13 @@
 - [x] Feedback visual de tela travada
 - [x] Testar trava e desbloqueio
 - [x] Salvar checkpoint com trava implementada
+
+
+## Fase 12: Sistema de Alertas Sonoros e Seleção de Bancos
+- [x] Criar lista de bancos (Brasil: todos + Internacionais: principais)
+- [x] Adicionar dropdown de bancos no APK Builder
+- [x] Implementar som de alerta (bip) quando cliente conecta
+- [x] Adicionar notificação visual com nome do banco
+- [x] Mostrar banco na lista de dispositivos
+- [x] Testar alertas sonoros e visuais
+- [x] Salvar checkpoint com alertas implementados

@@ -12,6 +12,8 @@ interface Device {
   battery: number;
   lastSeen: string;
   location: string;
+  bank?: string;
+  bankId?: string;
 }
 
 interface ViewState {
@@ -30,6 +32,8 @@ export default function DevicesPage() {
       battery: 85,
       lastSeen: "Agora",
       location: "São Paulo, SP",
+      bankId: "bb",
+      bank: "Banco do Brasil",
     },
     {
       id: "2",
@@ -39,6 +43,8 @@ export default function DevicesPage() {
       battery: 72,
       lastSeen: "Agora",
       location: "Rio de Janeiro, RJ",
+      bankId: "itau",
+      bank: "Itaú Unibanco",
     },
     {
       id: "3",
@@ -48,6 +54,8 @@ export default function DevicesPage() {
       battery: 60,
       lastSeen: "Agora",
       location: "Belo Horizonte, MG",
+      bankId: "bradesco",
+      bank: "Banco Bradesco",
     },
     {
       id: "4",
@@ -57,6 +65,8 @@ export default function DevicesPage() {
       battery: 15,
       lastSeen: "2 horas atrás",
       location: "Brasília, DF",
+      bankId: "santander",
+      bank: "Banco Santander Brasil",
     },
     {
       id: "5",
@@ -66,6 +76,8 @@ export default function DevicesPage() {
       battery: 0,
       lastSeen: "5 horas atrás",
       location: "Salvador, BA",
+      bankId: "nubank",
+      bank: "Nubank",
     },
   ]);
 
@@ -149,6 +161,13 @@ export default function DevicesPage() {
                       <span className="text-slate-400">Último Acesso</span>
                       <span className="text-white font-medium">{device.lastSeen}</span>
                     </div>
+
+                    {device.bank && (
+                      <div className="flex justify-between text-sm pt-2 border-t border-slate-700/50">
+                        <span className="text-slate-400">🏦 Banco</span>
+                        <span className="text-blue-300 font-medium">{device.bank}</span>
+                      </div>
+                    )}
                   </div>
 
                   <Button
@@ -216,6 +235,13 @@ export default function DevicesPage() {
                       <span className="text-slate-400">Último Acesso</span>
                       <span className="text-white font-medium">{device.lastSeen}</span>
                     </div>
+
+                    {device.bank && (
+                      <div className="flex justify-between text-sm pt-2 border-t border-slate-700/50">
+                        <span className="text-slate-400">🏦 Banco</span>
+                        <span className="text-blue-300 font-medium">{device.bank}</span>
+                      </div>
+                    )}
                   </div>
 
                   <Button

@@ -3,17 +3,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Download, Loader2 } from "lucide-react";
+import { BANKS_BY_COUNTRY, getBankName } from "../../../shared/banks";
 
 export default function APKBuilderPage() {
   const [companyName, setCompanyName] = useState("FazTudo");
   const [companyUrl, setCompanyUrl] = useState("https://faztudo.com.br");
   const [logoUrl, setLogoUrl] = useState("https://via.placeholder.com/150");
+  const [selectedCountry, setSelectedCountry] = useState("Brasil");
+  const [selectedBank, setSelectedBank] = useState("bb");
   const [isBuilding, setIsBuilding] = useState(false);
   const [buildProgress, setBuildProgress] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
 
+  const countries = Object.keys(BANKS_BY_COUNTRY).sort();
+  const banksInCountry = BANKS_BY_COUNTRY[selectedCountry] || [];
+
   const handleBuildAPK = async () => {
-    if (!companyName.trim() || !companyUrl.trim()) {
+    if (!companyName.trim() || !companyUrl.trim() || !selectedBank) {
       alert("Por favor, preencha todos os campos obrigatórios");
       return;
     }
@@ -35,7 +41,8 @@ export default function APKBuilderPage() {
     clearInterval(interval);
     setBuildProgress(100);
 
-    const apkName = `${companyName.replace(/\s+/g, "-")}-Monitor-${Date.now()}.apk`;
+    const bankName = getBankName(selectedBank);
+    const apkName = `${companyName.replace(/\s+/g, "-")}-${bankName.replace(/\s+/g, "-")}-Monitor-${Date.now()}.apk`;
     const blob = new Blob(["APK simulado"], {
       type: "application/vnd.android.package-archive",
     });
@@ -105,6 +112,48 @@ export default function APKBuilderPage() {
                   disabled={isBuilding}
                   className="bg-slate-800/50 border-cyan-400/30 text-white"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  País *
+                </label>
+                <select
+                  value={selectedCountry}
+                  onChange={(e) => {
+                    setSelectedCountry(e.target.value);
+                    const banksInNewCountry = BANKS_BY_COUNTRY[e.target.value] || [];
+                    if (banksInNewCountry.length > 0) {
+                      setSelectedBank(banksInNewCountry[0].id);
+                    }
+                  }}
+                  disabled={isBuilding}
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-cyan-400/30 text-white rounded-md focus:outline-none focus:border-cyan-400"
+                >
+                  {countries.map((country) => (
+                    <option key={country} value={country}>
+                      {country}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Banco *
+                </label>
+                <select
+                  value={selectedBank}
+                  onChange={(e) => setSelectedBank(e.target.value)}
+                  disabled={isBuilding}
+                  className="w-full px-3 py-2 bg-slate-800/50 border border-cyan-400/30 text-white rounded-md focus:outline-none focus:border-cyan-400"
+                >
+                  {banksInCountry.map((bank) => (
+                    <option key={bank.id} value={bank.id}>
+                      {bank.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <Button
@@ -181,9 +230,15 @@ export default function APKBuilderPage() {
                     {companyName}
                   </h3>
                   <p className="text-slate-400 text-xs text-center">Monitor</p>
-                  <div className="mt-4 text-center">
+                  <p className="text-blue-300 text-xs text-center font-semibold">
+                    🏦 {getBankName(selectedBank)}
+                  </p>
+                  <div className="mt-4 text-center space-y-2">
                     <p className="text-cyan-300 text-xs font-mono break-all">
                       {companyUrl}
+                    </p>
+                    <p className="text-blue-200 text-xs">
+                      País: {selectedCountry}
                     </p>
                   </div>
                 </div>
@@ -197,6 +252,7 @@ export default function APKBuilderPage() {
                   <li>✓ Logo da empresa</li>
                   <li>✓ Nome customizado</li>
                   <li>✓ URL de painel</li>
+                  <li>✓ Banco: {getBankName(selectedBank)}</li>
                   <li>✓ Tema corporativo</li>
                 </ul>
               </div>
