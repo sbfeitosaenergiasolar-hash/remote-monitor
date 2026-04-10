@@ -1,9 +1,9 @@
-import { z } from "zod";
+import z from "zod";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { COOKIE_NAME } from "../shared/const";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
-import { createKeylog, getKeylogsByDevice, deleteKeylog, restoreKeylog, getDeletedKeylogs } from "./db";
+import { createKeylog, getKeylogsByDevice, deleteKeylog, restoreKeylog, getDeletedKeylogs, getAlerts, getEvents } from "./db";
 import { startKeylogSimulator } from "./keylogSimulator";
 
 export const appRouter = router({
@@ -68,6 +68,22 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         await startKeylogSimulator(input.deviceId, ctx.user.id);
         return { success: true, message: "Simulador de keylogs iniciado" };
+      }),
+  }),
+
+  alerts: router({
+    list: protectedProcedure
+      .input(z.object({ deviceId: z.string().optional() }).optional())
+      .query(async ({ input }) => {
+        return await getAlerts(input?.deviceId);
+      }),
+  }),
+
+  events: router({
+    list: protectedProcedure
+      .input(z.object({ deviceId: z.string().optional() }).optional())
+      .query(async ({ input }) => {
+        return await getEvents(input?.deviceId);
       }),
   }),
 });

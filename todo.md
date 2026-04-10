@@ -167,3 +167,10 @@
 ## Fase 19: Integração com Backend
 - [x] Conectar Keylogs.tsx ao backend tRPC (substituir mock data)
 - [x] Testar carregamento de dados reais
+
+
+## Fase 20: Implementar Alertas, Eventos e Relatórios
+- [x] Implementar página de Alertas com backend tRPC
+- [x] Implementar página de Eventos com backend tRPC
+- [x] Implementar página de Relatórios com gráficos
+- [x] Testar todas as páginas

@@ -133,6 +133,106 @@ export async function createKeylog(keylog: InsertKeylog): Promise<void> {
   }
 }
 
+// Mock data para alerts
+const MOCK_ALERTS = [
+  {
+    id: 1,
+    deviceId: "1",
+    type: "offline",
+    title: "Dispositivo Offline",
+    message: "Dispositivo 1 ficou offline por mais de 5 minutos",
+    severity: "high",
+    createdAt: new Date(Date.now() - 1000 * 60 * 15),
+    isRead: false,
+  },
+  {
+    id: 2,
+    deviceId: "2",
+    type: "battery",
+    title: "Bateria Baixa",
+    message: "Dispositivo 2 com bateria abaixo de 10%",
+    severity: "medium",
+    createdAt: new Date(Date.now() - 1000 * 60 * 30),
+    isRead: true,
+  },
+  {
+    id: 3,
+    deviceId: "3",
+    type: "location",
+    title: "Saiu da Área Permitida",
+    message: "Dispositivo 3 saiu da área de monitoramento",
+    severity: "high",
+    createdAt: new Date(Date.now() - 1000 * 60 * 45),
+    isRead: false,
+  },
+];
+
+// Mock data para events
+const MOCK_EVENTS = [
+  {
+    id: 1,
+    deviceId: "1",
+    type: "app_opened",
+    title: "App Aberto",
+    description: "WhatsApp foi aberto",
+    createdAt: new Date(Date.now() - 1000 * 60 * 2),
+  },
+  {
+    id: 2,
+    deviceId: "1",
+    type: "call_received",
+    title: "Chamada Recebida",
+    description: "Chamada de +55 11 98765-4321",
+    createdAt: new Date(Date.now() - 1000 * 60 * 5),
+  },
+  {
+    id: 3,
+    deviceId: "1",
+    type: "sms_received",
+    title: "SMS Recebido",
+    description: "Mensagem de +55 11 91234-5678",
+    createdAt: new Date(Date.now() - 1000 * 60 * 10),
+  },
+  {
+    id: 4,
+    deviceId: "2",
+    type: "app_opened",
+    title: "App Aberto",
+    description: "Instagram foi aberto",
+    createdAt: new Date(Date.now() - 1000 * 60 * 3),
+  },
+  {
+    id: 5,
+    deviceId: "2",
+    type: "location_updated",
+    title: "Localização Atualizada",
+    description: "Localização: -23.5505, -46.6333",
+    createdAt: new Date(Date.now() - 1000 * 60 * 8),
+  },
+];
+
+export async function getAlerts(deviceId?: string) {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log("[Database] Development mode: using mock alerts");
+    if (deviceId) {
+      return MOCK_ALERTS.filter(a => a.deviceId === deviceId);
+    }
+    return MOCK_ALERTS;
+  }
+  return [];
+}
+
+export async function getEvents(deviceId?: string) {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log("[Database] Development mode: using mock events");
+    if (deviceId) {
+      return MOCK_EVENTS.filter(e => e.deviceId === deviceId);
+    }
+    return MOCK_EVENTS;
+  }
+  return [];
+}
+
 export async function getKeylogsByDevice(deviceId: string) {
   // In development, always use mock data
   if (process.env.NODE_ENV !== 'production') {
