@@ -1,15 +1,52 @@
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import ErrorBoundary from "./components/ErrorBoundary";
-import DashboardLayout from "./components/DashboardLayout";
 import Login from "./pages/Login";
-import { useAuth } from "./_core/hooks/useAuth";
-import { useLocation } from "wouter";
+import Home from "./pages/Home";
+
+interface User {
+  email: string;
+  name: string;
+}
 
 function App() {
-  const { user, loading } = useAuth();
-  const [location] = useLocation();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | undefined>();
+  const [loading, setLoading] = useState(true);
+
+  // Verificar autenticação ao carregar
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+    if (token) {
+      // Simular carregamento de usuário
+      setUser({
+        email: "admin@faztudo.com",
+        name: "Administrador",
+      });
+      setIsAuthenticated(true);
+    }
+    setLoading(false);
+  }, []);
+
+  const handleLogin = (email: string, password: string) => {
+    // Validação simples (credenciais de teste)
+    if (email && password) {
+      localStorage.setItem("auth_token", "token_" + Date.now());
+      setUser({
+        email: email,
+        name: email.split("@")[0],
+      });
+      setIsAuthenticated(true);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("auth_token");
+    setUser(undefined);
+    setIsAuthenticated(false);
+  };
 
   if (loading) {
     return (
@@ -22,43 +59,16 @@ function App() {
     );
   }
 
-  // Se está na página de login, mostrar login
-  if (location === "/login") {
-    return (
-      <ErrorBoundary>
-        <ThemeProvider defaultTheme="dark">
-          <TooltipProvider>
-            <Toaster />
-            <Login />
-          </TooltipProvider>
-        </ThemeProvider>
-      </ErrorBoundary>
-    );
-  }
-
-  // Se não está autenticado, redirecionar para login
-  if (!user) {
-    return (
-      <ErrorBoundary>
-        <ThemeProvider defaultTheme="dark">
-          <TooltipProvider>
-            <Toaster />
-            <Login />
-          </TooltipProvider>
-        </ThemeProvider>
-      </ErrorBoundary>
-    );
-  }
-
-  // Se está autenticado, mostrar dashboard
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
-          <DashboardLayout>
-            {/* O DashboardLayout gerencia navegação */}
-          </DashboardLayout>
+          {!isAuthenticated ? (
+            <Login onLogin={handleLogin} loading={false} />
+          ) : (
+            <Home user={user} onLogout={handleLogout} />
+          )}
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
