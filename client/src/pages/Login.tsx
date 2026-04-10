@@ -57,7 +57,7 @@ export default function Login() {
               </label>
               <Input
                 type="email"
-                placeholder="seu@email.com"
+                placeholder="admin@faztudo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loginMutation.isPending}
@@ -71,7 +71,7 @@ export default function Login() {
               </label>
               <Input
                 type="password"
-                placeholder="••••••••"
+                placeholder="Mm102030@@"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loginMutation.isPending}
