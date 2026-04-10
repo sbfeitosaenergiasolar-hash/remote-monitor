@@ -71,9 +71,14 @@ export default function APKBuilderPage() {
       setBuildProgress(100);
 
       if (result.success && result.downloadUrl) {
-        // Construir URL completa do download
-        const baseUrl = window.location.origin;
-        const fullDownloadUrl = `${baseUrl}${result.downloadUrl}`;
+        // result.downloadUrl já é uma URL completa
+        // Se começar com http/https, usar direto
+        // Se não, adicionar baseUrl
+        let fullDownloadUrl = result.downloadUrl;
+        if (!result.downloadUrl.startsWith('http')) {
+          const baseUrl = window.location.origin;
+          fullDownloadUrl = `${baseUrl}${result.downloadUrl}`;
+        }
         setDownloadUrl(fullDownloadUrl);
       } else {
         throw new Error("Resposta inválida do servidor");
