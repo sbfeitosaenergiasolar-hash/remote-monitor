@@ -171,8 +171,19 @@ export const appRouter = router({
             fs.writeFileSync(apkPath, apkBuffer);
             
             // Construir URL pública
-            const protocol = ctx.req.protocol || 'https';
-            const host = ctx.req.get('host') || 'localhost:3000';
+            let protocol = ctx.req.protocol || 'https';
+            let host = ctx.req.get('host') || 'localhost:3000';
+            
+            // Remover protocolo duplicado se existir
+            if (host.includes('://')) {
+              host = host.split('://')[1];
+            }
+            
+            // Garantir que não há protocolo duplicado
+            if (protocol.includes('://')) {
+              protocol = protocol.split('://')[0];
+            }
+            
             downloadUrl = `${protocol}://${host}/apks/${apkFileName}`;
           }
 
