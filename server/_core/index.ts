@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import fs from "fs";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 
 import { appRouter } from "../routers";
@@ -37,10 +38,27 @@ async function startServer() {
   // APK Download Route
   app.get("/download-apk", (req, res) => {
     const apkPath = process.env.APK_PATH || "./FazTudo-Monitor.apk";
+    
+    // Verificar se arquivo existe antes de tentar fazer download
+    if (!fs.existsSync(apkPath)) {
+      console.warn(`APK file not found at ${apkPath}`);
+      return res.status(404).json({ 
+        error: "APK not found",
+        message: "O arquivo APK ainda não foi gerado. Por favor, acesse o painel e clique em 'Build APK'."
+      });
+    }
+    
+    // Configurar headers corretos para download
+    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+    res.setHeader('Content-Disposition', 'attachment; filename="FazTudo-Monitor.apk"');
+    
+    // Fazer download do arquivo
     res.download(apkPath, "FazTudo-Monitor.apk", (err) => {
       if (err) {
         console.error("APK download error:", err);
-        res.status(404).json({ error: "APK not found" });
+        if (!res.headersSent) {
+          res.status(500).json({ error: "Erro ao fazer download do APK" });
+        }
       }
     });
   });

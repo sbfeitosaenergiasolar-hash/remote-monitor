@@ -181,6 +181,6 @@
 
 
 ## Fase 21: Download de APK com Link Permanente
-- [ ] Implementar rota de download de APK no servidor
-- [ ] Gerar link permanente para APK
-- [ ] Testar download do APK via link
+- [x] Implementar rota de download de APK no servidor
+- [x] Gerar link permanente para APK
+- [x] Testar download do APK via link

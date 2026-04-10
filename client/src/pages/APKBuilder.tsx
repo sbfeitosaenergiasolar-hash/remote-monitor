@@ -17,9 +17,32 @@ export default function APKBuilderPage() {
   const buildApkMutation = trpc.apk.build.useMutation();
 
   const handleBuildAPK = async () => {
-    if (!companyName.trim() || !companyUrl.trim()) {
-      alert("Por favor, preencha os campos obrigatórios");
+    if (!companyName.trim()) {
+      alert("Por favor, preencha o Nome da Empresa");
       return;
+    }
+    
+    if (!companyUrl.trim()) {
+      alert("Por favor, preencha a URL da Empresa");
+      return;
+    }
+    
+    // Validar URL
+    try {
+      new URL(companyUrl);
+    } catch (e) {
+      alert("URL da Empresa inválida. Use o formato: https://exemplo.com");
+      return;
+    }
+    
+    // Validar URL da logo se fornecida
+    if (logoUrl.trim()) {
+      try {
+        new URL(logoUrl);
+      } catch (e) {
+        alert("URL da Logo inválida. Use o formato: https://exemplo.com/logo.png");
+        return;
+      }
     }
 
     setIsBuilding(true);
@@ -45,17 +68,22 @@ export default function APKBuilderPage() {
       clearInterval(interval);
       setBuildProgress(100);
 
-      if (result.success) {
+      if (result.success && result.downloadUrl) {
         // Construir URL completa do download
         const baseUrl = window.location.origin;
         const fullDownloadUrl = `${baseUrl}${result.downloadUrl}`;
         setDownloadUrl(fullDownloadUrl);
+      } else {
+        throw new Error("Resposta inválida do servidor");
       }
     } catch (error) {
+      clearInterval(interval);
       console.error("Erro ao gerar APK:", error);
-      alert("Erro ao gerar APK. Tente novamente.");
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+      alert(`Erro ao gerar APK: ${errorMessage}. Tente novamente.`);
     } finally {
       setIsBuilding(false);
+      setBuildProgress(0);
     }
   };
 
