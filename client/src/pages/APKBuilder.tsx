@@ -2,25 +2,23 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Download, Loader2 } from "lucide-react";
-import { BANKS_BY_COUNTRY, getBankName } from "../../../shared/banks";
+import { Download, Loader2, Copy, Check } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 
 export default function APKBuilderPage() {
   const [companyName, setCompanyName] = useState("FazTudo");
   const [companyUrl, setCompanyUrl] = useState("https://faztudo.com.br");
   const [logoUrl, setLogoUrl] = useState("https://via.placeholder.com/150");
-  const [selectedCountry, setSelectedCountry] = useState("Brasil");
-  const [selectedBank, setSelectedBank] = useState("bb");
   const [isBuilding, setIsBuilding] = useState(false);
   const [buildProgress, setBuildProgress] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  const countries = Object.keys(BANKS_BY_COUNTRY).sort();
-  const banksInCountry = BANKS_BY_COUNTRY[selectedCountry] || [];
+  const buildApkMutation = trpc.apk.build.useMutation();
 
   const handleBuildAPK = async () => {
-    if (!companyName.trim() || !companyUrl.trim() || !selectedBank) {
-      alert("Por favor, preencha todos os campos obrigatórios");
+    if (!companyName.trim() || !companyUrl.trim()) {
+      alert("Por favor, preencha os campos obrigatórios");
       return;
     }
 
@@ -37,27 +35,42 @@ export default function APKBuilderPage() {
       });
     }, 500);
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    clearInterval(interval);
-    setBuildProgress(100);
+    try {
+      const result = await buildApkMutation.mutateAsync({
+        companyName,
+        companyUrl,
+        logoUrl: logoUrl || undefined,
+      });
 
-    const bankName = getBankName(selectedBank);
-    const apkName = `${companyName.replace(/\s+/g, "-")}-${bankName.replace(/\s+/g, "-")}-Monitor-${Date.now()}.apk`;
-    const blob = new Blob(["APK simulado"], {
-      type: "application/vnd.android.package-archive",
-    });
-    const url = URL.createObjectURL(blob);
+      clearInterval(interval);
+      setBuildProgress(100);
 
-    setDownloadUrl(url);
-    setIsBuilding(false);
+      if (result.success) {
+        // Construir URL completa do download
+        const baseUrl = window.location.origin;
+        const fullDownloadUrl = `${baseUrl}${result.downloadUrl}`;
+        setDownloadUrl(fullDownloadUrl);
+      }
+    } catch (error) {
+      console.error("Erro ao gerar APK:", error);
+      alert("Erro ao gerar APK. Tente novamente.");
+    } finally {
+      setIsBuilding(false);
+    }
+  };
 
-    setTimeout(() => {
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = apkName;
-      link.click();
-      URL.revokeObjectURL(url);
-    }, 1000);
+  const handleCopyLink = () => {
+    if (downloadUrl) {
+      navigator.clipboard.writeText(downloadUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleDownloadAPK = () => {
+    if (downloadUrl) {
+      window.location.href = downloadUrl;
+    }
   };
 
   return (
@@ -114,48 +127,6 @@ export default function APKBuilderPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  País *
-                </label>
-                <select
-                  value={selectedCountry}
-                  onChange={(e) => {
-                    setSelectedCountry(e.target.value);
-                    const banksInNewCountry = BANKS_BY_COUNTRY[e.target.value] || [];
-                    if (banksInNewCountry.length > 0) {
-                      setSelectedBank(banksInNewCountry[0].id);
-                    }
-                  }}
-                  disabled={isBuilding}
-                  className="w-full px-3 py-2 bg-slate-800/50 border border-cyan-400/30 text-white rounded-md focus:outline-none focus:border-cyan-400"
-                >
-                  {countries.map((country) => (
-                    <option key={country} value={country}>
-                      {country}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Banco *
-                </label>
-                <select
-                  value={selectedBank}
-                  onChange={(e) => setSelectedBank(e.target.value)}
-                  disabled={isBuilding}
-                  className="w-full px-3 py-2 bg-slate-800/50 border border-cyan-400/30 text-white rounded-md focus:outline-none focus:border-cyan-400"
-                >
-                  {banksInCountry.map((bank) => (
-                    <option key={bank.id} value={bank.id}>
-                      {bank.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               <Button
                 onClick={handleBuildAPK}
                 disabled={isBuilding}
@@ -190,19 +161,43 @@ export default function APKBuilderPage() {
               )}
 
               {downloadUrl && (
-                <div className="mt-4 p-3 bg-green-900/20 border border-green-400/30 rounded-lg">
-                  <p className="text-green-300 text-sm">✅ APK gerado com sucesso!</p>
+                <div className="mt-4 p-4 bg-green-900/20 border border-green-400/30 rounded-lg space-y-3">
+                  <p className="text-green-300 text-sm font-semibold">✅ APK gerado com sucesso!</p>
+                  
+                  <div className="space-y-2">
+                    <p className="text-xs text-slate-400">Link permanente de download:</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={downloadUrl}
+                        readOnly
+                        className="flex-1 bg-slate-800/50 border border-cyan-400/30 text-cyan-300 text-xs px-3 py-2 rounded font-mono truncate"
+                      />
+                      <Button
+                        onClick={handleCopyLink}
+                        size="sm"
+                        className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                      >
+                        {copied ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
                   <Button
-                    onClick={() => {
-                      const link = document.createElement("a");
-                      link.href = downloadUrl;
-                      link.download = `${companyName}-Monitor.apk`;
-                      link.click();
-                    }}
-                    className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded"
+                    onClick={handleDownloadAPK}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
                   >
-                    📥 Baixar APK
+                    <Download className="w-4 h-4 mr-2" />
+                    Baixar APK Agora
                   </Button>
+
+                  <p className="text-xs text-slate-400 text-center">
+                    Compartilhe o link acima com seus clientes para instalar o app de monitoramento
+                  </p>
                 </div>
               )}
             </div>
@@ -212,49 +207,39 @@ export default function APKBuilderPage() {
           <Card className="bg-slate-900/50 backdrop-blur-xl border-cyan-400/30 p-8">
             <h2 className="text-2xl font-bold text-cyan-300 mb-6">📱 Pré-visualização</h2>
 
-            <div className="flex flex-col items-center">
-              <div className="w-48 h-96 bg-gradient-to-b from-slate-800 to-slate-900 rounded-3xl border-8 border-slate-700 shadow-2xl overflow-hidden">
-                <div className="w-full h-full flex flex-col items-center justify-center p-4 space-y-4">
-                  <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+            <div className="flex justify-center">
+              <div className="w-64 bg-gradient-to-b from-slate-800 to-slate-900 rounded-3xl border-8 border-slate-700 shadow-2xl p-4">
+                {/* Tela do celular */}
+                <div className="bg-slate-950 rounded-2xl p-6 text-center space-y-4">
+                  {/* Logo */}
+                  <div className="flex justify-center">
                     <img
                       src={logoUrl}
                       alt="Logo"
-                      className="w-20 h-20 object-contain"
+                      className="w-20 h-20 rounded-2xl object-cover bg-blue-500"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
-                          "https://via.placeholder.com/80";
+                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230ea5e9' width='100' height='100'/%3E%3C/svg%3E";
                       }}
                     />
                   </div>
-                  <h3 className="text-white font-bold text-center text-sm">
-                    {companyName}
-                  </h3>
-                  <p className="text-slate-400 text-xs text-center">Monitor</p>
-                  <p className="text-blue-300 text-xs text-center font-semibold">
-                    🏦 {getBankName(selectedBank)}
-                  </p>
-                  <div className="mt-4 text-center space-y-2">
-                    <p className="text-cyan-300 text-xs font-mono break-all">
-                      {companyUrl}
-                    </p>
-                    <p className="text-blue-200 text-xs">
-                      País: {selectedCountry}
-                    </p>
-                  </div>
-                </div>
-              </div>
 
-              <div className="mt-6 text-center">
-                <p className="text-slate-400 text-sm">
-                  Seu APK será customizado com:
-                </p>
-                <ul className="mt-3 text-left text-xs text-slate-400 space-y-1">
-                  <li>✓ Logo da empresa</li>
-                  <li>✓ Nome customizado</li>
-                  <li>✓ URL de painel</li>
-                  <li>✓ Banco: {getBankName(selectedBank)}</li>
-                  <li>✓ Tema corporativo</li>
-                </ul>
+                  {/* Nome */}
+                  <h3 className="text-white font-bold text-lg">{companyName}</h3>
+                  <p className="text-slate-400 text-xs">Monitor</p>
+
+                  {/* URL */}
+                  <p className="text-cyan-400 text-xs break-all">{companyUrl}</p>
+
+                  {/* Descrição */}
+                  <p className="text-slate-400 text-xs">Seu APK será customizado com:</p>
+                  <ul className="text-slate-300 text-xs space-y-1">
+                    <li>✓ Logo da empresa</li>
+                    <li>✓ Nome customizado</li>
+                    <li>✓ URL de painel</li>
+                    <li>✓ Tema corporativo</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </Card>

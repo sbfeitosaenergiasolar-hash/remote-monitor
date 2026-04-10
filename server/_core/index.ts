@@ -34,6 +34,17 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+  // APK Download Route
+  app.get("/download-apk", (req, res) => {
+    const apkPath = process.env.APK_PATH || "./FazTudo-Monitor.apk";
+    res.download(apkPath, "FazTudo-Monitor.apk", (err) => {
+      if (err) {
+        console.error("APK download error:", err);
+        res.status(404).json({ error: "APK not found" });
+      }
+    });
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",

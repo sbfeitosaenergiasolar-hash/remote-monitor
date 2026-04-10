@@ -178,3 +178,9 @@
 
 ## Bugs Resolvidos (Continuação 3)
 - [x] Alertas e Keylogs redirecionam para Dashboard ao terminar de carregar - resolvido com URL-based routing
+
+
+## Fase 21: Download de APK com Link Permanente
+- [ ] Implementar rota de download de APK no servidor
+- [ ] Gerar link permanente para APK
+- [ ] Testar download do APK via link

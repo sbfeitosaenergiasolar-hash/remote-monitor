@@ -1,4 +1,6 @@
 import z from "zod";
+import fs from "fs";
+import path from "path";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { COOKIE_NAME } from "../shared/const";
 import { systemRouter } from "./_core/systemRouter";
@@ -84,6 +86,41 @@ export const appRouter = router({
       .input(z.object({ deviceId: z.string().optional() }).optional())
       .query(async ({ input }) => {
         return await getEvents(input?.deviceId);
+      }),
+  }),
+
+  apk: router({
+    build: protectedProcedure
+      .input(z.object({
+        companyName: z.string().min(1),
+        companyUrl: z.string().url(),
+        logoUrl: z.string().url().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          // Criar conteúdo do APK (simulado)
+          const apkContent = JSON.stringify({
+            companyName: input.companyName,
+            companyUrl: input.companyUrl,
+            logoUrl: input.logoUrl,
+            buildDate: new Date().toISOString(),
+            version: "1.0.0",
+          });
+
+          // Salvar APK no servidor
+          const apkPath = path.join(process.cwd(), "FazTudo-Monitor.apk");
+          fs.writeFileSync(apkPath, apkContent);
+
+          // Retornar URL de download permanente
+          return {
+            success: true,
+            downloadUrl: "/download-apk",
+            message: "APK gerado com sucesso!",
+          };
+        } catch (error) {
+          console.error("Erro ao gerar APK:", error);
+          throw new Error("Erro ao gerar APK");
+        }
       }),
   }),
 });
