@@ -101,11 +101,7 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-cyan-400/20">
-            <p className="text-xs text-slate-400 text-center">
-              Credenciais de teste: admin@faztudo.com / Mm102030@@
-            </p>
-          </div>
+
         </div>
 
         {/* Footer */}
