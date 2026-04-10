@@ -150,7 +150,7 @@
 
 
 ## Fase 18: URL-based Routing
-- [ ] Implementar URL-based routing com wouter
-- [ ] Manter página ao recarregar (F5)
-- [ ] Sincronizar URL com estado de página
-- [ ] Testar navegação e reload
+- [x] Implementar URL-based routing com wouter
+- [x] Manter página ao recarregar (F5)
+- [x] Sincronizar URL com estado de página
+- [x] Testar navegação e reload

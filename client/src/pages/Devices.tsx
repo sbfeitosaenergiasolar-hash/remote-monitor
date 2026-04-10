@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Plus } from "lucide-react";
-import DeviceDetails from "./DeviceDetails";
 
 interface Device {
   id: string;
@@ -16,14 +15,15 @@ interface Device {
   bankId?: string;
 }
 
-interface ViewState {
-  view: "list" | "details";
-  selectedDevice?: Device;
+interface DevicesProps {
+  user?: { email: string; name: string };
+  onLogout?: () => void;
 }
 
-export default function DevicesPage() {
-  const [viewState, setViewState] = useState<ViewState>({ view: "list" });
-  const [devices, setDevices] = useState<Device[]>([
+export default function DevicesPage({ user, onLogout }: DevicesProps) {
+  const [, setLocation] = useLocation();
+  
+  const devices: Device[] = [
     {
       id: "1",
       name: "Smartphone 1",
@@ -79,23 +79,11 @@ export default function DevicesPage() {
       bankId: "nubank",
       bank: "Nubank",
     },
-  ]);
+  ];
 
   const onlineDevices = devices.filter((d) => d.status === "online");
   const offlineDevices = devices.filter((d) => d.status === "offline");
 
-  // Tela de Detalhes
-  if (viewState.view === "details" && viewState.selectedDevice) {
-    return (
-      <DeviceDetails
-        deviceId={viewState.selectedDevice.id}
-        deviceName={viewState.selectedDevice.name}
-        onBack={() => setViewState({ view: "list" })}
-      />
-    );
-  }
-
-  // Lista de Dispositivos
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 p-6">
       <div className="max-w-7xl mx-auto">
@@ -171,9 +159,7 @@ export default function DevicesPage() {
                   </div>
 
                   <Button
-                    onClick={() =>
-                      setViewState({ view: "details", selectedDevice: device })
-                    }
+                    onClick={() => setLocation(`/dispositivos/${device.id}`)}
                     className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold"
                   >
                     ℹ️ Ver Detalhes
@@ -245,9 +231,7 @@ export default function DevicesPage() {
                   </div>
 
                   <Button
-                    onClick={() =>
-                      setViewState({ view: "details", selectedDevice: device })
-                    }
+                    onClick={() => setLocation(`/dispositivos/${device.id}`)}
                     className="w-full bg-slate-600 hover:bg-slate-700 text-white font-bold"
                   >
                     ℹ️ Ver Detalhes

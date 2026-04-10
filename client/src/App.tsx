@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Router, Route } from "wouter";
+import { Router, Route, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -25,6 +25,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | undefined>();
   const [loading, setLoading] = useState(true);
+  const [location] = useLocation();
 
   // Verificar autenticação ao carregar
   useEffect(() => {
@@ -134,33 +135,31 @@ function App() {
                   <Home user={user} onLogout={handleLogout} />
                 </Route>
                 <Route path="/dispositivos">
-                  <Devices user={user} onLogout={handleLogout} />
+                  <Home user={user} onLogout={handleLogout} />
                 </Route>
                 <Route path="/dispositivos/:id">
-                  {(params) => (
-                    <DeviceDetails deviceId={params.id} user={user} onLogout={handleLogout} />
-                  )}
+                  <Home user={user} onLogout={handleLogout} />
                 </Route>
                 <Route path="/keylogs">
-                  <Keylogs user={user} onLogout={handleLogout} />
+                  <Home user={user} onLogout={handleLogout} />
                 </Route>
                 <Route path="/alertas">
-                  <Alerts user={user} onLogout={handleLogout} />
+                  <Home user={user} onLogout={handleLogout} />
                 </Route>
                 <Route path="/eventos">
-                  <Events user={user} onLogout={handleLogout} />
+                  <Home user={user} onLogout={handleLogout} />
                 </Route>
                 <Route path="/mapa">
-                  <Map user={user} onLogout={handleLogout} />
+                  <Home user={user} onLogout={handleLogout} />
                 </Route>
                 <Route path="/relatorios">
-                  <Reports user={user} onLogout={handleLogout} />
+                  <Home user={user} onLogout={handleLogout} />
                 </Route>
                 <Route path="/conformidade">
-                  <Compliance user={user} onLogout={handleLogout} />
+                  <Home user={user} onLogout={handleLogout} />
                 </Route>
                 <Route path="/apk-builder">
-                  <APKBuilder user={user} onLogout={handleLogout} />
+                  <Home user={user} onLogout={handleLogout} />
                 </Route>
                 {/* Rota padrão */}
                 <Route path="*">

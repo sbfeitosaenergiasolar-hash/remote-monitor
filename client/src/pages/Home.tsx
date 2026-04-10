@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { LogOut, Menu, X } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import Dashboard from "./Dashboard";
 import DevicesPage from "./Devices";
+import DeviceDetails from "./DeviceDetails";
 import AlertsPage from "./Alerts";
 import EventsPage from "./Events";
 import MapPage from "./Map";
@@ -23,27 +24,31 @@ interface HomeProps {
   onLogout: () => void;
 }
 
-type PageType = "dashboard" | "devices" | "alerts" | "events" | "map" | "reports" | "compliance" | "apk-builder" | "keylogs";
+type PageType = "dashboard" | "devices" | "device-details" | "alerts" | "events" | "map" | "reports" | "compliance" | "apk-builder" | "keylogs";
 
 export default function Home({ user, onLogout }: HomeProps) {
   const [location, setLocation] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Mapear URL para página
-  const getPageFromLocation = (): PageType => {
-    if (location === "/dispositivos") return "devices";
-    if (location === "/alertas") return "alerts";
-    if (location === "/eventos") return "events";
-    if (location === "/mapa") return "map";
-    if (location === "/relatorios") return "reports";
-    if (location === "/conformidade") return "compliance";
-    if (location === "/apk-builder") return "apk-builder";
-    if (location === "/keylogs") return "keylogs";
-    return "dashboard";
-  };
-
-  const currentPage = getPageFromLocation();
+  // Usar useMemo para evitar recalcular a cada render
+  const { currentPage, deviceId } = useMemo(() => {
+    // Verificar se é rota dinâmica /dispositivos/:id
+    const deviceMatch = location.match(/^\/dispositivos\/(.+)$/);
+    if (deviceMatch) {
+      return { currentPage: "device-details" as PageType, deviceId: deviceMatch[1] };
+    }
+    
+    if (location === "/dispositivos") return { currentPage: "devices" as PageType, deviceId: null };
+    if (location === "/alertas") return { currentPage: "alerts" as PageType, deviceId: null };
+    if (location === "/eventos") return { currentPage: "events" as PageType, deviceId: null };
+    if (location === "/mapa") return { currentPage: "map" as PageType, deviceId: null };
+    if (location === "/relatorios") return { currentPage: "reports" as PageType, deviceId: null };
+    if (location === "/conformidade") return { currentPage: "compliance" as PageType, deviceId: null };
+    if (location === "/apk-builder") return { currentPage: "apk-builder" as PageType, deviceId: null };
+    if (location === "/keylogs") return { currentPage: "keylogs" as PageType, deviceId: null };
+    return { currentPage: "dashboard" as PageType, deviceId: null };
+  }, [location]);
 
   // Detectar mudanças de tamanho de tela
   useEffect(() => {
@@ -64,6 +69,7 @@ export default function Home({ user, onLogout }: HomeProps) {
     const urlMap: Record<PageType, string> = {
       dashboard: "/",
       devices: "/dispositivos",
+      "device-details": "/dispositivos",
       alerts: "/alertas",
       events: "/eventos",
       map: "/mapa",
@@ -90,7 +96,7 @@ export default function Home({ user, onLogout }: HomeProps) {
       <Sidebar
         isOpen={sidebarOpen}
         onNavigate={handleNavigate}
-        currentPage={currentPage}
+        currentPage={currentPage === "device-details" ? "devices" : currentPage}
         onLogout={handleLogoutClick}
         onClose={() => setSidebarOpen(false)}
       />
@@ -134,7 +140,10 @@ export default function Home({ user, onLogout }: HomeProps) {
         {/* Page Content */}
         <div className="flex-1 overflow-auto">
           {currentPage === "dashboard" && <Dashboard />}
-          {currentPage === "devices" && <DevicesPage />}
+          {currentPage === "devices" && <DevicesPage user={user} onLogout={onLogout} />}
+          {currentPage === "device-details" && deviceId && (
+            <DeviceDetails deviceId={deviceId} user={user} onLogout={onLogout} />
+          )}
           {currentPage === "alerts" && <AlertsPage />}
           {currentPage === "events" && <EventsPage />}
           {currentPage === "map" && <MapPage />}
