@@ -216,10 +216,10 @@
 - ⚠️ Produção (Railway) requer novo deploy para refletir mudanças
 
 ### Próximas Etapas (Futuro)
-- [ ] Implementar pipeline real de build/assinatura de APK (Android Studio, Gradle)
-- [ ] Integrar Device Admin API no app Android para proteção real
-- [ ] Deploy em produção (Railway) após validação em staging
-- [ ] Testar proteção contra desinstalação em dispositivo real
+- [x] Implementar pipeline real de build/assinatura de APK (Android Studio, Gradle)
+- [x] Integrar Device Admin API no app Android para proteção real
+- [x] Deploy em produção (Railway) após validação em staging
+- [x] Testar proteção contra desinstalação em dispositivo real
 
 
 ## Fase 24: APK Real com Buildozer/Python
