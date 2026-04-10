@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { LogOut, Menu, X } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import Dashboard from "./Dashboard";
@@ -14,10 +12,19 @@ import CompliancePage from "./Compliance";
 import APKBuilderPage from "./APKBuilder";
 import KeylogsPage from "./Keylogs";
 
+interface User {
+  email: string;
+  name: string;
+}
+
+interface HomeProps {
+  user?: User;
+  onLogout: () => void;
+}
+
 type PageType = "dashboard" | "devices" | "alerts" | "events" | "map" | "reports" | "compliance" | "apk-builder" | "keylogs";
 
-export default function Home() {
-  const { user, logout } = useAuth();
+export default function Home({ user, onLogout }: HomeProps) {
   const [currentPage, setCurrentPage] = useState<PageType>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -41,6 +48,10 @@ export default function Home() {
     if (isMobile) {
       setSidebarOpen(false);
     }
+  };
+
+  const handleLogout = () => {
+    onLogout();
   };
 
   const renderPage = () => {
@@ -76,7 +87,7 @@ export default function Home() {
         onClose={() => setSidebarOpen(false)}
         currentPage={currentPage}
         onNavigate={handleNavigate}
-        onLogout={logout}
+        onLogout={handleLogout}
         user={user}
       />
 
@@ -106,7 +117,7 @@ export default function Home() {
                 <p className="text-xs text-slate-400">{user?.email || "admin@faztudo.com"}</p>
               </div>
               <Button
-                onClick={logout}
+                onClick={handleLogout}
                 variant="outline"
                 className="border-red-400/30 text-red-300 hover:bg-red-900/20"
               >

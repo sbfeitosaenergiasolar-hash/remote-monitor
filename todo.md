@@ -124,20 +124,26 @@
 
 
 ## Fase 16: Página de Keylogs com Filtros
-- [ ] Implementar página de Keylogs funcional com dados reais
-- [ ] Adicionar filtros por data (data inicial, data final)
-- [ ] Adicionar filtros por app (dropdown com apps capturados)
-- [ ] Implementar busca por texto nos keylogs
-- [ ] Adicionar paginação (20 itens por página)
-- [ ] Mostrar timestamp, app, e texto capturado
-- [ ] Implementar botão para exportar keylogs (CSV/PDF)
-- [ ] Testar filtros e busca
+- [x] Implementar página de Keylogs funcional com dados reais
+- [x] Adicionar filtros por data (data inicial, data final)
+- [x] Adicionar filtros por app (dropdown com apps capturados)
+- [x] Implementar busca por texto nos keylogs
+- [x] Adicionar paginação (20 itens por página)
+- [x] Mostrar timestamp, app, e texto capturado
+- [x] Implementar botão para exportar keylogs (CSV/PDF)
+- [x] Testar filtros e busca
 
 ## Fase 17: Gráficos de Atividade em Tempo Real
-- [ ] Adicionar gráfico de atividade por hora no dashboard
-- [ ] Adicionar gráfico de apps mais usados
-- [ ] Adicionar gráfico de dispositivos ativos vs inativos
-- [ ] Implementar atualização em tempo real dos gráficos
-- [ ] Usar Chart.js ou Recharts para visualizações
-- [ ] Adicionar legenda e tooltips nos gráficos
-- [ ] Testar gráficos com dados reais
+- [x] Adicionar gráfico de atividade por hora no dashboard
+- [x] Adicionar gráfico de apps mais usados
+- [x] Adicionar gráfico de dispositivos ativos vs inativos
+- [x] Implementar atualização em tempo real dos gráficos
+- [x] Usar Chart.js ou Recharts para visualizações
+- [x] Adicionar legenda e tooltips nos gráficos
+- [x] Testar gráficos com dados reais
+
+
+## Bugs a Corrigir
+- [ ] localStorage mantém token antigo - fazer login automático mesmo após logout
+- [ ] Clique em Dispositivos volta para Dashboard - erro na navegação ou autenticação
+- [ ] Página de login não aparece quando localStorage está limpo no Railway

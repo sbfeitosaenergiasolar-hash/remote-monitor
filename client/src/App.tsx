@@ -18,22 +18,21 @@ function App() {
 
   // Verificar autenticação ao carregar
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
-    if (token) {
-      // Simular carregamento de usuário
-      setUser({
-        email: "admin@faztudo.com",
-        name: "Administrador",
-      });
-      setIsAuthenticated(true);
-    }
+    // Sempre começar com não autenticado
+    // Deixar o usuário fazer login manualmente
+    setIsAuthenticated(false);
+    setUser(undefined);
     setLoading(false);
   }, []);
 
   const handleLogin = (email: string, password: string) => {
     // Validação simples (credenciais de teste)
     if (email && password) {
-      localStorage.setItem("auth_token", "token_" + Date.now());
+      // Criar token com timestamp para evitar reutilização
+      const token = "token_" + Date.now() + "_" + Math.random();
+      localStorage.setItem("auth_token", token);
+      localStorage.setItem("auth_timestamp", Date.now().toString());
+      
       setUser({
         email: email,
         name: email.split("@")[0],
@@ -43,7 +42,15 @@ function App() {
   };
 
   const handleLogout = () => {
+    // Limpar TODOS os dados de autenticação
     localStorage.removeItem("auth_token");
+    localStorage.removeItem("auth_timestamp");
+    localStorage.removeItem("user_email");
+    localStorage.removeItem("user_name");
+    
+    // Limpar sessionStorage também
+    sessionStorage.clear();
+    
     setUser(undefined);
     setIsAuthenticated(false);
   };
