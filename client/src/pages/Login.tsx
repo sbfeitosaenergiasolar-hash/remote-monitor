@@ -2,22 +2,45 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 interface LoginProps {
-  onLogin: (email: string, password: string) => void;
+  onLogin: () => void;
   loading?: boolean;
 }
 
-export default function Login({ onLogin, loading = false }: LoginProps) {
+export default function Login({ onLogin, loading: externalLoading = false }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [localLoading, setLocalLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const utils = trpc.useUtils();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password) {
-      onLogin(email, password);
+    if (!email || !password) return;
+
+    setLocalLoading(true);
+    try {
+      // Aqui você faria a chamada tRPC para login se tivesse um endpoint
+      // Por enquanto, vamos simular o login
+      localStorage.setItem("auth_token", "token_" + Date.now());
+      
+      // Invalidar cache de autenticação para forçar reload
+      await utils.auth.me.invalidate();
+      
+      toast.success("Login realizado com sucesso!");
+      onLogin();
+    } catch (error: any) {
+      toast.error(error?.message || "Erro ao fazer login");
+      console.error("Login error:", error);
+    } finally {
+      setLocalLoading(false);
     }
   };
+
+  const loading = externalLoading || localLoading;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">

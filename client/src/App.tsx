@@ -3,50 +3,19 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { useAuth } from "./_core/hooks/useAuth";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 
-interface User {
-  email: string;
-  name: string;
-}
+function AppContent() {
+  const { user, loading, isAuthenticated } = useAuth({
+    redirectOnUnauthenticated: false,
+  });
+  const [showLogin, setShowLogin] = useState(!isAuthenticated);
 
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | undefined>();
-  const [loading, setLoading] = useState(true);
-
-  // Verificar autenticação ao carregar
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
-    if (token) {
-      // Simular carregamento de usuário
-      setUser({
-        email: "admin@faztudo.com",
-        name: "Administrador",
-      });
-      setIsAuthenticated(true);
-    }
-    setLoading(false);
-  }, []);
-
-  const handleLogin = (email: string, password: string) => {
-    // Validação simples (credenciais de teste)
-    if (email && password) {
-      localStorage.setItem("auth_token", "token_" + Date.now());
-      setUser({
-        email: email,
-        name: email.split("@")[0],
-      });
-      setIsAuthenticated(true);
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("auth_token");
-    setUser(undefined);
-    setIsAuthenticated(false);
-  };
+    setShowLogin(!isAuthenticated);
+  }, [isAuthenticated]);
 
   if (loading) {
     return (
@@ -59,16 +28,25 @@ function App() {
     );
   }
 
+  return showLogin ? (
+    <Login
+      onLogin={() => {
+        setShowLogin(false);
+      }}
+      loading={false}
+    />
+  ) : (
+    <Home />
+  );
+}
+
+function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
-          {!isAuthenticated ? (
-            <Login onLogin={handleLogin} loading={false} />
-          ) : (
-            <Home user={user} onLogout={handleLogout} />
-          )}
+          <AppContent />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
