@@ -29,13 +29,13 @@ export default function Keylogs() {
 
   // Extrair apps únicos
   const uniqueApps = useMemo(
-    () => Array.from(new Set(keylogs.map((log) => log.appName))),
+    () => Array.from(new Set(keylogs.map((log: any) => log.appName))) as string[],
     [keylogs]
   );
 
   // Filtrar keylogs
   const filteredKeylogs = useMemo(() => {
-    return keylogs.filter((log) => {
+    return keylogs.filter((log: any) => {
       // Filtro por texto
       if (
         searchText &&
@@ -75,13 +75,13 @@ export default function Keylogs() {
   const handleExportCSV = () => {
     const csv = [
       ["Data", "App", "Texto"],
-      ...filteredKeylogs.map((log) => [
+      ...filteredKeylogs.map((log: any) => [
         new Date(log.createdAt).toLocaleString("pt-BR"),
         log.appName,
         log.keyText,
       ]),
     ]
-      .map((row) => row.map((cell) => `"${cell}"`).join(","))
+      .map((row: any) => row.map((cell: any) => `"${cell}"`).join(","))
       .join("\n");
 
     const blob = new Blob([csv], { type: "text/csv" });
@@ -196,9 +196,9 @@ export default function Keylogs() {
               className="w-full bg-slate-700 border border-slate-600 text-white rounded px-3 py-2 placeholder:text-slate-500"
             >
               <option value="">Todos os apps</option>
-              {uniqueApps.map((app) => (
+              {uniqueApps.map((app: string) => (
                 <option key={app} value={app}>
-                  {app}
+                  {app as React.ReactNode}
                 </option>
               ))}
             </select>
