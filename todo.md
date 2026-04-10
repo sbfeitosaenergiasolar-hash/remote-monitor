@@ -58,3 +58,12 @@
 - [x] Testar autenticação
 - [x] Testar responsividade
 - [x] Salvar checkpoint final
+
+
+## Fase 10: Refatoração da Tela de Detalhes
+- [x] Adicionar abas (Informações, Comandos, Screenshots, Keylogs)
+- [x] Implementar visualização ao vivo do dispositivo
+- [x] Adicionar botões de ação no topo (Screenshot, Parar, Controle, Travar, Remover)
+- [x] Remover botão "Controlar" da lista de dispositivos
+- [x] Testar nova estrutura
+- [x] Salvar checkpoint refatorado
