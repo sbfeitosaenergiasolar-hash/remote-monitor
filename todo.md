@@ -154,3 +154,7 @@
 - [x] Manter página ao recarregar (F5)
 - [x] Sincronizar URL com estado de página
 - [x] Testar navegação e reload
+
+
+## Bugs Resolvidos (Continuação)
+- [x] Página de Keylogs volta para Dashboard - resolvido com URL-based routing
