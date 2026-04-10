@@ -87,3 +87,14 @@
 - [x] Mostrar banco na lista de dispositivos
 - [x] Testar alertas sonoros e visuais
 - [x] Salvar checkpoint com alertas implementados
+
+
+## Fase 13: Sistema de Keylogs com Hist\u00f3rico
+## Fase 13: Sistema de Keylogs com Histórico
+- [x] Criar estrutura de dados para keylogs (timestamp, app, texto)
+- [x] Implementar aba Keylogs com lista de digitações
+- [x] Adicionar botão para remover keylogs (individual e em lote)
+- [x] Criar aba Histórico para keylogs removidos
+- [x] Implementar botão restaurar keylogs
+- [x] Testar remoção e restauração
+- [x] Salvar checkpoint com keylogs implementados

