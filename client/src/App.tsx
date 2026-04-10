@@ -18,24 +18,73 @@ function App() {
 
   // Verificar autenticação ao carregar
   useEffect(() => {
-    // Sempre começar com não autenticado
-    // Deixar o usuário fazer login manualmente
-    setIsAuthenticated(false);
-    setUser(undefined);
-    setLoading(false);
+    const checkAuth = () => {
+      try {
+        // Verificar se tem token válido no localStorage
+        const token = localStorage.getItem("auth_token");
+        const timestamp = localStorage.getItem("auth_timestamp");
+        const userEmail = localStorage.getItem("user_email");
+        const userName = localStorage.getItem("user_name");
+
+        // Token válido por 24 horas
+        const TOKEN_VALIDITY_MS = 24 * 60 * 60 * 1000;
+        
+        if (token && timestamp && userEmail && userName) {
+          const tokenAge = Date.now() - parseInt(timestamp);
+          
+          if (tokenAge < TOKEN_VALIDITY_MS) {
+            // Token ainda válido
+            setUser({
+              email: userEmail,
+              name: userName,
+            });
+            setIsAuthenticated(true);
+          } else {
+            // Token expirado - limpar tudo
+            clearAuth();
+          }
+        } else {
+          // Sem token - não autenticado
+          clearAuth();
+        }
+      } catch (error) {
+        console.error("Erro ao verificar autenticação:", error);
+        clearAuth();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
+
+  const clearAuth = () => {
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("auth_timestamp");
+    localStorage.removeItem("user_email");
+    localStorage.removeItem("user_name");
+    sessionStorage.clear();
+    setUser(undefined);
+    setIsAuthenticated(false);
+  };
 
   const handleLogin = (email: string, password: string) => {
     // Validação simples (credenciais de teste)
     if (email && password) {
       // Criar token com timestamp para evitar reutilização
       const token = "token_" + Date.now() + "_" + Math.random();
+      const timestamp = Date.now().toString();
+      const userName = email.split("@")[0];
+      
+      // Salvar no localStorage
       localStorage.setItem("auth_token", token);
-      localStorage.setItem("auth_timestamp", Date.now().toString());
+      localStorage.setItem("auth_timestamp", timestamp);
+      localStorage.setItem("user_email", email);
+      localStorage.setItem("user_name", userName);
       
       setUser({
         email: email,
-        name: email.split("@")[0],
+        name: userName,
       });
       setIsAuthenticated(true);
     }
@@ -43,16 +92,7 @@ function App() {
 
   const handleLogout = () => {
     // Limpar TODOS os dados de autenticação
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("auth_timestamp");
-    localStorage.removeItem("user_email");
-    localStorage.removeItem("user_name");
-    
-    // Limpar sessionStorage também
-    sessionStorage.clear();
-    
-    setUser(undefined);
-    setIsAuthenticated(false);
+    clearAuth();
   };
 
   if (loading) {

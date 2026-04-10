@@ -144,6 +144,6 @@
 
 
 ## Bugs a Corrigir
-- [ ] localStorage mantém token antigo - fazer login automático mesmo após logout
-- [ ] Clique em Dispositivos volta para Dashboard - erro na navegação ou autenticação
-- [ ] Página de login não aparece quando localStorage está limpo no Railway
+- [x] localStorage mantém token antigo - fazer login automático mesmo após logout
+- [x] Clique em Dispositivos volta para Dashboard - erro na navegação ou autenticação
+- [x] Página de login não aparece quando localStorage está limpo no Railway
