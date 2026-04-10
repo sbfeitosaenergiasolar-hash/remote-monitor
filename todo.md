@@ -67,3 +67,13 @@
 - [x] Remover botão "Controlar" da lista de dispositivos
 - [x] Testar nova estrutura
 - [x] Salvar checkpoint refatorado
+
+
+## Fase 11: Sistema de Trava de Tela com Senha
+- [x] Criar componente LockedScreen com modal de trava
+- [x] Implementar campo de entrada de senha
+- [x] Validação de senha correta (apenas admin consegue destravar)
+- [x] Integrar trava na tela de detalhes
+- [x] Feedback visual de tela travada
+- [x] Testar trava e desbloqueio
+- [x] Salvar checkpoint com trava implementada

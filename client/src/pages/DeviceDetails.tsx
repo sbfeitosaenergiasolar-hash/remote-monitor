@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import LockedScreen from "@/components/LockedScreen";
 
 interface DeviceDetailsProps {
   deviceId: string;
@@ -17,6 +18,7 @@ export default function DeviceDetails({
   const [activeTab, setActiveTab] = useState("info");
   const [isLiveActive, setIsLiveActive] = useState(true);
   const [isControlActive, setIsControlActive] = useState(false);
+  const [isScreenLocked, setIsScreenLocked] = useState(false);
 
   const handleScreenshot = () => {
     alert(`📸 Screenshot capturado de ${deviceName}`);
@@ -37,7 +39,13 @@ export default function DeviceDetails({
   };
 
   const handleLockScreen = () => {
-    alert("🔒 Tela travada permanentemente");
+    setIsScreenLocked(true);
+    alert("🔒 Tela travada! Digite a senha para destravar.");
+  };
+
+  const handleUnlockScreen = () => {
+    setIsScreenLocked(false);
+    alert("🔓 Tela desbloqueada com sucesso!");
   };
 
   const handleRemoveDevice = () => {
@@ -46,6 +54,16 @@ export default function DeviceDetails({
       onBack();
     }
   };
+
+  // Se a tela está travada, mostrar apenas o componente de trava
+  if (isScreenLocked) {
+    return (
+      <LockedScreen
+        deviceName={deviceName}
+        onUnlock={handleUnlockScreen}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 md:p-8">
