@@ -133,7 +133,7 @@ export const appRouter = router({
         logoUrl: z.string().url().optional(),
         protectFromUninstall: z.boolean().default(true),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         try {
           // Criar conteúdo do APK em memória
           const zip = new JSZip();
@@ -146,17 +146,40 @@ export const appRouter = router({
           
           const apkBuffer = await zip.generateAsync({ type: 'nodebuffer' });
 
-          // Salvar APK no S3 (sem extensão .apk para contornar restrições)
-          const { url } = await storagePut(
-            `apk/FazTudo-Monitor-${Date.now()}`,
-            apkBuffer,
-            "application/vnd.android.package-archive"
-          );
+          // Tentar salvar no S3 primeiro (para Manus)
+          // Se falhar, salvar localmente (para Railway)
+          let downloadUrl: string;
+          
+          try {
+            const { url } = await storagePut(
+              `apk/FazTudo-Monitor-${Date.now()}`,
+              apkBuffer,
+              "application/vnd.android.package-archive"
+            );
+            downloadUrl = url;
+          } catch (s3Error) {
+            // Fallback: salvar localmente
+            const apkDir = path.join(process.cwd(), 'public', 'apks');
+            if (!fs.existsSync(apkDir)) {
+              fs.mkdirSync(apkDir, { recursive: true });
+            }
+            
+            const timestamp = Date.now();
+            const apkFileName = `FazTudo-Monitor-${timestamp}`;
+            const apkPath = path.join(apkDir, apkFileName);
+            
+            fs.writeFileSync(apkPath, apkBuffer);
+            
+            // Construir URL pública
+            const protocol = ctx.req.protocol || 'https';
+            const host = ctx.req.get('host') || 'localhost:3000';
+            downloadUrl = `${protocol}://${host}/apks/${apkFileName}`;
+          }
 
           // Retornar URL de download permanente
           return {
             success: true,
-            downloadUrl: url,
+            downloadUrl: downloadUrl,
             message: "APK gerado com sucesso!",
           };
         } catch (error) {
