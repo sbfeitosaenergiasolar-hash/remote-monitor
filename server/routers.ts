@@ -37,8 +37,10 @@ export const appRouter = router({
           throw new Error("Invalid email or password");
         }
 
-        const sessionToken = await sdk.createSessionToken(user.openId, {
-          name: user.name || "",
+        const sessionToken = await sdk.signSession({
+          userId: user.id,
+          email: user.email || "",
+        }, {
           expiresInMs: ONE_YEAR_MS,
         });
 
