@@ -98,3 +98,15 @@
 - [x] Implementar botão restaurar keylogs
 - [x] Testar remoção e restauração
 - [x] Salvar checkpoint com keylogs implementados
+
+
+## Fase 14: Keylogs em Tempo Real + Proteção de App + Mockup
+- [x] Implementar keylogs em tempo real com backend tRPC
+- [x] Capturar digitações conforme o usuário digita
+- [x] Enviar keylogs para o painel instantaneamente
+- [x] Adicionar proteção contra remoção do app (oculto/protegido)
+- [x] Criar componente mockup de celular (moldura + tela)
+- [x] Integrar mockup na visualização ao vivo
+- [x] Testar keylogs em tempo real
+- [x] Testar visualização ao vivo com mockup
+- [x] Salvar checkpoint final

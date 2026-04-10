@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LockedScreen from "@/components/LockedScreen";
+import PhoneFrame from "@/components/PhoneFrame";
 
 interface DeviceDetailsProps {
   deviceId: string;
@@ -454,12 +455,8 @@ export default function DeviceDetails({
             <h3 className="text-cyan-400 font-bold mb-4">
               🔴 Visualização Ao Vivo
             </h3>
-            <div className="bg-black rounded-lg overflow-hidden aspect-video flex items-center justify-center border-2 border-red-500">
-              <div className="text-center">
-                <p className="text-4xl mb-2">📱</p>
-                <p className="text-slate-400">Transmissão ao vivo do dispositivo</p>
-                <p className="text-red-500 text-sm mt-2">● Gravando</p>
-              </div>
+            <div className="flex justify-center py-8">
+              <PhoneFrame status="Transmissão ao vivo do dispositivo" />
             </div>
           </Card>
         </div>
