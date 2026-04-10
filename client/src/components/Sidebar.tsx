@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 
-type PageType = "dashboard" | "devices" | "alerts" | "events" | "map" | "reports" | "compliance" | "apk-builder";
+type PageType = "dashboard" | "devices" | "alerts" | "events" | "map" | "reports" | "compliance" | "apk-builder" | "keylogs";
 
 interface User {
   email?: string | null;
@@ -36,6 +36,7 @@ const menuItems = [
   { id: "map", label: "Mapa", icon: Map },
   { id: "reports", label: "Relatórios", icon: BarChart3 },
   { id: "compliance", label: "Conformidade", icon: Shield },
+  { id: "keylogs", label: "Keylogs", icon: BarChart3 },
 ];
 
 export default function Sidebar({

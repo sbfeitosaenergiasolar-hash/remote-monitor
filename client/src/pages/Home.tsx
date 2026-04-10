@@ -12,8 +12,9 @@ import MapPage from "./Map";
 import ReportsPage from "./Reports";
 import CompliancePage from "./Compliance";
 import APKBuilderPage from "./APKBuilder";
+import KeylogsPage from "./Keylogs";
 
-type PageType = "dashboard" | "devices" | "alerts" | "events" | "map" | "reports" | "compliance" | "apk-builder";
+type PageType = "dashboard" | "devices" | "alerts" | "events" | "map" | "reports" | "compliance" | "apk-builder" | "keylogs";
 
 export default function Home() {
   const { user, logout } = useAuth();
@@ -60,6 +61,8 @@ export default function Home() {
         return <CompliancePage />;
       case "apk-builder":
         return <APKBuilderPage />;
+      case "keylogs":
+        return <KeylogsPage />;
       default:
         return <Dashboard />;
     }

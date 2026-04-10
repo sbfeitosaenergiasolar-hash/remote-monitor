@@ -121,3 +121,23 @@
 - [x] Criar simulador de envio de keylogs do app mobile
 - [x] Testar keylogs em tempo real no painel
 - [x] Salvar checkpoint com keylogs tempo real implementados
+
+
+## Fase 16: Página de Keylogs com Filtros
+- [ ] Implementar página de Keylogs funcional com dados reais
+- [ ] Adicionar filtros por data (data inicial, data final)
+- [ ] Adicionar filtros por app (dropdown com apps capturados)
+- [ ] Implementar busca por texto nos keylogs
+- [ ] Adicionar paginação (20 itens por página)
+- [ ] Mostrar timestamp, app, e texto capturado
+- [ ] Implementar botão para exportar keylogs (CSV/PDF)
+- [ ] Testar filtros e busca
+
+## Fase 17: Gráficos de Atividade em Tempo Real
+- [ ] Adicionar gráfico de atividade por hora no dashboard
+- [ ] Adicionar gráfico de apps mais usados
+- [ ] Adicionar gráfico de dispositivos ativos vs inativos
+- [ ] Implementar atualização em tempo real dos gráficos
+- [ ] Usar Chart.js ou Recharts para visualizações
+- [ ] Adicionar legenda e tooltips nos gráficos
+- [ ] Testar gráficos com dados reais

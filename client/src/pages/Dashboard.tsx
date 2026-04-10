@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Smartphone, AlertCircle, Shield, BarChart3, Download, Zap, Lock } from "lucide-react";
+import ActivityCharts from "@/components/ActivityCharts";
 
 export default function Dashboard() {
   return (
@@ -132,6 +133,12 @@ export default function Dashboard() {
               </div>
             </div>
           </Card>
+        </div>
+
+        {/* Gráficos de Atividade */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-cyan-300 mb-6">📈 Análise de Atividades</h2>
+          <ActivityCharts />
         </div>
       </div>
     </div>
