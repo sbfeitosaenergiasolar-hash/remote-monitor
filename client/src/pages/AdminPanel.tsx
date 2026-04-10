@@ -2,7 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Download, LogOut } from "lucide-react";
-import { getLoginUrl } from "@/const";
+
 import { useState } from "react";
 
 export default function AdminPanel() {
@@ -71,7 +71,7 @@ export default function AdminPanel() {
           <h1 className="text-3xl font-bold text-white mb-4">Painel de Administração</h1>
           <p className="text-slate-400 mb-8">Faça login para continuar</p>
           <Button
-            onClick={() => (window.location.href = getLoginUrl())}
+            onClick={() => (window.location.href = "/login")}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             Entrar
