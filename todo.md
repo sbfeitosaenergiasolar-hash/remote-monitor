@@ -158,3 +158,7 @@
 
 ## Bugs Resolvidos (Continuação)
 - [x] Página de Keylogs volta para Dashboard - resolvido com URL-based routing
+
+
+## Bugs Resolvidos (Continuação 2)
+- [x] Keylogs redireciona ao pressionar F5 - resolvido com URL-based routing
