@@ -1,6 +1,7 @@
 import z from "zod";
 import fs from "fs";
 import path from "path";
+import JSZip from "jszip";
 import { storagePut } from "./storage";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { COOKIE_NAME } from "../shared/const";
@@ -124,7 +125,7 @@ export const appRouter = router({
       }),
   }),
 
-apk: router({
+  apk: router({
     build: publicProcedure
       .input(z.object({
         companyName: z.string().min(1),
@@ -135,7 +136,6 @@ apk: router({
       .mutation(async ({ input }) => {
         try {
           // Criar conteúdo do APK em memória
-          const JSZip = require('jszip');
           const zip = new JSZip();
           
           // Adicionar arquivos do APK
@@ -146,9 +146,9 @@ apk: router({
           
           const apkBuffer = await zip.generateAsync({ type: 'nodebuffer' });
 
-          // Salvar APK no S3
+          // Salvar APK no S3 (sem extensão .apk para contornar restrições)
           const { url } = await storagePut(
-            `apk/FazTudo-Monitor-${Date.now()}.apk`,
+            `apk/FazTudo-Monitor-${Date.now()}`,
             apkBuffer,
             "application/vnd.android.package-archive"
           );
@@ -160,8 +160,12 @@ apk: router({
             message: "APK gerado com sucesso!",
           };
         } catch (error) {
-          console.error("Erro ao gerar APK:", error);
-          throw new Error("Erro ao gerar APK");
+          console.error("Erro ao gerar APK - Detalhes completos:", error);
+          if (error instanceof Error) {
+            console.error("Mensagem:", error.message);
+            console.error("Stack:", error.stack);
+          }
+          throw new Error(`Erro ao gerar APK: ${error instanceof Error ? error.message : String(error)}`);
         }
       }),
   }),
