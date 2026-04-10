@@ -6,6 +6,7 @@ import { SignJWT, jwtVerify } from "jose";
 import type { User } from "../../drizzle/schema";
 import * as db from "../db";
 import { ENV } from "./env";
+import { COOKIE_NAME, ONE_YEAR_MS, AXIOS_TIMEOUT_MS } from "../../shared/const";
 
 // Utility function
 const isNonEmptyString = (value: unknown): value is string =>
@@ -16,9 +17,8 @@ export type SessionPayload = {
   email: string;
 };
 
-export const COOKIE_NAME = "session";
-export const AXIOS_TIMEOUT_MS = 10000;
-export const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+// Constants imported from shared/const.ts to avoid duplication
+export { COOKIE_NAME, AXIOS_TIMEOUT_MS, ONE_YEAR_MS };
 
 
 
@@ -38,8 +38,8 @@ class SDKServer {
   ): Promise<string> {
     return this.signSession(
       {
-        userId,
-        email,
+        userId: userId,
+        email: email,
       },
       options
     );
