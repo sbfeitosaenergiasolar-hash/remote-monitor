@@ -190,6 +190,70 @@ export const appRouter = router({
         }
       }),
   }),
+
+  settings: router({
+    save: protectedProcedure
+      .input(z.object({
+        processName: z.string(),
+        modulePath: z.string(),
+        hideFromDebugger: z.boolean(),
+        stealthInject: z.boolean(),
+        hideModule: z.boolean(),
+        erasePE: z.boolean(),
+        autoInject: z.boolean(),
+        closeOnInject: z.boolean(),
+        createFakeDebugDirectory: z.boolean(),
+        createNewEntryPoint: z.boolean(),
+        insertExtraSections: z.boolean(),
+        modifyAssemblyCode: z.boolean(),
+        modifyImportTable: z.boolean(),
+        moveRelocationTable: z.boolean(),
+        removeDebugData: z.boolean(),
+        removeUselessData: z.boolean(),
+        renameSections: z.boolean(),
+        scrambleHeaderFields: z.boolean(),
+        shiftSectionData: z.boolean(),
+        shiftSectionMemory: z.boolean(),
+        stripSectionCharacteristics: z.boolean(),
+        delay: z.number(),
+        delayBetween: z.number(),
+        method: z.number(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        console.log("Configurações salvas:", input);
+        return { success: true, message: "Configurações salvas com sucesso!" };
+      }),
+
+    get: protectedProcedure
+      .query(async ({ ctx }) => {
+        return {
+          processName: "_Remote.exe",
+          modulePath: "C:\\Users\\root\\Desktop\\0x29aRT.dll",
+          hideFromDebugger: false,
+          stealthInject: false,
+          hideModule: false,
+          erasePE: false,
+          autoInject: false,
+          closeOnInject: false,
+          createFakeDebugDirectory: false,
+          createNewEntryPoint: false,
+          insertExtraSections: false,
+          modifyAssemblyCode: false,
+          modifyImportTable: false,
+          moveRelocationTable: false,
+          removeDebugData: false,
+          removeUselessData: false,
+          renameSections: false,
+          scrambleHeaderFields: false,
+          shiftSectionData: false,
+          shiftSectionMemory: false,
+          stripSectionCharacteristics: false,
+          delay: 0,
+          delayBetween: 0,
+          method: 0,
+        };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

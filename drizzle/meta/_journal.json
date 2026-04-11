@@ -43,6 +43,13 @@
       "when": 1775793621408,
       "tag": "0005_lame_chronomancer",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1775868868390,
+      "tag": "0006_opposite_legion",
+      "breakpoints": true
     }
   ]
 }

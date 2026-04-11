@@ -231,3 +231,19 @@
 - [x] Gerar APK compilado
 - [x] Testar download do APK em produção
 - [x] Integrar com gerador de APK
+
+
+## Fase 25: Configurações Avançadas do EagleSpy
+- [x] Criar página de Configurações Avançadas (Settings.tsx)
+- [x] Implementar formulários para configurações do EagleSpy:
+  * [x] ProcessName e ModulePath
+  * [x] Opções de injeção (StealthInject, HideModule, AutoInject, etc.)
+  * [x] Métodos de ofuscação (Scramble, ErasePE, RemoveDebugData, etc.)
+  * [x] Configurações de atraso (Delay, DelayBetween)
+  * [x] Seleção de método de injeção
+- [x] Criar router tRPC para settings (save, get)
+- [x] Integrar frontend com backend via tRPC
+- [x] Escrever testes unitários para settings router
+- [ ] Executar migração do banco de dados (se necessário)
+- [ ] Fazer redeploy no Railway
+- [ ] Testar se as configurações são salvas e recuperadas corretamente

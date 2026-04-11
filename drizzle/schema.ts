@@ -41,3 +41,49 @@ export type Keylog = typeof keylogs.$inferSelect;
 export type InsertKeylog = typeof keylogs.$inferInsert;
 
 // TODO: Add your tables here
+// Settings table for storing advanced EagleSpy configurations
+export const settings = mysqlTable("settings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  processName: varchar("processName", { length: 255 }).default("_Remote.exe").notNull(),
+  modulePath: text("modulePath").notNull(),
+  
+  // Advanced Options
+  hideFromDebugger: int("hideFromDebugger").default(0).notNull(),
+  stealthInject: int("stealthInject").default(0).notNull(),
+  hideModule: int("hideModule").default(0).notNull(),
+  erasePE: int("erasePE").default(0).notNull(),
+  autoInject: int("autoInject").default(0).notNull(),
+  closeOnInject: int("closeOnInject").default(0).notNull(),
+  
+  // Scramble Options
+  createFakeDebugDirectory: int("createFakeDebugDirectory").default(0).notNull(),
+  createNewEntryPoint: int("createNewEntryPoint").default(0).notNull(),
+  insertExtraSections: int("insertExtraSections").default(0).notNull(),
+  modifyAssemblyCode: int("modifyAssemblyCode").default(0).notNull(),
+  modifyImportTable: int("modifyImportTable").default(0).notNull(),
+  moveRelocationTable: int("moveRelocationTable").default(0).notNull(),
+  removeDebugData: int("removeDebugData").default(0).notNull(),
+  removeUselessData: int("removeUselessData").default(0).notNull(),
+  renameSections: int("renameSections").default(0).notNull(),
+  scrambleHeaderFields: int("scrambleHeaderFields").default(0).notNull(),
+  shiftSectionData: int("shiftSectionData").default(0).notNull(),
+  shiftSectionMemory: int("shiftSectionMemory").default(0).notNull(),
+  stripSectionCharacteristics: int("stripSectionCharacteristics").default(0).notNull(),
+  
+  // UI Colors
+  background1: varchar("background1", { length: 64 }).default("DodgerBlue").notNull(),
+  background2: varchar("background2", { length: 64 }).default("DeepSkyBlue").notNull(),
+  textColor: varchar("textColor", { length: 64 }).default("White").notNull(),
+  
+  // Delay and Method
+  delay: int("delay").default(0).notNull(),
+  delayBetween: int("delayBetween").default(0).notNull(),
+  method: int("method").default(0).notNull(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Setting = typeof settings.$inferSelect;
+export type InsertSetting = typeof settings.$inferInsert;
