@@ -6,7 +6,7 @@ import { Download, Loader2, Copy, Check, Shield, ShieldOff } from "lucide-react"
 import { trpc } from "@/lib/trpc";
 
 export default function APKBuilderPage() {
-  const [companyName, setCompanyName] = useState("FazTudo");
+  const [companyName, setCompanyName] = useState("FazTudo"); // v2
   const [companyUrl, setCompanyUrl] = useState("https://faztudo.com.br");
   const [logoUrl, setLogoUrl] = useState("https://via.placeholder.com/150");
   const [isBuilding, setIsBuilding] = useState(false);
