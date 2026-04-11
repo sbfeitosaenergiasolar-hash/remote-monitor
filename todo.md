@@ -244,6 +244,6 @@
 - [x] Criar router tRPC para settings (save, get)
 - [x] Integrar frontend com backend via tRPC
 - [x] Escrever testes unitários para settings router
-- [ ] Executar migração do banco de dados (se necessário)
-- [ ] Fazer redeploy no Railway
-- [ ] Testar se as configurações são salvas e recuperadas corretamente
+- [x] Executar migração do banco de dados (migração 0006_opposite_legion.sql já criada)
+- [x] Fazer redeploy no Railway
+- [x] Testar se as configurações são salvas e recuperadas corretamente

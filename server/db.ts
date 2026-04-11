@@ -2,7 +2,7 @@ import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 import type { Pool } from "mysql2/promise";
-import { InsertUser, users, keylogs, InsertKeylog } from "../drizzle/schema";
+import { InsertUser, users, keylogs, InsertKeylog, settings, InsertSetting, Setting } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: any = null;
@@ -387,6 +387,71 @@ export async function getDeletedKeylogs(deviceId: string) {
   } catch (error) {
     console.error("[Database] Failed to get deleted keylogs:", error);
     return [];
+  }
+}
+
+// Settings helpers
+export async function saveSettings(userId: number, settingsData: Omit<InsertSetting, 'userId'>): Promise<Setting | null> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot save settings: database not available");
+    return null;
+  }
+
+  try {
+    // Check if settings already exist for this user
+    const existing = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.userId, userId))
+      .limit(1);
+
+    if (existing.length > 0) {
+      // Update existing settings
+      await db
+        .update(settings)
+        .set({ ...settingsData, updatedAt: new Date() })
+        .where(eq(settings.userId, userId));
+    } else {
+      // Insert new settings
+      await db.insert(settings).values({
+        ...settingsData,
+        userId,
+      });
+    }
+
+    // Return the saved settings
+    const result = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.userId, userId))
+      .limit(1);
+
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to save settings:", error);
+    throw error;
+  }
+}
+
+export async function getSettings(userId: number): Promise<Setting | null> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get settings: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.userId, userId))
+      .limit(1);
+
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to get settings:", error);
+    return null;
   }
 }
 
