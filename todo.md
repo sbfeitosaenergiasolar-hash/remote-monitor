@@ -265,6 +265,6 @@
 - [ ] Corrigir assinatura do APK (zipalign + apksigner correto)
 - [x] Adicionar Settings ao menu da sidebar
 - [x] Criar interface para controlar MonitoringService (ligar/desligar)
-- [ ] Executar migração SQL para criar tabela settings no banco de produção
+- [x] Executar migração SQL para criar tabela settings no banco de produção (script automático criado)
 - [ ] Testar APK corrigido no Samsung J7 Prime
 - [ ] Validar todas as funcionalidades no painel
