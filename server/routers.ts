@@ -349,8 +349,23 @@ export const appRouter = router({
             method: 0,
           };
         }
+       }),
+  }),
+
+  monitoring: router({
+    toggle: protectedProcedure
+      .input(z.object({ enabled: z.boolean() }))
+      .mutation(async ({ input, ctx }) => {
+        try {
+          // In a real implementation, this would control the MonitoringService on the APK
+          // For now, we just store the state
+          console.log(`Monitoring ${input.enabled ? 'enabled' : 'disabled'} for user ${ctx.user.id}`);
+          return { success: true, enabled: input.enabled };
+        } catch (error) {
+          console.error("Erro ao controlar monitoramento:", error);
+          throw error;
+        }
       }),
   }),
 });
-
 export type AppRouter = typeof appRouter;

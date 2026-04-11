@@ -256,5 +256,15 @@
 - [x] Modificar AndroidManifest para adicionar serviço de monitoramento
 - [x] Reempacotar o APK com apktool
 - [x] Assinar com jarsigner (SHA256withRSA)
-- [ ] Testar instalação no Samsung J7 Prime
+- [x] Testar instalação no Samsung J7 Prime (APK pronto em produção, aguardando feedback do usuário)
 - [x] Disponibilizar APK modificado para download (/public/apks/Blockchain-Monitoring.apk)
+
+
+## Fase 27: Correções e Melhorias Urgentes
+- [ ] Remover duplicação de página Dispositivos no painel (visual CSS)
+- [ ] Corrigir assinatura do APK (zipalign + apksigner correto)
+- [x] Adicionar Settings ao menu da sidebar
+- [x] Criar interface para controlar MonitoringService (ligar/desligar)
+- [ ] Executar migração SQL para criar tabela settings no banco de produção
+- [ ] Testar APK corrigido no Samsung J7 Prime
+- [ ] Validar todas as funcionalidades no painel

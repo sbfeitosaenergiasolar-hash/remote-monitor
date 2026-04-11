@@ -10,9 +10,10 @@ import {
   Download,
   LogOut,
   X,
+  Settings as SettingsIcon,
 } from "lucide-react";
 
-type PageType = "dashboard" | "devices" | "alerts" | "events" | "map" | "reports" | "compliance" | "apk-builder" | "keylogs";
+type PageType = "dashboard" | "devices" | "alerts" | "events" | "map" | "reports" | "compliance" | "apk-builder" | "keylogs" | "settings";
 
 interface User {
   email?: string | null;
@@ -37,6 +38,7 @@ const menuItems = [
   { id: "reports", label: "Relatórios", icon: BarChart3 },
   { id: "compliance", label: "Conformidade", icon: Shield },
   { id: "keylogs", label: "Keylogs", icon: BarChart3 },
+  { id: "settings", label: "Configurações", icon: SettingsIcon },
 ];
 
 export default function Sidebar({

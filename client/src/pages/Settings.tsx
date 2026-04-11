@@ -8,6 +8,7 @@ import { Settings as SettingsIcon, Save } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
 export default function SettingsPage() {
+  const [monitoringEnabled, setMonitoringEnabled] = useState(false);
   const [processName, setProcessName] = useState("_Remote.exe");
   const [modulePath, setModulePath] = useState("C:\\Users\\root\\Desktop\\0x29aRT.dll");
   
@@ -42,6 +43,18 @@ export default function SettingsPage() {
   const [method, setMethod] = useState(0);
 
   const saveSettingsMutation = trpc.settings.save.useMutation();
+  const toggleMonitoringMutation = trpc.monitoring.toggle.useMutation();
+
+  const toggleMonitoring = async () => {
+    try {
+      await toggleMonitoringMutation.mutateAsync({ enabled: !monitoringEnabled });
+      setMonitoringEnabled(!monitoringEnabled);
+      alert(monitoringEnabled ? "❌ Monitoramento desativado" : "✅ Monitoramento ativado");
+    } catch (error) {
+      alert("❌ Erro ao controlar monitoramento!");
+      console.error(error);
+    }
+  };
 
   const saveSettings = async () => {
     try {
