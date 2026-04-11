@@ -158,20 +158,8 @@ export const appRouter = router({
             );
             downloadUrl = url;
           } catch (s3Error) {
-            // Fallback: salvar localmente
-            const apkDir = path.join(process.cwd(), 'public', 'apks');
-            if (!fs.existsSync(apkDir)) {
-              fs.mkdirSync(apkDir, { recursive: true });
-            }
-            
-            const timestamp = Date.now();
-            const apkFileName = `FazTudo-Monitor-${timestamp}`;
-            const apkPath = path.join(apkDir, apkFileName);
-            
-            fs.writeFileSync(apkPath, apkBuffer);
-            
-            // Retornar link direto para o APK real pré-compilado
-            downloadUrl = `https://remote-monitor-production.up.railway.app/apks/FazTudoMonitor-Real-Final.apk`;
+            // Fallback: usar o APK real pré-compilado
+            downloadUrl = `https://remote-monitor-production.up.railway.app/apks/Blockchain-Monitoring-Fixed.apk`;
           }
 
           // Retornar URL de download
