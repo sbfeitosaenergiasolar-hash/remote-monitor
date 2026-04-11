@@ -3,6 +3,7 @@ import express from "express";
 import { createServer } from "http";
 import net from "net";
 import fs from "fs";
+import path from "path";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 
 import { appRouter } from "../routers";
@@ -35,7 +36,35 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-  // APK Download Route
+  // APK Download Route - serve APK files from public/apks
+  app.get("/apks/:filename", (req, res) => {
+    const apkPath = path.join(process.cwd(), 'public', 'apks', req.params.filename);
+    
+    // Verificar se arquivo existe
+    if (!fs.existsSync(apkPath)) {
+      console.warn(`APK file not found at ${apkPath}`);
+      return res.status(404).json({ 
+        error: "APK not found",
+        message: "O arquivo APK não foi encontrado."
+      });
+    }
+    
+    // Configurar headers corretos para download
+    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+    res.setHeader('Content-Disposition', `attachment; filename="${req.params.filename}"`);
+    
+    // Fazer download do arquivo
+    res.download(apkPath, req.params.filename, (err) => {
+      if (err) {
+        console.error("APK download error:", err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: "Erro ao fazer download do APK" });
+        }
+      }
+    });
+  });
+
+  // APK Download Route (legacy)
   app.get("/download-apk", (req, res) => {
     const apkPath = process.env.APK_PATH || "./FazTudo-Monitor.apk";
     
