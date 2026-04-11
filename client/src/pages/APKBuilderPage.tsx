@@ -1,8 +1,8 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Download, X } from "lucide-react";
-
+import { Loader2, Download } from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 
 export default function APKBuilderPage() {
@@ -13,6 +13,8 @@ export default function APKBuilderPage() {
   const [isBuilding, setIsBuilding] = useState(false);
   const [buildProgress, setBuildProgress] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+
+  const buildMutation = trpc.apk.build.useMutation();
 
   const handleBuildAPK = async () => {
     if (!companyName.trim() || !companyUrl.trim()) {
@@ -33,20 +35,35 @@ export default function APKBuilderPage() {
       });
     }, 500);
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    clearInterval(interval);
-    setBuildProgress(100);
+    try {
+      const result = await buildMutation.mutateAsync({
+        companyName,
+        companyUrl,
+        logoUrl: logoUrl || undefined,
+        protectFromUninstall: true,
+      });
 
-    const mockUrl = `https://storage.example.com/apks/${companyName.replace(/\s+/g, '-')}-${Date.now()}.apk`;
-    setDownloadUrl(mockUrl);
-    setIsBuilding(false);
+      clearInterval(interval);
+      setBuildProgress(100);
 
-    setTimeout(() => {
-      const link = document.createElement('a');
-      link.href = mockUrl;
-      link.download = `${companyName}-Monitor.apk`;
-      link.click();
-    }, 1000);
+      if (result.success && result.downloadUrl) {
+        setDownloadUrl(result.downloadUrl);
+        
+        setTimeout(() => {
+          const link = document.createElement('a');
+          link.href = result.downloadUrl;
+          link.download = `${companyName}-Monitor.apk`;
+          link.click();
+        }, 1000);
+      } else {
+        alert('Erro ao gerar APK');
+      }
+    } catch (error) {
+      alert('Erro ao gerar APK: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
+      clearInterval(interval);
+    } finally {
+      setIsBuilding(false);
+    }
   };
 
   if (loading) {
@@ -77,7 +94,8 @@ export default function APKBuilderPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
+        <div className="mb-8 flex justify-between items-center">
+          <h1 className="text-4xl font-bold text-cyan-300">🔨 APK Builder</h1>
           <Button
             onClick={logout}
             variant="outline"
@@ -89,8 +107,7 @@ export default function APKBuilderPage() {
 
         <div className="bg-slate-900 border border-cyan-400/30 rounded-lg overflow-hidden">
           <div className="bg-slate-900 border-b border-cyan-400/30 p-6">
-            <h1 className="text-3xl font-bold text-cyan-300">🔨 APK Builder</h1>
-            <p className="text-slate-400 mt-2">Gere seu APK customizado com sua marca</p>
+            <p className="text-slate-400">Gere seu APK customizado com sua marca</p>
           </div>
 
           <div className="p-6">
@@ -177,6 +194,7 @@ export default function APKBuilderPage() {
                 {downloadUrl && (
                   <div className="mt-4 p-3 bg-green-900/20 border border-green-400/30 rounded-lg">
                     <p className="text-green-300 text-sm">✅ APK gerado com sucesso!</p>
+                    <p className="text-slate-400 text-xs mt-2 break-all">{downloadUrl}</p>
                     <Button
                       onClick={() => {
                         const link = document.createElement('a');
@@ -198,45 +216,21 @@ export default function APKBuilderPage() {
 
                 <div className="flex justify-center">
                   <div className="w-64 bg-slate-700 rounded-3xl border-8 border-slate-800 overflow-hidden shadow-2xl">
-                    <div className="bg-black h-6 flex justify-center">
-                      <div className="w-32 h-5 bg-black rounded-b-2xl"></div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-slate-900 to-blue-900 p-4 min-h-96 flex flex-col items-center justify-center">
+                    <div className="bg-black h-96 flex flex-col items-center justify-center p-4">
                       {logoUrl && (
-                        <img
-                          src={logoUrl}
-                          alt="Logo"
-                          className="w-20 h-20 rounded-lg object-cover border-2 border-cyan-400/50 mb-4"
+                        <img 
+                          src={logoUrl} 
+                          alt="Logo" 
+                          className="w-20 h-20 rounded-lg mb-4 object-cover"
                           onError={(e) => {
-                            e.currentTarget.style.display = 'none';
+                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/80';
                           }}
                         />
                       )}
-
-                      <h4 className="text-lg font-bold text-cyan-300 text-center mb-2">
-                        {companyName || 'Seu App'}
-                      </h4>
-
-                      <p className="text-xs text-slate-400 text-center break-all mb-6">
-                        {companyUrl || 'https://seu-site.com'}
-                      </p>
-
-                      <div className="bg-slate-800/50 border border-cyan-400/30 rounded-lg p-3 w-full text-center">
-                        <p className="text-xs text-slate-300">✅ App pronto para instalar</p>
-                      </div>
+                      <p className="text-white text-center font-bold text-sm">{companyName}</p>
+                      <p className="text-slate-400 text-xs text-center mt-2 break-words">{companyUrl}</p>
                     </div>
                   </div>
-                </div>
-
-                <div className="mt-6 bg-slate-700/30 border border-cyan-400/20 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-cyan-300 mb-3">ℹ️ Informações</h4>
-                  <ul className="space-y-2 text-xs text-slate-300">
-                    <li>✓ APK customizado com sua marca</li>
-                    <li>✓ Integrado ao seu painel</li>
-                    <li>✓ Pronto para distribuir</li>
-                    <li>✓ Suporte a múltiplos dispositivos</li>
-                  </ul>
                 </div>
               </div>
             </div>
