@@ -82,13 +82,7 @@ export default function APKBuilderPage() {
 
       if (result.success && result.downloadUrl) {
         setDownloadUrl(result.downloadUrl);
-        
-        setTimeout(() => {
-          const link = document.createElement('a');
-          link.href = result.downloadUrl;
-          link.download = `${appName}-Monitor.apk`;
-          link.click();
-        }, 1000);
+        // Removed auto-download - user can click the button manually
       } else {
         setError('Erro ao gerar APK');
       }
