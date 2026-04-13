@@ -42,7 +42,11 @@ async function startServer() {
 
   // APK Download Route - MUST be before all other middleware to avoid catch-all routes
   app.get("/apks/:filename", (req, res) => {
-    const apkPath = path.join(process.cwd(), 'public', 'apks', req.params.filename);
+    // Use the same path resolution as apk-wrapper-simple.ts
+    const apksDir = process.env.NODE_ENV === 'production' 
+      ? '/app/public/apks'
+      : path.join(process.cwd(), 'public', 'apks');
+    const apkPath = path.join(apksDir, req.params.filename);
     
     // Verificar se arquivo existe
     if (!fs.existsSync(apkPath)) {

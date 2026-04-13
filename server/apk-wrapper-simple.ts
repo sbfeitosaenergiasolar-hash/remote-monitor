@@ -58,7 +58,11 @@ export async function generateSimpleAPKWrapper(options: APKWrapperOptions): Prom
 
     // Simply copy the base APK
     const finalAPKName = `${options.appName.replace(/\s+/g, '-')}-${Date.now()}.apk`;
-    const outputDir = '/app/public/apks';
+    
+    // Use process.cwd() for development, /app for production
+    const outputDir = process.env.NODE_ENV === 'production' 
+      ? '/app/public/apks'
+      : path.join(process.cwd(), 'public/apks');
     
     await execAsync(`mkdir -p ${outputDir}`);
     const finalAPKPath = path.join(outputDir, finalAPKName);
