@@ -144,6 +144,35 @@ export const appRouter = router({
         };
       }),
   }),
+
+  devices: router({
+    register: publicProcedure
+      .input(z.object({
+        deviceId: z.string(),
+        deviceName: z.string(),
+        deviceModel: z.string(),
+        androidVersion: z.string(),
+        appName: z.string(),
+        appVersion: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          console.log('Dispositivo registrado:', input);
+          
+          return {
+            success: true,
+            message: 'Dispositivo registrado com sucesso',
+            deviceId: input.deviceId,
+          };
+        } catch (error) {
+          console.error('Erro ao registrar dispositivo:', error);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Erro ao registrar dispositivo',
+          });
+        }
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
