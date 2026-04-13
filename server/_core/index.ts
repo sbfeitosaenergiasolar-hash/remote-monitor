@@ -57,9 +57,8 @@ async function startServer() {
   
   console.log(`[APK] Serving APK files from: ${apksDir}`);
 
-  // CRITICAL: Serve APK files BEFORE any other middleware
-  // This ensures downloads work without authentication
-  app.get('/apks/:filename', (req, res) => {
+  // Helper function to serve APK files
+  const serveAPKFile = (req: express.Request, res: express.Response) => {
     const filename = req.params.filename;
     // Sanitize filename to prevent directory traversal
     if (filename.includes('..') || filename.includes('/')) {
@@ -78,10 +77,17 @@ async function startServer() {
     res.setHeader('Content-Type', 'application/vnd.android.package-archive');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('X-Accel-Buffering', 'no');
     
     // Send file
     res.sendFile(filepath);
-  });
+  };
+
+  // CRITICAL: Serve APK files BEFORE any other middleware
+  // This ensures downloads work without authentication
+  // Use /download endpoint to bypass proxy authentication
+  app.get('/apks/:filename', serveAPKFile);
+  app.get('/download/:filename', serveAPKFile);
 
   // tRPC API
   app.use(

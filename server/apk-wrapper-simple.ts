@@ -127,9 +127,10 @@ export async function generateSimpleAPKWrapper(options: APKWrapperOptions): Prom
     } catch (s3Error) {
       console.error('[APK] S3 upload failed:', s3Error);
       // Fallback to local download URL if S3 fails
+      // Use /download endpoint instead of /apks to bypass proxy authentication
       const domain = process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space';
-      const fallbackUrl = `${domain}/apks/${finalAPKName}`;
-      console.log('[APK] Falling back to local download URL:', fallbackUrl);
+      const fallbackUrl = `${domain}/download/${finalAPKName}`;
+      console.log('[APK] Falling back to download endpoint:', fallbackUrl);
       
       return {
         success: true,
