@@ -50,15 +50,12 @@ export async function setupVite(app: Express, server: Server) {
 export function serveStatic(app: Express) {
   // Use process.cwd() as fallback if import.meta.dirname is undefined
   const baseDir = import.meta.dirname || process.cwd();
-  // In production, baseDir might be /app/dist/server/_core, so we need to go up to /app/dist/public
+  // In production, we need to serve from dist/public
   // In development, baseDir is the project root, so we need dist/public
-  const distPath =
-    process.env.NODE_ENV === "development"
-      ? path.resolve(baseDir, "../../../", "dist", "public")
-      : path.resolve(baseDir, "../../", "public");
+  const distPath = path.resolve(baseDir, process.env.NODE_ENV === "development" ? "../../../dist/public" : "../../dist/public");
   if (!fs.existsSync(distPath)) {
     console.error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`
+      `Could not find the build directory: ${distPath}, baseDir: ${baseDir}, NODE_ENV: ${process.env.NODE_ENV}, make sure to build the client first`
     );
   }
 
