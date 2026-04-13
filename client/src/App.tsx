@@ -6,6 +6,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
+import { trpc } from "@/lib/trpc";
 import Devices from "./pages/Devices";
 import DeviceDetails from "./pages/DeviceDetails";
 import Keylogs from "./pages/Keylogs";
@@ -79,25 +80,24 @@ function App() {
     setIsAuthenticated(false);
   };
 
-  const handleLogin = (email: string, password: string) => {
-    // Validação simples (credenciais de teste)
-    if (email && password) {
-      // Criar token com timestamp para evitar reutilização
-      const token = "token_" + Date.now() + "_" + Math.random();
-      const timestamp = Date.now().toString();
-      const userName = email.split("@")[0];
+  const handleLogin = async (email: string, password: string) => {
+    if (!email || !password) return;
+    
+    try {
+      // Call the server-side login procedure
+      const loginMutation = trpc.auth.login.useMutation();
+      const result = await loginMutation.mutateAsync({ email, password });
       
-      // Salvar no localStorage
-      localStorage.setItem("auth_token", token);
-      localStorage.setItem("auth_timestamp", timestamp);
-      localStorage.setItem("user_email", email);
-      localStorage.setItem("user_name", userName);
-      
-      setUser({
-        email: email,
-        name: userName,
-      });
-      setIsAuthenticated(true);
+      if (result.success && result.user) {
+        setUser({
+          email: result.user.email,
+          name: result.user.name,
+        });
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Erro ao fazer login. Tente novamente.");
     }
   };
 

