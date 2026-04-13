@@ -51,13 +51,14 @@ export function serveStatic(app: Express) {
   // Use process.cwd() as fallback if import.meta.dirname is undefined
   const baseDir = import.meta.dirname || process.cwd();
   
-  // Try multiple possible paths for dist/public
+  // Try multiple possible paths for dist/public - prioritize dist/public over source public
   const possiblePaths = [
-    path.resolve(baseDir, "../public"),           // /app/dist/public (if baseDir is /app/dist)
+    path.resolve(process.cwd(), "dist/public"),   // /app/dist/public (using cwd) - FIRST PRIORITY
+    path.resolve(baseDir, "dist/public"),         // /app/dist/public (if baseDir is /app)
     path.resolve(baseDir, "../../dist/public"),   // /app/dist/public (if baseDir is /app/dist/server/_core)
     path.resolve(baseDir, "../../../dist/public"), // /app/dist/public (if baseDir is /app/dist/server/_core/...)
-    path.resolve(baseDir, "dist/public"),         // /app/dist/public (if baseDir is /app)
-    path.resolve(process.cwd(), "dist/public"),   // /app/dist/public (using cwd)
+    path.resolve(baseDir, "../public"),           // /app/dist/public (if baseDir is /app/dist)
+    path.resolve(process.cwd(), "public"),        // /app/public (fallback to source public)
   ];
   
   let distPath = possiblePaths[0];
