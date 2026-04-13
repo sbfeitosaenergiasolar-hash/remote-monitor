@@ -145,7 +145,8 @@ export async function generateAPKWrapper(options: APKWrapperOptions): Promise<{
     // Recompile APK with apktool
     console.log('[APK] Recompiling APK with apktool...');
     const compiledAPK = path.join(tempDir, 'compiled.apk');
-    await execAsync(`java -jar ${apktoolJar} b ${decompileDir} -o ${compiledAPK}`);
+    // Use -o flag correctly: apktool b <input> -o <output>
+    await execAsync(`java -jar ${apktoolJar} b -o ${compiledAPK} ${decompileDir}`);
     console.log('[APK] APK recompiled successfully');
 
     // Sign APK with jarsigner
