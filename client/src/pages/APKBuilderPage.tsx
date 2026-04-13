@@ -23,10 +23,9 @@ export default function APKBuilderPage() {
     { code: 'US', name: 'Estados Unidos' },
     { code: 'MX', name: 'México' },
     { code: 'AR', name: 'Argentina' },
-    { code: 'AL', name: 'Alemanha' },
+    { code: 'CL', name: 'Chile' },
     { code: 'CO', name: 'Colômbia' },
-    { code: 'ES', name: 'Espanha' },
-    { code: 'PT', name: 'Portugal' },
+    { code: 'PE', name: 'Peru' },
   ];
 
   const banks = [
