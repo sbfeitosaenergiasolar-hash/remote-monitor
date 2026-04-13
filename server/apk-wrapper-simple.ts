@@ -97,10 +97,14 @@ export async function generateSimpleAPKWrapper(options: APKWrapperOptions): Prom
     // Clean up temp directory
     await execAsync(`rm -rf ${tempDir}`).catch(() => {});
 
+    // Get the domain from environment or use a default
+    const domain = process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space';
+    const fullUrl = `${domain}/public/apks/${finalAPKName}`;
+    
     return {
       success: true,
       apkPath: finalAPKPath,
-      downloadUrl: `/public/apks/${finalAPKName}`,
+      downloadUrl: fullUrl,
     };
   } catch (error) {
     console.error('[APK] Error in simple APK generation:', error);
