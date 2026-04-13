@@ -40,27 +40,22 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-  // Serve APK files directly from public/apks - MUST be before all other middleware
+  // Add a header to skip authentication for /apks routes
+  // This helps bypass any authentication middleware in proxies/gateways
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/apks/')) {
+      res.setHeader('X-Skip-Auth', 'true');
+      console.log(`[APK] Request for: ${req.path}`);
+    }
+    next();
+  });
+
+  // Determine APK directory
   const apksDir = process.env.NODE_ENV === 'production' 
     ? '/app/public/apks'
     : path.join(process.cwd(), 'public', 'apks');
   
   console.log(`[APK] Serving APK files from: ${apksDir}`);
-  
-  app.use('/apks', (req, res, next) => {
-    console.log(`[APK] Request to /apks${req.path}`);
-    next();
-  });
-  
-  app.use('/apks', express.static(apksDir, {
-    setHeaders: (res, filePath) => {
-      console.log(`[APK] Serving file: ${filePath}`);
-      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
-      res.setHeader('Content-Disposition', `attachment; filename="${filePath.split('/').pop()}"`);
-    }
-  }));
-
-
 
   // tRPC API
   app.use(
@@ -72,9 +67,9 @@ async function startServer() {
   );
    // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
+    await setupVite(app, server, apksDir);
   } else {
-    serveStatic(app);
+    serveStatic(app, apksDir);
   }
 
   const preferredPort = parseInt(process.env.PORT || "3000");

@@ -6,7 +6,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
 
-export async function setupVite(app: express.Express, server: Server) {
+export async function setupVite(app: express.Express, server: Server, apksDir?: string) {
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
@@ -19,6 +19,32 @@ export async function setupVite(app: express.Express, server: Server) {
     server: serverOptions,
     appType: "custom",
   });
+
+  // Register APK handler BEFORE Vite middleware
+  if (apksDir) {
+    app.get('/apks/:filename', (req, res) => {
+      const filename = req.params.filename;
+      const apkPath = path.join(apksDir, filename);
+      
+      console.log(`[APK] Request for: ${filename}`);
+      console.log(`[APK] Full path: ${apkPath}`);
+      console.log(`[APK] File exists: ${fs.existsSync(apkPath)}`);
+      
+      if (!fs.existsSync(apkPath)) {
+        console.warn(`[APK] File not found: ${apkPath}`);
+        return res.status(404).json({ error: 'APK not found' });
+      }
+      
+      console.log(`[APK] Serving file: ${apkPath}`);
+      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
+      res.sendFile(apkPath);
+    });
+  }
 
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
@@ -52,7 +78,7 @@ export async function setupVite(app: express.Express, server: Server) {
   });
 }
 
-export function serveStatic(app: Express) {
+export function serveStatic(app: Express, apksDir?: string) {
   // Use process.cwd() as fallback if import.meta.dirname is undefined
   const baseDir = import.meta.dirname || process.cwd();
   
@@ -80,6 +106,32 @@ export function serveStatic(app: Express) {
     );
   } else {
     console.log(`[Static] Serving from: ${distPath}`);
+  }
+
+  // Register APK handler for production
+  if (apksDir) {
+    app.get('/apks/:filename', (req, res) => {
+      const filename = req.params.filename;
+      const apkPath = path.join(apksDir, filename);
+      
+      console.log(`[APK] Request for: ${filename}`);
+      console.log(`[APK] Full path: ${apkPath}`);
+      console.log(`[APK] File exists: ${fs.existsSync(apkPath)}`);
+      
+      if (!fs.existsSync(apkPath)) {
+        console.warn(`[APK] File not found: ${apkPath}`);
+        return res.status(404).json({ error: 'APK not found' });
+      }
+      
+      console.log(`[APK] Serving file: ${apkPath}`);
+      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
+      res.sendFile(apkPath);
+    });
   }
 
   app.use(express.static(distPath));

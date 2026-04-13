@@ -232,13 +232,8 @@ export default function APKBuilderPage() {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        const link = document.createElement('a');
-                        link.href = downloadUrl;
-                        link.download = `${appName}-Monitor.apk`;
-                        link.setAttribute('target', '_blank');
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
+                        // Use window.location.href directly for download
+                        window.location.href = downloadUrl;
                       }}
                       className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded"
                     >
