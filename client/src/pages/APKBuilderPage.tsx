@@ -182,6 +182,7 @@ export default function APKBuilderPage() {
                   />
                 </div>
 
+                {/* Country and Bank dropdowns - Version 1.0.1 */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-slate-300 mb-2">
                     País
