@@ -228,13 +228,22 @@ export default function APKBuilderPage() {
                   <div className="mt-4 p-3 bg-green-900/20 border border-green-400/30 rounded-lg">
                     <p className="text-green-300 text-sm">✅ APK gerado com sucesso!</p>
                     <p className="text-slate-400 text-xs mt-2 break-all">{downloadUrl}</p>
-                    <a
-                      href={downloadUrl}
-                      download={`${appName}-Monitor.apk`}
-                      className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded inline-block text-center"
+                    <Button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const link = document.createElement('a');
+                        link.href = downloadUrl;
+                        link.download = `${appName}-Monitor.apk`;
+                        link.setAttribute('target', '_blank');
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
+                      className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded"
                     >
                       📥 Baixar APK
-                    </a>
+                    </Button>
                   </div>
                 )}
               </div>
