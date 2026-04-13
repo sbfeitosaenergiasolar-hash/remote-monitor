@@ -77,8 +77,9 @@ function DashboardLayoutContent({
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
   // Use localStorage for user info instead of making a server request
-  const userInfo = localStorage.getItem("manus-runtime-user-info");
-  const user = userInfo ? JSON.parse(userInfo) : null;
+  const userEmail = localStorage.getItem("user_email");
+  const userName = localStorage.getItem("user_name");
+  const user = userEmail && userName ? { email: userEmail, name: userName } : null;
   const { logout } = useAuth();
   const [location, setLocation] = useLocation();
   const { state, toggleSidebar } = useSidebar();
