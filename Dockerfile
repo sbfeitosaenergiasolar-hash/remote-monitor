@@ -1,5 +1,5 @@
 # Build stage
-FROM node:22-alpine AS builder
+FROM node:22 AS builder
 
 WORKDIR /app
 
@@ -19,11 +19,27 @@ COPY . .
 # Build the application
 RUN pnpm build
 
-# Runtime stage
-FROM node:22-alpine
+# Runtime stage - Ubuntu with Android build tools
+FROM ubuntu:22.04
 
-# Install Java for apktool
-RUN apk add --no-cache openjdk17-jre
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    openjdk-17-jdk \
+    gradle \
+    android-sdk \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pnpm
+RUN npm install -g pnpm@latest
+
+# Set up Android SDK environment
+ENV ANDROID_HOME=/usr/lib/android-sdk
+ENV PATH=${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:${PATH}
 
 WORKDIR /app
 
@@ -33,6 +49,9 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/tools ./tools
+
+# Create necessary directories for APK generation
+RUN mkdir -p /tmp/apk-builds /app/public/apks
 
 # Expose port
 EXPOSE 8080

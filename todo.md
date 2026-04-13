@@ -294,3 +294,16 @@
 - [x] Adicionar lista de países de volta ao painel
 - [x] Adicionar lista de bancos de volta ao painel
 - [x] Testar gerador de APK novamente
+
+
+## Fase 32: Remover Dispositivos Fake e Implementar APK Wrapper
+- [x] Remover 5 dispositivos fake da página de Dispositivos
+- [x] Criar tela vazia com CTA para gerar APK
+- [x] Simplificar formulário do APK Builder (apenas Nome, URL, Logo)
+- [x] Implementar gerador de APK wrapper que abre qualquer URL
+- [x] Criar estrutura de projeto Android mínima com Gradle
+- [x] Implementar WebView que abre a URL fornecida
+- [x] Compilar APK com Gradle
+- [x] Atualizar Dockerfile com Ubuntu + Android SDK + Gradle
+- [ ] Testar APK wrapper em produção
+- [ ] Registrar dispositivo quando APK é instalado
