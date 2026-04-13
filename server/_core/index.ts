@@ -85,9 +85,11 @@ async function startServer() {
 
   // CRITICAL: Serve APK files BEFORE any other middleware
   // This ensures downloads work without authentication
-  // Use /download endpoint to bypass proxy authentication
+  // Try multiple endpoints to bypass proxy authentication
   app.get('/apks/:filename', serveAPKFile);
   app.get('/download/:filename', serveAPKFile);
+  app.get('/static/apk/:filename', serveAPKFile);
+  app.get('/file/:filename', serveAPKFile);
 
   // tRPC API
   app.use(
