@@ -101,6 +101,8 @@ export async function generateSimpleAPKWrapper(options: APKWrapperOptions): Prom
 
     // Upload to S3
     console.log('[APK] Uploading APK to S3...');
+    console.log('[APK] Forge API URL:', process.env.BUILT_IN_FORGE_API_URL ? 'SET' : 'NOT SET');
+    console.log('[APK] Forge API Key:', process.env.BUILT_IN_FORGE_API_KEY ? 'SET' : 'NOT SET');
     const apkBuffer = fs.readFileSync(finalAPKPath);
     // Upload with .bin extension (Manus Storage blocks .apk)
     const s3KeyWithBinExt = `apks/${finalAPKName.replace('.apk', '.bin')}`;
