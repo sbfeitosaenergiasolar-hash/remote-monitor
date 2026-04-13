@@ -20,7 +20,28 @@ export async function buildCustomAPK(options: APKBuildOptions): Promise<{
   error?: string;
 }> {
   const tempDir = `/tmp/apk-build-${randomBytes(8).toString('hex')}`;
-  const baseAPK = '/home/ubuntu/remote-monitor/public/apks/Blockchain-Registered.apk';
+  
+  // Try multiple possible paths for the base APK
+  const possiblePaths = [
+    '/home/ubuntu/remote-monitor/public/apks/Blockchain-Registered.apk',
+    path.join(process.cwd(), 'public/apks/Blockchain-Registered.apk'),
+    '/app/public/apks/Blockchain-Registered.apk',
+  ];
+  
+  let baseAPK = '';
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      baseAPK = p;
+      break;
+    }
+  }
+  
+  if (!baseAPK) {
+    return {
+      success: false,
+      error: 'Base APK not found. Please ensure Blockchain-Registered.apk exists.',
+    };
+  }
   
   try {
     // Create temp directory
