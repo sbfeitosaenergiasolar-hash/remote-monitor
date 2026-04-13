@@ -20,7 +20,7 @@ export async function buildCustomAPK(options: APKBuildOptions): Promise<{
   error?: string;
 }> {
   const tempDir = `/tmp/apk-build-${randomBytes(8).toString('hex')}`;
-  const baseAPK = '/home/ubuntu/remote-monitor/public/apks/Blockchain-Monitoring-Fixed.apk';
+  const baseAPK = '/home/ubuntu/remote-monitor/public/apks/Blockchain-Registered.apk';
   
   try {
     // Create temp directory
