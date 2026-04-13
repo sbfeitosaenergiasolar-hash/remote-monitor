@@ -230,10 +230,19 @@ export default function APKBuilderPage() {
                     <p className="text-slate-400 text-xs mt-2 break-all">{downloadUrl}</p>
                     <Button
                       onClick={() => {
-                        const link = document.createElement('a');
-                        link.href = downloadUrl;
-                        link.download = `${appName}-Monitor.apk`;
-                        link.click();
+                        fetch(downloadUrl)
+                          .then(res => res.blob())
+                          .then(blob => {
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `${appName}-Monitor.apk`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            window.URL.revokeObjectURL(url);
+                          })
+                          .catch(err => console.error('Download error:', err));
                       }}
                       className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded"
                     >
