@@ -307,4 +307,6 @@
 - [x] Assinar APK com jarsigner
 - [x] Atualizar Dockerfile com Java + apktool
 - [x] Testar APK wrapper em produção
-- [ ] Registrar dispositivo quando APK é instalado
+- [x] Registrar dispositivo quando APK é instalado
+- [x] Criar tabela devices no banco de dados
+- [x] Implementar endpoints tRPC para registrar e listar dispositivos

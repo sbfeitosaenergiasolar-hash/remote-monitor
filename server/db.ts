@@ -2,7 +2,7 @@ import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 import type { Pool } from "mysql2/promise";
-import { InsertUser, users, keylogs, InsertKeylog, settings, InsertSetting, Setting } from "../drizzle/schema";
+import { InsertUser, users, keylogs, InsertKeylog, settings, InsertSetting, Setting, devices, InsertDevice, Device } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: any = null;
@@ -452,6 +452,93 @@ export async function getSettings(userId: number): Promise<Setting | null> {
   } catch (error) {
     console.error("[Database] Failed to get settings:", error);
     return null;
+  }
+}
+
+// Device helpers
+export async function registerDevice(device: InsertDevice): Promise<Device | null> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot register device: database not available");
+    return null;
+  }
+
+  try {
+    await db.insert(devices).values(device).onDuplicateKeyUpdate({
+      set: {
+        status: 'online',
+        lastSeen: new Date(),
+      },
+    });
+
+    const result = await db
+      .select()
+      .from(devices)
+      .where(eq(devices.deviceId, device.deviceId))
+      .limit(1);
+
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to register device:", error);
+    throw error;
+  }
+}
+
+export async function getDevicesByUser(userId: number): Promise<Device[]> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get devices: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(devices)
+      .where(eq(devices.userId, userId))
+      .orderBy(devices.lastSeen);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get devices:", error);
+    return [];
+  }
+}
+
+export async function getDeviceById(deviceId: string): Promise<Device | null> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get device: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(devices)
+      .where(eq(devices.deviceId, deviceId))
+      .limit(1);
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to get device:", error);
+    return null;
+  }
+}
+
+export async function updateDeviceStatus(deviceId: string, status: 'online' | 'offline'): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update device: database not available");
+    return;
+  }
+
+  try {
+    await db
+      .update(devices)
+      .set({ status, lastSeen: new Date() })
+      .where(eq(devices.deviceId, deviceId));
+  } catch (error) {
+    console.error("[Database] Failed to update device status:", error);
+    throw error;
   }
 }
 

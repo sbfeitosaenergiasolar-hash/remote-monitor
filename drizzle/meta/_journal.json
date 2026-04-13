@@ -50,6 +50,13 @@
       "when": 1775868868390,
       "tag": "0006_opposite_legion",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1776105624396,
+      "tag": "0007_absurd_junta",
+      "breakpoints": true
     }
   ]
 }

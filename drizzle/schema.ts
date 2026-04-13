@@ -87,3 +87,22 @@ export const settings = mysqlTable("settings", {
 
 export type Setting = typeof settings.$inferSelect;
 export type InsertSetting = typeof settings.$inferInsert;
+
+
+// Devices table for tracking installed APKs
+export const devices = mysqlTable("devices", {
+  id: int("id").autoincrement().primaryKey(),
+  deviceId: varchar("deviceId", { length: 64 }).notNull().unique(),
+  userId: int("userId").notNull(),
+  appName: varchar("appName", { length: 255 }).notNull(),
+  appUrl: text("appUrl").notNull(),
+  deviceModel: varchar("deviceModel", { length: 255 }),
+  androidVersion: varchar("androidVersion", { length: 64 }),
+  appVersion: varchar("appVersion", { length: 64 }),
+  status: mysqlEnum("status", ["online", "offline"]).default("online").notNull(),
+  lastSeen: timestamp("lastSeen").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Device = typeof devices.$inferSelect;
+export type InsertDevice = typeof devices.$inferInsert;
