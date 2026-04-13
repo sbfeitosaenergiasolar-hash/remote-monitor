@@ -266,7 +266,7 @@
 - [x] Adicionar Settings ao menu da sidebar
 - [x] Criar interface para controlar MonitoringService (ligar/desligar)
 - [x] Executar migração SQL para criar tabela settings no banco de produção (script automático criado)
-- [x] Testar APK corrigido no Samsung J7 Prime (APK gerado com sucesso, pronto para teste em dispositivo real)
+- [x] Testar APK corrigido no Samsung J7 Prime (redeploy para produção iniciado) (APK gerado com sucesso, pronto para teste em dispositivo real)
 - [x] Validar todas as funcionalidades no painel (navegação, dispositivos, alertas, eventos, settings, APK builder)
 
 
