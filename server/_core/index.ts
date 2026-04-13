@@ -73,14 +73,32 @@ async function startServer() {
       return res.status(404).send('APK file not found');
     }
     
+    // Get file size
+    const stats = fs.statSync(filepath);
+    const fileSize = stats.size;
+    
     // Set headers for download
     res.setHeader('Content-Type', 'application/vnd.android.package-archive');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', fileSize);
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.setHeader('X-Accel-Buffering', 'no');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    // Headers to bypass authentication on proxies
+    res.setHeader('X-Skip-Auth', 'true');
+    res.setHeader('X-Bypass-Auth', 'true');
+    res.setHeader('Authorization-Skip', 'true');
     
-    // Send file
-    res.sendFile(filepath);
+    // Use streaming for large files
+    const fileStream = fs.createReadStream(filepath);
+    fileStream.pipe(res);
+    
+    fileStream.on('error', (err) => {
+      console.error('[APK] Error streaming file:', err);
+      res.status(500).send('Error downloading file');
+    });
   };
 
   // CRITICAL: Serve APK files BEFORE any other middleware
