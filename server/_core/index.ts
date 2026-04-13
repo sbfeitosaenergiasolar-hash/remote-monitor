@@ -57,6 +57,32 @@ async function startServer() {
   
   console.log(`[APK] Serving APK files from: ${apksDir}`);
 
+  // CRITICAL: Serve APK files BEFORE any other middleware
+  // This ensures downloads work without authentication
+  app.get('/apks/:filename', (req, res) => {
+    const filename = req.params.filename;
+    // Sanitize filename to prevent directory traversal
+    if (filename.includes('..') || filename.includes('/')) {
+      return res.status(400).send('Invalid filename');
+    }
+    const filepath = path.join(apksDir, filename);
+    console.log(`[APK] Serving file: ${filepath}`);
+    
+    // Check if file exists
+    if (!fs.existsSync(filepath)) {
+      console.log(`[APK] File not found: ${filepath}`);
+      return res.status(404).send('APK file not found');
+    }
+    
+    // Set headers for download
+    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    
+    // Send file
+    res.sendFile(filepath);
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",
