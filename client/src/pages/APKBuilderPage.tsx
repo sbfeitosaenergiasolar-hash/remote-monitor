@@ -1,12 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Download } from "lucide-react";
-import { useAuth } from "@/_core/hooks/useAuth";
+
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 
 export default function APKBuilderPage() {
-  const { user, loading, isAuthenticated, logout } = useAuth();
+  // Check authentication from localStorage
+  const userEmail = localStorage.getItem("user_email");
+  const userName = localStorage.getItem("user_name");
+  const isAuthenticated = !!(userEmail && userName);
+  
+  const logout = () => {
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("auth_timestamp");
+    localStorage.removeItem("user_email");
+    localStorage.removeItem("user_name");
+    window.location.href = "/";
+  };
   const [companyName, setCompanyName] = useState('FazTudo');
   const [companyUrl, setCompanyUrl] = useState('https://faztudo.com.br');
   const [logoUrl, setLogoUrl] = useState('https://via.placeholder.com/150');
@@ -89,14 +100,6 @@ export default function APKBuilderPage() {
       setIsBuilding(false);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin w-8 h-8" />
-      </div>
-    );
-  }
 
   if (!isAuthenticated) {
     return (
