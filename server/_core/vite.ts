@@ -23,6 +23,11 @@ export async function setupVite(app: express.Express, server: Server) {
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
+    
+    // Skip Vite middleware for /apks routes - let them be handled by the static handler
+    if (url.startsWith('/apks/')) {
+      return next();
+    }
 
     try {
       const clientTemplate = path.resolve(
@@ -79,8 +84,12 @@ export function serveStatic(app: Express) {
 
   app.use(express.static(distPath));
 
-  // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
+  // fall through to index.html if the file doesn't exist (but NOT for /apks routes)
+  app.use("*", (req, res) => {
+    // Skip index.html fallback for /apks routes
+    if (req.originalUrl.startsWith('/apks/')) {
+      return res.status(404).json({ error: 'APK not found' });
+    }
     const indexPath = path.resolve(distPath, "index.html");
     if (!fs.existsSync(indexPath)) {
       console.error(`index.html not found at ${indexPath}`);
