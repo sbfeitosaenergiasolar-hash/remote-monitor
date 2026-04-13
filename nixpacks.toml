@@ -1,0 +1,15 @@
+[providers]
+# Use Node.js provider for the main application
+nodejs = {}
+
+[phases.setup]
+# Install Java for apktool
+nixpkgs = ["openjdk17"]
+
+[phases.build]
+# Build the application
+cmds = ["pnpm install", "pnpm build"]
+
+[phases.start]
+# Start the application
+cmd = "npm run start"
