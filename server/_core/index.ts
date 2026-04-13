@@ -40,6 +40,17 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+  // Serve APK files directly from public/apks - MUST be before all other middleware
+  const apksDir = process.env.NODE_ENV === 'production' 
+    ? '/app/public/apks'
+    : path.join(process.cwd(), 'public', 'apks');
+  app.use('/apks', express.static(apksDir, {
+    setHeaders: (res, path) => {
+      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+      res.setHeader('Content-Disposition', `attachment; filename="${path.split('/').pop()}"`);
+    }
+  }));
+
   // APK Download Route - MUST be before all other middleware to avoid catch-all routes
   app.get("/apks/:filename", (req, res) => {
     // Use the same path resolution as apk-wrapper-simple.ts
