@@ -1,4 +1,4 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+
 import { useEffect as useEffectHook } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -80,7 +80,15 @@ function DashboardLayoutContent({
   const userEmail = localStorage.getItem("user_email");
   const userName = localStorage.getItem("user_name");
   const user = userEmail && userName ? { email: userEmail, name: userName } : null;
-  const { logout } = useAuth();
+  
+  // Local logout function that clears localStorage
+  const logout = () => {
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("auth_timestamp");
+    localStorage.removeItem("user_email");
+    localStorage.removeItem("user_name");
+    window.location.href = "/";
+  };
   const [location, setLocation] = useLocation();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
