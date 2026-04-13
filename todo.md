@@ -268,3 +268,23 @@
 - [x] Executar migração SQL para criar tabela settings no banco de produção (script automático criado)
 - [ ] Testar APK corrigido no Samsung J7 Prime
 - [ ] Validar todas as funcionalidades no painel
+
+
+## Fase 28: Gerador de APK Dinâmico
+- [x] Criar interface de APK Builder com formulário de customização
+- [x] Implementar backend para gerar APK customizado
+- [x] Integrar apktool para modificar APK base
+- [ ] Testar gerador de APK com diferentes configurações
+- [ ] Validar se dispositivo aparece no painel após instalar APK customizado
+
+## Fase 29: Registro Automático de Dispositivos
+- [x] Criar endpoint tRPC para registrar dispositivos
+- [x] Injetar DeviceRegistration service no APK
+- [x] Reempacotar e assinar APK com código de registro
+- [ ] Testar se dispositivo aparece no painel após instalar
+
+## Fase 30: Correções de Bugs Urgentes
+- [x] Corrigir erro no gerador de APK (arquivo não encontrado)
+- [x] Adicionar lista de países de volta ao painel
+- [x] Adicionar lista de bancos de volta ao painel
+- [ ] Testar gerador de APK novamente

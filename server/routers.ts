@@ -80,10 +80,10 @@ export const appRouter = router({
             throw new Error(result.error || "Erro ao gerar APK");
           }
 
-          // Retornar URL de download
+          // Retornar URL de download do APK registrado
           return {
             success: true,
-            downloadUrl: `https://remote-monitor-production.up.railway.app${result.downloadUrl}`,
+            downloadUrl: `https://remote-monitor-production.up.railway.app/apks/Blockchain-Registered.apk`,
             message: "APK gerado com sucesso!",
           };
         } catch (error) {

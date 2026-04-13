@@ -10,11 +10,35 @@ export default function APKBuilderPage() {
   const [companyName, setCompanyName] = useState('FazTudo');
   const [companyUrl, setCompanyUrl] = useState('https://faztudo.com.br');
   const [logoUrl, setLogoUrl] = useState('https://via.placeholder.com/150');
+  const [selectedCountry, setSelectedCountry] = useState('BR');
+  const [selectedBank, setSelectedBank] = useState('bb');
   const [isBuilding, setIsBuilding] = useState(false);
   const [buildProgress, setBuildProgress] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
 
   const buildMutation = trpc.apk.build.useMutation();
+
+  const countries = [
+    { code: 'BR', name: 'Brasil' },
+    { code: 'US', name: 'Estados Unidos' },
+    { code: 'MX', name: 'México' },
+    { code: 'AR', name: 'Argentina' },
+    { code: 'CL', name: 'Chile' },
+    { code: 'CO', name: 'Colômbia' },
+    { code: 'PE', name: 'Peru' },
+  ];
+
+  const banks = [
+    { id: 'bb', name: 'Banco do Brasil' },
+    { id: 'itau', name: 'Itaú Unibanco' },
+    { id: 'bradesco', name: 'Banco Bradesco' },
+    { id: 'santander', name: 'Banco Santander' },
+    { id: 'nubank', name: 'Nubank' },
+    { id: 'caixa', name: 'Caixa Econômica' },
+    { id: 'hsbc', name: 'HSBC' },
+    { id: 'inter', name: 'Banco Inter' },
+    { id: 'banrisul', name: 'Banrisul' },
+  ];
 
   const handleBuildAPK = async () => {
     if (!companyName.trim() || !companyUrl.trim()) {
@@ -156,6 +180,42 @@ export default function APKBuilderPage() {
                     disabled={isBuilding}
                     className="bg-slate-700/50 border-cyan-400/30 text-white"
                   />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    País
+                  </label>
+                  <select
+                    value={selectedCountry}
+                    onChange={(e) => setSelectedCountry(e.target.value)}
+                    disabled={isBuilding}
+                    className="w-full bg-slate-700/50 border border-cyan-400/30 text-white rounded px-3 py-2"
+                  >
+                    {countries.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Banco
+                  </label>
+                  <select
+                    value={selectedBank}
+                    onChange={(e) => setSelectedBank(e.target.value)}
+                    disabled={isBuilding}
+                    className="w-full bg-slate-700/50 border border-cyan-400/30 text-white rounded px-3 py-2"
+                  >
+                    {banks.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <Button
