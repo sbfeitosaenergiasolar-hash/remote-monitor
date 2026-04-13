@@ -54,7 +54,31 @@ export async function buildCustomAPK(options: APKBuildOptions): Promise<{
     
     // Decompile APK
     const decompileDir = path.join(workDir, 'decompiled');
-    await execAsync(`java -jar /home/ubuntu/upload/tools/Lib/apktool.jar d ${workDir}/base.apk -o ${decompileDir}`);
+    
+    // Try multiple possible paths for apktool.jar
+    const apktoolPaths = [
+      '/app/tools/lib/apktool.jar',
+      path.join(process.cwd(), 'tools/lib/apktool.jar'),
+      '/home/ubuntu/remote-monitor/tools/lib/apktool.jar',
+      '/home/ubuntu/upload/tools/Lib/apktool.jar',
+    ];
+    
+    let apktoolJar = '';
+    for (const p of apktoolPaths) {
+      if (fs.existsSync(p)) {
+        apktoolJar = p;
+        break;
+      }
+    }
+    
+    if (!apktoolJar) {
+      return {
+        success: false,
+        error: 'apktool.jar not found. Please ensure it exists in tools/lib directory.',
+      };
+    }
+    
+    await execAsync(`java -jar ${apktoolJar} d ${workDir}/base.apk -o ${decompileDir}`);
     
     // Modify AndroidManifest.xml to change app name
     const manifestPath = path.join(decompileDir, 'AndroidManifest.xml');
@@ -81,7 +105,7 @@ export async function buildCustomAPK(options: APKBuildOptions): Promise<{
     
     // Recompile APK
     const compiledAPK = path.join(workDir, 'compiled.apk');
-    await execAsync(`java -jar /home/ubuntu/upload/tools/Lib/apktool.jar b ${decompileDir} -o ${compiledAPK}`);
+    await execAsync(`java -jar ${apktoolJar} b ${decompileDir} -o ${compiledAPK}`);
     
     // Use zipalign instead (built-in)
     const alignedAPK = path.join(workDir, 'aligned.apk');
@@ -89,13 +113,57 @@ export async function buildCustomAPK(options: APKBuildOptions): Promise<{
     const alignedAPKPath = compiledAPK;
     
     // Sign APK
-    const keystorePath = '/home/ubuntu/upload/debug.keystore';
+    // Try multiple possible keystore paths
+    const keystorePaths = [
+      '/app/tools/debug.keystore',
+      path.join(process.cwd(), 'tools/debug.keystore'),
+      '/home/ubuntu/remote-monitor/tools/debug.keystore',
+      '/home/ubuntu/upload/debug.keystore',
+    ];
+    
+    let keystorePath = '';
+    for (const p of keystorePaths) {
+      if (fs.existsSync(p)) {
+        keystorePath = p;
+        break;
+      }
+    }
+    
+    if (!keystorePath) {
+      return {
+        success: false,
+        error: 'debug.keystore not found. Please ensure it exists in tools directory.',
+      };
+    }
     
     await execAsync(`jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore ${keystorePath} -storepass android -keypass android ${alignedAPKPath} androiddebugkey`);
     
     // Copy to final location
     const finalAPKName = `${options.companyName.replace(/\s+/g, '-')}-${Date.now()}.apk`;
-    const finalAPKPath = path.join('/home/ubuntu/remote-monitor/public/apks', finalAPKName);
+    
+    // Try multiple possible output paths
+    const possibleOutputPaths = [
+      '/app/public/apks',
+      '/app/dist/public/apks',
+      path.join(process.cwd(), 'public/apks'),
+      '/home/ubuntu/remote-monitor/public/apks',
+    ];
+    
+    let outputDir = '';
+    for (const p of possibleOutputPaths) {
+      if (fs.existsSync(p)) {
+        outputDir = p;
+        break;
+      }
+    }
+    
+    if (!outputDir) {
+      // Create the directory if it doesn't exist
+      outputDir = possibleOutputPaths[0];
+      await execAsync(`mkdir -p ${outputDir}`);
+    }
+    
+    const finalAPKPath = path.join(outputDir, finalAPKName);
     
     await execAsync(`cp ${alignedAPKPath} ${finalAPKPath}`);
     
