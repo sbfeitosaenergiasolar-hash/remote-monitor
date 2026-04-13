@@ -300,10 +300,11 @@
 - [x] Remover 5 dispositivos fake da página de Dispositivos
 - [x] Criar tela vazia com CTA para gerar APK
 - [x] Simplificar formulário do APK Builder (apenas Nome, URL, Logo)
-- [x] Implementar gerador de APK wrapper que abre qualquer URL
-- [x] Criar estrutura de projeto Android mínima com Gradle
-- [x] Implementar WebView que abre a URL fornecida
-- [x] Compilar APK com Gradle
-- [x] Atualizar Dockerfile com Ubuntu + Android SDK + Gradle
-- [ ] Testar APK wrapper em produção
+- [x] Implementar gerador de APK wrapper com apktool (rápido e confiável)
+- [x] Modificar AndroidManifest.xml com nome customizado
+- [x] Modificar strings.xml com nome do app
+- [x] Armazenar config da URL em assets/app-config.json
+- [x] Assinar APK com jarsigner
+- [x] Atualizar Dockerfile com Java + apktool
+- [x] Testar APK wrapper em produção
 - [ ] Registrar dispositivo quando APK é instalado

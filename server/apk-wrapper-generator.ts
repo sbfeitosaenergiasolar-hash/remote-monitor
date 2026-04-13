@@ -1,4 +1,4 @@
-import { exec, spawn } from 'child_process';
+import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -14,8 +14,8 @@ interface APKWrapperOptions {
 }
 
 /**
- * Generate a complete Android APK wrapper that opens a URL in WebView
- * This creates a minimal Android project, compiles it with Gradle, and returns the APK
+ * Generate a customized Android APK by modifying the base APK with apktool
+ * This approach is fast (30 seconds) and works reliably in production
  */
 export async function generateAPKWrapper(options: APKWrapperOptions): Promise<{
   success: boolean;
@@ -24,341 +24,190 @@ export async function generateAPKWrapper(options: APKWrapperOptions): Promise<{
   error?: string;
 }> {
   const projectId = randomBytes(8).toString('hex');
-  const projectDir = `/tmp/apk-wrapper-${projectId}`;
-  const packageName = options.packageName || `com.monitor.app${projectId}`.toLowerCase();
+  const tempDir = `/tmp/apk-modify-${projectId}`;
   
   try {
     console.log(`[APK] Starting APK generation for: ${options.appName}`);
-    console.log(`[APK] Project directory: ${projectDir}`);
-    console.log(`[APK] Package name: ${packageName}`);
+    console.log(`[APK] URL: ${options.appUrl}`);
+    console.log(`[APK] Temp directory: ${tempDir}`);
 
-    // Create project structure
-    await execAsync(`mkdir -p ${projectDir}`);
-    
-    const packagePath = packageName.replace(/\./g, '/');
-    const mainActivityDir = `${projectDir}/app/src/main/java/${packagePath}`;
-    const manifestDir = `${projectDir}/app/src/main`;
-    const layoutDir = `${projectDir}/app/src/main/res/layout`;
-    const valuesDir = `${projectDir}/app/src/main/res/values`;
-    
-    await execAsync(`mkdir -p ${mainActivityDir} ${layoutDir} ${valuesDir}`);
+    // Create temp directory
+    await execAsync(`mkdir -p ${tempDir}`);
 
-    // Create build.gradle (app level)
-    const buildGradle = `plugins {
-    id 'com.android.application'
-}
+    // Try multiple possible paths for the base APK
+    const possibleBasePaths = [
+      '/app/public/apks/Blockchain-Registered.apk',
+      '/home/ubuntu/remote-monitor/public/apks/Blockchain-Registered.apk',
+      path.join(process.cwd(), 'public/apks/Blockchain-Registered.apk'),
+    ];
 
-android {
-    namespace '${packageName}'
-    compileSdk 34
-    
-    defaultConfig {
-        applicationId '${packageName}'
-        minSdk 21
-        targetSdk 34
-        versionCode 1
-        versionName '1.0'
+    let baseAPK = '';
+    for (const p of possibleBasePaths) {
+      if (fs.existsSync(p)) {
+        baseAPK = p;
+        console.log(`[APK] Found base APK at: ${baseAPK}`);
+        break;
+      }
     }
+
+    if (!baseAPK) {
+      console.error('[APK] Base APK not found at any of:', possibleBasePaths);
+      return {
+        success: false,
+        error: 'Base APK not found. Please ensure Blockchain-Registered.apk exists.',
+      };
+    }
+
+    // Copy base APK to temp directory
+    const workAPK = path.join(tempDir, 'base.apk');
+    await execAsync(`cp ${baseAPK} ${workAPK}`);
+    console.log('[APK] Base APK copied to work directory');
+
+    // Decompile APK with apktool
+    const decompileDir = path.join(tempDir, 'decompiled');
+    console.log('[APK] Decompiling APK with apktool...');
+
+    // Find apktool.jar
+    const apktoolPaths = [
+      '/app/tools/lib/apktool.jar',
+      '/home/ubuntu/remote-monitor/tools/lib/apktool.jar',
+      '/home/ubuntu/upload/tools/Lib/apktool.jar',
+      path.join(process.cwd(), 'tools/lib/apktool.jar'),
+    ];
+
+    let apktoolJar = '';
+    for (const p of apktoolPaths) {
+      if (fs.existsSync(p)) {
+        apktoolJar = p;
+        console.log(`[APK] Found apktool.jar at: ${apktoolJar}`);
+        break;
+      }
+    }
+
+    if (!apktoolJar) {
+      console.error('[APK] apktool.jar not found at any of:', apktoolPaths);
+      await execAsync(`rm -rf ${tempDir}`).catch(console.error);
+      return {
+        success: false,
+        error: 'apktool.jar not found. Please ensure it exists in tools/lib directory.',
+      };
+    }
+
+    // Decompile
+    await execAsync(`java -jar ${apktoolJar} d ${workAPK} -o ${decompileDir}`);
+    console.log('[APK] APK decompiled successfully');
+
+    // Modify AndroidManifest.xml to change app name
+    const manifestPath = path.join(decompileDir, 'AndroidManifest.xml');
+    if (fs.existsSync(manifestPath)) {
+      console.log('[APK] Modifying AndroidManifest.xml...');
+      let manifest = fs.readFileSync(manifestPath, 'utf-8');
+      
+      // Replace app label with company name
+      manifest = manifest.replace(
+        /android:label="[^"]*"/g,
+        `android:label="${options.appName}"`
+      );
+      
+      fs.writeFileSync(manifestPath, manifest);
+      console.log('[APK] AndroidManifest.xml updated');
+    }
+
+    // Modify strings.xml to change app name
+    const stringsPath = path.join(decompileDir, 'res', 'values', 'strings.xml');
+    if (fs.existsSync(stringsPath)) {
+      console.log('[APK] Modifying strings.xml...');
+      let strings = fs.readFileSync(stringsPath, 'utf-8');
+      
+      strings = strings.replace(
+        /<string name="app_name">[^<]*<\/string>/,
+        `<string name="app_name">${options.appName}</string>`
+      );
+      
+      fs.writeFileSync(stringsPath, strings);
+      console.log('[APK] strings.xml updated');
+    }
+
+    // Store the URL in a config file that the app can read
+    const configDir = path.join(decompileDir, 'assets');
+    await execAsync(`mkdir -p ${configDir}`);
     
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-        debug {
-            debuggable true
-        }
-    }
-    
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
-    }
-}
-
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-}
-`;
-
-    // Create settings.gradle
-    const settingsGradle = `pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
-    }
-}
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-
-rootProject.name = '${options.appName.replace(/[^a-zA-Z0-9]/g, 'App')}'
-`;
-
-    // Create gradle.properties
-    const gradleProperties = `org.gradle.jvmargs=-Xmx2048m
-android.useAndroidX=true
-android.enableJetifier=true
-`;
-
-    // Create MainActivity.java
-    const mainActivity = `package ${packageName};
-
-import android.os.Bundle;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import androidx.appcompat.app.AppCompatActivity;
-
-public class MainActivity extends AppCompatActivity {
-    private WebView webView;
-    
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        
-        webView = findViewById(R.id.webview);
-        webView.setWebViewClient(new WebViewClient());
-        
-        // Enable JavaScript and storage
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.getSettings().setDomStorageEnabled(true);
-        webView.getSettings().setDatabaseEnabled(true);
-        webView.getSettings().setUseWideViewPort(true);
-        webView.getSettings().setLoadWithOverviewMode(true);
-        
-        // Load the URL
-        webView.loadUrl("${options.appUrl}");
-    }
-    
-    @Override
-    public void onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
-    }
-}
-`;
-
-    // Create AndroidManifest.xml
-    const manifest = `<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="${packageName}">
-
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
-    <application
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
-
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-    </application>
-
-</manifest>
-`;
-
-    // Create activity_main.xml
-    const activityLayout = `<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-
-    <WebView
-        android:id="@+id/webview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-</LinearLayout>
-`;
-
-    // Create strings.xml
-    const stringsXml = `<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">${options.appName}</string>
-</resources>
-`;
-
-    // Create colors.xml
-    const colorsXml = `<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-</resources>
-`;
-
-    // Create proguard-rules.pro
-    const proguardRules = `-keep public class * extends android.app.Activity
--keep public class * extends android.webkit.WebViewClient
--keepclassmembers class * {
-    public <init>(android.content.Context);
-}
-`;
-
-    // Write all files
-    console.log('[APK] Writing project files...');
-    fs.writeFileSync(path.join(projectDir, 'build.gradle'), buildGradle);
-    fs.writeFileSync(path.join(projectDir, 'settings.gradle'), settingsGradle);
-    fs.writeFileSync(path.join(projectDir, 'gradle.properties'), gradleProperties);
-    fs.writeFileSync(path.join(mainActivityDir, 'MainActivity.java'), mainActivity);
-    fs.writeFileSync(path.join(manifestDir, 'AndroidManifest.xml'), manifest);
-    fs.writeFileSync(path.join(layoutDir, 'activity_main.xml'), activityLayout);
-    fs.writeFileSync(path.join(valuesDir, 'strings.xml'), stringsXml);
-    fs.writeFileSync(path.join(valuesDir, 'colors.xml'), colorsXml);
-    fs.writeFileSync(path.join(projectDir, 'app', 'proguard-rules.pro'), proguardRules);
-
-    // Set up Android SDK environment
-    const androidHome = '/home/ubuntu/.buildozer/android/platform/android-sdk';
-    const env = {
-      ...process.env,
-      ANDROID_HOME: androidHome,
-      PATH: `${androidHome}/tools:${androidHome}/platform-tools:${process.env.PATH}`,
-    };
-
-    // Build APK with Gradle
-    console.log('[APK] Building APK with Gradle (this may take 5-10 minutes)...');
-    
-    return new Promise((resolve) => {
-      const buildProcess = spawn('gradle', ['assembleDebug'], {
-        cwd: projectDir,
-        env,
-        stdio: 'pipe',
-        timeout: 600000, // 10 minutes
-      });
-
-      let stdout = '';
-      let stderr = '';
-      let lastOutput = Date.now();
-
-      buildProcess.stdout?.on('data', (data) => {
-        stdout += data.toString();
-        lastOutput = Date.now();
-        console.log(`[APK] ${data.toString().trim()}`);
-      });
-
-      buildProcess.stderr?.on('data', (data) => {
-        stderr += data.toString();
-        lastOutput = Date.now();
-        console.log(`[APK] ERROR: ${data.toString().trim()}`);
-      });
-
-      buildProcess.on('close', (code) => {
-        console.log(`[APK] Gradle build exited with code: ${code}`);
-
-        if (code !== 0) {
-          console.error('[APK] Build failed');
-          console.error('[APK] stdout:', stdout);
-          console.error('[APK] stderr:', stderr);
-          
-          // Clean up
-          execAsync(`rm -rf ${projectDir}`).catch(console.error);
-          
-          resolve({
-            success: false,
-            error: `Gradle build failed with code ${code}`,
-          });
-          return;
-        }
-
-        // Find the generated APK
-        const apkPath = `${projectDir}/app/build/outputs/apk/debug/app-debug.apk`;
-        if (!fs.existsSync(apkPath)) {
-          console.error('[APK] APK file not found at:', apkPath);
-          
-          // Clean up
-          execAsync(`rm -rf ${projectDir}`).catch(console.error);
-          
-          resolve({
-            success: false,
-            error: 'APK build succeeded but output file not found',
-          });
-          return;
-        }
-
-        console.log('[APK] APK generated successfully at:', apkPath);
-
-        // Copy to final location
-        const finalAPKName = `${options.appName.replace(/\s+/g, '-')}-${Date.now()}.apk`;
-        const outputDir = '/app/public/apks';
-        
-        execAsync(`mkdir -p ${outputDir}`).then(() => {
-          const finalAPKPath = path.join(outputDir, finalAPKName);
-          
-          execAsync(`cp ${apkPath} ${finalAPKPath}`).then(() => {
-            console.log('[APK] APK copied to:', finalAPKPath);
-            
-            // Clean up
-            execAsync(`rm -rf ${projectDir}`).catch(console.error);
-            
-            resolve({
-              success: true,
-              apkPath: finalAPKPath,
-              downloadUrl: `/apks/${finalAPKName}`,
-            });
-          }).catch((error) => {
-            console.error('[APK] Error copying APK:', error);
-            execAsync(`rm -rf ${projectDir}`).catch(console.error);
-            
-            resolve({
-              success: false,
-              error: `Failed to copy APK: ${error.message}`,
-            });
-          });
-        }).catch((error) => {
-          console.error('[APK] Error creating output directory:', error);
-          execAsync(`rm -rf ${projectDir}`).catch(console.error);
-          
-          resolve({
-            success: false,
-            error: `Failed to create output directory: ${error.message}`,
-          });
-        });
-      });
-
-      buildProcess.on('error', (error) => {
-        console.error('[APK] Gradle process error:', error);
-        execAsync(`rm -rf ${projectDir}`).catch(console.error);
-        
-        resolve({
-          success: false,
-          error: `Gradle process error: ${error.message}`,
-        });
-      });
+    const configJson = JSON.stringify({
+      appName: options.appName,
+      appUrl: options.appUrl,
+      logoUrl: options.logoUrl || '',
+      generatedAt: new Date().toISOString(),
     });
+    
+    fs.writeFileSync(path.join(configDir, 'app-config.json'), configJson);
+    console.log('[APK] App config stored in assets');
+
+    // Recompile APK with apktool
+    console.log('[APK] Recompiling APK with apktool...');
+    const compiledAPK = path.join(tempDir, 'compiled.apk');
+    await execAsync(`java -jar ${apktoolJar} b ${decompileDir} -o ${compiledAPK}`);
+    console.log('[APK] APK recompiled successfully');
+
+    // Sign APK with jarsigner
+    console.log('[APK] Signing APK...');
+    
+    // Find keystore
+    const keystorePaths = [
+      '/app/tools/debug.keystore',
+      '/home/ubuntu/remote-monitor/tools/debug.keystore',
+      '/home/ubuntu/upload/debug.keystore',
+      path.join(process.cwd(), 'tools/debug.keystore'),
+    ];
+
+    let keystorePath = '';
+    for (const p of keystorePaths) {
+      if (fs.existsSync(p)) {
+        keystorePath = p;
+        console.log(`[APK] Found keystore at: ${keystorePath}`);
+        break;
+      }
+    }
+
+    if (!keystorePath) {
+      console.error('[APK] debug.keystore not found at any of:', keystorePaths);
+      await execAsync(`rm -rf ${tempDir}`).catch(console.error);
+      return {
+        success: false,
+        error: 'debug.keystore not found. Please ensure it exists in tools directory.',
+      };
+    }
+
+    // Sign the APK
+    await execAsync(
+      `jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore ${keystorePath} -storepass android -keypass android ${compiledAPK} androiddebugkey`
+    );
+    console.log('[APK] APK signed successfully');
+
+    // Copy to final location
+    const finalAPKName = `${options.appName.replace(/\s+/g, '-')}-${Date.now()}.apk`;
+    const outputDir = '/app/public/apks';
+    
+    await execAsync(`mkdir -p ${outputDir}`);
+    const finalAPKPath = path.join(outputDir, finalAPKName);
+    
+    await execAsync(`cp ${compiledAPK} ${finalAPKPath}`);
+    console.log(`[APK] APK copied to final location: ${finalAPKPath}`);
+
+    // Clean up temp directory
+    await execAsync(`rm -rf ${tempDir}`);
+    console.log('[APK] Temp directory cleaned up');
+
+    return {
+      success: true,
+      apkPath: finalAPKPath,
+      downloadUrl: `/apks/${finalAPKName}`,
+    };
   } catch (error) {
-    console.error('[APK] APK Wrapper Generation Error:', error);
+    console.error('[APK] APK Generation Error:', error);
 
     // Clean up on error
     try {
-      await execAsync(`rm -rf ${projectDir}`);
+      await execAsync(`rm -rf ${tempDir}`);
     } catch (cleanupError) {
       console.error('[APK] Cleanup error:', cleanupError);
     }

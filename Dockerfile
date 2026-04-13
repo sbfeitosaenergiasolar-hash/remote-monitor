@@ -1,5 +1,5 @@
 # Build stage
-FROM node:22 AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -19,27 +19,11 @@ COPY . .
 # Build the application
 RUN pnpm build
 
-# Runtime stage - Ubuntu with Android build tools
-FROM ubuntu:22.04
+# Runtime stage
+FROM node:22-alpine
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    wget \
-    git \
-    openjdk-17-jdk \
-    gradle \
-    android-sdk \
-    nodejs \
-    npm \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install pnpm
-RUN npm install -g pnpm@latest
-
-# Set up Android SDK environment
-ENV ANDROID_HOME=/usr/lib/android-sdk
-ENV PATH=${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:${PATH}
+# Install Java for apktool and jarsigner
+RUN apk add --no-cache openjdk17-jre openjdk17-jdk
 
 WORKDIR /app
 
