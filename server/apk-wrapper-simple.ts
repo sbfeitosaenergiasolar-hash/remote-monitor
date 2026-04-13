@@ -100,6 +100,7 @@ export async function generateSimpleAPKWrapper(options: APKWrapperOptions): Prom
     // Get the domain from environment or use a default
     const domain = process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space';
     const fullUrl = `${domain}/public/apks/${finalAPKName}`;
+    console.log('[APK] Generated full download URL:', fullUrl);
     
     return {
       success: true,
