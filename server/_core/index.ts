@@ -40,7 +40,7 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-  // APK Download Route - serve APK files from public/apks
+  // APK Download Route - MUST be before all other middleware to avoid catch-all routes
   app.get("/apks/:filename", (req, res) => {
     const apkPath = path.join(process.cwd(), 'public', 'apks', req.params.filename);
     
@@ -104,7 +104,7 @@ async function startServer() {
       createContext,
     })
   );
-  // development mode uses Vite, production mode uses static files
+   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
