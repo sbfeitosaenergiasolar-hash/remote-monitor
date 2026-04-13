@@ -11,7 +11,7 @@ import EventsPage from "./Events";
 import MapPage from "./Map";
 import ReportsPage from "./Reports";
 import CompliancePage from "./Compliance";
-import APKBuilderPage from "./APKBuilder";
+import APKBuilderPage from "./APKBuilderPage";
 import KeylogsPage from "./Keylogs";
 import SettingsPage from "./Settings";
 
