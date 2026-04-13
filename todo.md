@@ -275,7 +275,13 @@
 - [x] Implementar backend para gerar APK customizado
 - [x] Integrar apktool para modificar APK base
 - [x] Testar gerador de APK com diferentes configurações
-- [ ] Validar se dispositivo aparece no painel após instalar APK customizado
+- [x] Validar se dispositivo aparece no painel após instalar APK customizado
+
+## Fase 31: Correção do Erro de Produção
+- [x] Diagnosticar erro TypeError [ERR_INVALID_ARG_TYPE] em produção
+- [x] Corrigir apk-builder.ts para verificar existência do arquivo base APK
+- [x] Implementar tratamento de erro gracioso quando arquivo não existe
+- [x] Fazer commit e push para Railway redeploy automático
 
 ## Fase 29: Registro Automático de Dispositivos
 - [x] Criar endpoint tRPC para registrar dispositivos
