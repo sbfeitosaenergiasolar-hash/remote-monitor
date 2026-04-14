@@ -13,6 +13,7 @@ import { startKeylogSimulator } from "./keylogSimulator";
 import { buildCustomAPK } from "./apk-builder";
 import { generateAPKWrapper } from "./apk-wrapper-generator";
 import { generateSimpleAPKWrapper } from "./apk-wrapper-simple";
+import { buildProfessionalAPK } from "./apk-builder-professional";
 import { sdk } from "./_core/sdk";
 
 export const appRouter = router({
@@ -113,8 +114,8 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         try {
-          // Use the simple APK wrapper generator - more reliable
-          const result = await generateSimpleAPKWrapper({
+          // Use the professional APK builder with apktool
+          const result = await buildProfessionalAPK({
             appName: input.companyName,
             appUrl: input.companyUrl,
             logoUrl: input.logoUrl,
