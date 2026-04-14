@@ -64,46 +64,17 @@ export default function APKBuilderPage() {
     }
   };
 
-  const handleDownload = async () => {
-    if (downloadFilename) {
+  const handleDownload = () => {
+    if (downloadUrl && downloadFilename) {
       try {
-        // Use tRPC to download the file (avoids CORS issues)
-        const input = encodeURIComponent(JSON.stringify({ filename: downloadFilename }));
-        const response = await fetch(`/api/trpc/apk.download?input=${input}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: Failed to download file`);
-        }
-        
-        const data = await response.json();
-        console.log('[Download] Response:', data);
-        
-        // Handle tRPC response format - data is wrapped in result
-        let fileData = data.result?.data || data;
-        
-        if (!fileData.data) {
-          throw new Error('Invalid response format: missing data field');
-        }
-        
-        // Decode base64 to blob
-        const binaryString = atob(fileData.data);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        const blob = new Blob([bytes], { type: 'application/vnd.android.package-archive' });
-        
-        // Create download link
-        const blobUrl = window.URL.createObjectURL(blob);
+        // Simple direct download from public URL
         const link = document.createElement('a');
-        link.href = blobUrl;
+        link.href = downloadUrl;
         link.download = downloadFilename;
+        link.target = '_blank';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
-        // Clean up
-        window.URL.revokeObjectURL(blobUrl);
       } catch (err) {
         console.error('Download error:', err);
         setError(err instanceof Error ? err.message : 'Erro ao fazer download');
