@@ -2,6 +2,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { rimraf } from 'rimraf';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 interface APKCustomizerOptions {
   baseApkPath: string;
@@ -21,6 +25,7 @@ export async function customizeAPKWithApktool(options: APKCustomizerOptions): Pr
 }> {
   const workDir = path.join('/tmp', `apk-customize-apktool-${Date.now()}`);
   const apktoolPath = path.join(__dirname, 'signing-tools', 'apktool.jar');
+  console.log(`[APK-CUSTOMIZER-APKTOOL] apktoolPath: ${apktoolPath}`);
   
   try {
     console.log(`[APK-CUSTOMIZER-APKTOOL] Starting APK customization`);
@@ -41,6 +46,18 @@ export async function customizeAPKWithApktool(options: APKCustomizerOptions): Pr
 
     // Check if apktool exists
     if (!fs.existsSync(apktoolPath)) {
+      console.error(`[APK-CUSTOMIZER-APKTOOL] apktool.jar not found at ${apktoolPath}`);
+      console.error(`[APK-CUSTOMIZER-APKTOOL] __dirname: ${__dirname}`);
+      try {
+        const signingToolsDir = path.join(__dirname, 'signing-tools');
+        if (fs.existsSync(signingToolsDir)) {
+          console.error(`[APK-CUSTOMIZER-APKTOOL] Contents of signing-tools:`, fs.readdirSync(signingToolsDir));
+        } else {
+          console.error(`[APK-CUSTOMIZER-APKTOOL] signing-tools directory not found`);
+        }
+      } catch (e) {
+        console.error(`[APK-CUSTOMIZER-APKTOOL] Error reading signing-tools:`, e);
+      }
       throw new Error(`apktool.jar not found at ${apktoolPath}`);
     }
 
