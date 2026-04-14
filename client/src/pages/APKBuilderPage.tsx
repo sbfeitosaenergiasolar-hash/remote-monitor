@@ -27,9 +27,11 @@ export default function APKBuilderPage() {
   );
 
   const handleBuildAPK = async () => {
+    console.log('[APK] Starting APK build...');
     setError('');
     setSuccess(false);
     setDownloadUrl('');
+    setDownloadFilename('');
     setBuildProgress(0);
 
     try {
@@ -40,6 +42,7 @@ export default function APKBuilderPage() {
       }, 500);
 
       // Call tRPC endpoint using mutation
+      console.log('[APK] Calling buildMutation.mutateAsync...');
       const data = await buildMutation.mutateAsync({
         companyName: config.appName,
         companyUrl: config.appUrl,
@@ -49,8 +52,8 @@ export default function APKBuilderPage() {
 
       if (interval) clearInterval(interval);
 
-      console.log('APK Build Response:', data);
-      console.log('Response details:', {
+      console.log('[APK] Build Response received:', data);
+      console.log('[APK] Response details:', {
         success: data?.success,
         downloadUrl: data?.downloadUrl,
         filename: data?.filename,
@@ -62,11 +65,16 @@ export default function APKBuilderPage() {
       // Check if build was successful
       if (data?.success && data?.downloadUrl) {
         const filename = data.filename || data.downloadUrl.split('/').pop() || 'app.apk';
-        console.log('Setting download state:', { downloadUrl: data.downloadUrl, filename });
+        console.log('[APK] Setting download state:', { downloadUrl: data.downloadUrl, filename });
+        console.log('[APK] Before setState - current downloadUrl:', downloadUrl);
+        
         setDownloadUrl(data.downloadUrl);
         setDownloadFilename(filename);
         setSuccess(true);
+        
+        console.log('[APK] After setState calls - state should update soon');
       } else {
+        console.error('[APK] Build failed - no success or downloadUrl:', data);
         throw new Error(data?.message || 'Erro ao gerar APK');
       }
     } catch (err) {

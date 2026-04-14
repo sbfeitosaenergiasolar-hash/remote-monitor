@@ -1,6 +1,5 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { randomBytes } from 'crypto';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -64,13 +63,15 @@ export async function buildSimpleProductionAPK(options: APKBuilderOptions): Prom
       };
     }
 
-    // Generate output filename
+    // Generate output filename with timestamp and random suffix to ensure uniqueness
     const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(2, 8); // 6 random chars
     const sanitizedName = options.appName
       .replace(/[^a-zA-Z0-9-]/g, '-')
       .replace(/-+/g, '-')
       .toLowerCase();
-    const finalAPKName = `${sanitizedName}-${timestamp}.apk`;
+    const finalAPKName = `${sanitizedName}-${timestamp}-${randomSuffix}.apk`;
+    console.log(`[APK-SIMPLE] Generated filename: ${finalAPKName}`);
 
     // Determine output directory
     const outputDir = process.env.NODE_ENV === 'production' 
