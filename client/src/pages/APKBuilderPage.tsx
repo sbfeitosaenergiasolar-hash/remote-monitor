@@ -68,22 +68,25 @@ export default function APKBuilderPage() {
     if (downloadFilename) {
       try {
         // Use tRPC to download the file (avoids CORS issues)
-        const response = await fetch(`/api/trpc/apk.download?input=${JSON.stringify({filename: downloadFilename})}`);
+        const input = encodeURIComponent(JSON.stringify({ filename: downloadFilename }));
+        const response = await fetch(`/api/trpc/apk.download?input=${input}`);
         
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: Failed to download file`);
         }
         
         const data = await response.json();
+        console.log('[Download] Response:', data);
         
-        // Handle tRPC response format
-        let fileData = data;
-        if (data.result?.data) {
-          fileData = data.result.data;
+        // Handle tRPC response format - data is wrapped in result
+        let fileData = data.result?.data || data;
+        
+        if (!fileData.data) {
+          throw new Error('Invalid response format: missing data field');
         }
         
         // Decode base64 to blob
-        const binaryString = atob(fileData.content);
+        const binaryString = atob(fileData.data);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
