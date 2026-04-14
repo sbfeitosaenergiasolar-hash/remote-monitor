@@ -64,14 +64,32 @@ export default function APKBuilderPage() {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (downloadUrl) {
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = downloadFilename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      try {
+        // Fetch the file as a blob
+        const response = await fetch(downloadUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: Failed to download file`);
+        }
+        
+        const blob = await response.blob();
+        
+        // Create a blob URL and download
+        const blobUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = downloadFilename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up the blob URL
+        window.URL.revokeObjectURL(blobUrl);
+      } catch (err) {
+        console.error('Download error:', err);
+        setError(err instanceof Error ? err.message : 'Erro ao fazer download');
+      }
     }
   };
 
