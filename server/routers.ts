@@ -124,12 +124,15 @@ export const appRouter = router({
             throw new Error(result.error || "Erro ao gerar APK");
           }
 
+          // Extract filename from download URL
+          const filename = result.downloadUrl.split('/').pop() || 'app.apk';
+          
           // Return the download URL and filename
           return {
             success: true,
             downloadUrl: result.downloadUrl,
             apkPath: result.apkPath,
-            filename: result.apkPath ? path.basename(result.apkPath) : undefined,
+            filename: filename,
             message: "APK gerado com sucesso!",
           };
         } catch (error) {
