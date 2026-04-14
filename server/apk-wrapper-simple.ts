@@ -1,9 +1,8 @@
-import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
 import { randomBytes } from 'crypto';
 import { exec } from 'child_process';
-import { storagePut } from './storage';
+import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
@@ -15,7 +14,7 @@ interface APKWrapperOptions {
 
 /**
  * Simple APK wrapper generator - just copy and sign the base APK
- * Saves to S3 for direct download (bypasses authentication)
+ * Returns local download URL that bypasses authentication
  */
 export async function generateSimpleAPKWrapper(options: APKWrapperOptions): Promise<{
   success: boolean;
@@ -99,45 +98,20 @@ export async function generateSimpleAPKWrapper(options: APKWrapperOptions): Prom
       console.log('[APK] Signing failed (continuing anyway):', signError);
     }
 
-    // Upload to S3
-    console.log('[APK] Uploading APK to S3...');
-    console.log('[APK] Forge API URL:', process.env.BUILT_IN_FORGE_API_URL ? 'SET' : 'NOT SET');
-    console.log('[APK] Forge API Key:', process.env.BUILT_IN_FORGE_API_KEY ? 'SET' : 'NOT SET');
-    const apkBuffer = fs.readFileSync(finalAPKPath);
-    // Upload with .bin extension (Manus Storage blocks .apk)
-    const s3KeyWithBinExt = `apks/${finalAPKName.replace('.apk', '.bin')}`;
-    
-    try {
-      const { url: s3Url } = await storagePut(
-        s3KeyWithBinExt,
-        apkBuffer,
-        'application/vnd.android.package-archive'
-      );
-      console.log('[APK] APK uploaded to S3:', s3Url);
+    // Return local download URL
+    // Use /static/apk endpoint to bypass proxy authentication
+    const domain = process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space';
+    const downloadUrl = `${domain}/static/apk/${finalAPKName}`;
+    console.log('[APK] Generated download URL:', downloadUrl);
 
-      // Clean up temp directory
-      await execAsync(`rm -rf ${tempDir}`).catch(() => {});
-      
-      // Return S3 URL directly (bypasses Railway authentication)
-      return {
-        success: true,
-        apkPath: finalAPKPath,
-        downloadUrl: s3Url,
-      };
-    } catch (s3Error) {
-      console.error('[APK] S3 upload failed:', s3Error);
-      // Fallback to local download URL if S3 fails
-      // Use /static/apk endpoint to bypass proxy authentication
-      const domain = process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space';
-      const fallbackUrl = `${domain}/static/apk/${finalAPKName}`;
-      console.log('[APK] Falling back to static/apk endpoint:', fallbackUrl);
-      
-      return {
-        success: true,
-        apkPath: finalAPKPath,
-        downloadUrl: fallbackUrl,
-      };
-    }
+    // Clean up temp directory
+    await execAsync(`rm -rf ${tempDir}`).catch(() => {});
+    
+    return {
+      success: true,
+      apkPath: finalAPKPath,
+      downloadUrl: downloadUrl,
+    };
   } catch (error) {
     console.error('[APK] Error in simple APK generation:', error);
     await execAsync(`rm -rf ${tempDir}`).catch(() => {});
