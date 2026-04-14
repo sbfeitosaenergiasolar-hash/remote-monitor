@@ -104,7 +104,7 @@ export default function APKBuilderPage() {
     try {
       // Call tRPC download endpoint to get base64 data
       // Use the tRPC client directly via fetch to bypass React hooks
-      const response = await fetch('/api/trpc/apk.download', {
+      const fetchResponse = await fetch('/api/trpc/apk.download', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -112,7 +112,13 @@ export default function APKBuilderPage() {
         body: JSON.stringify({
           json: { filename: downloadFilename },
         }),
-      }).then(r => r.json()).then(r => r.result.data);
+      });
+      
+      const jsonResponse = await fetchResponse.json();
+      console.log('tRPC response:', jsonResponse);
+      
+      // tRPC returns { result: { data: {...} } }
+      const response = jsonResponse.result?.data;
       
       if (response && response.success && response.data) {
         // Convert base64 to blob
