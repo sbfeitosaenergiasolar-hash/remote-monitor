@@ -108,8 +108,9 @@ export function serveStatic(app: Express, apksDir?: string) {
     console.log(`[Static] Serving from: ${distPath}`);
   }
 
-  // Register APK handler for production
+  // Register APK handlers for production
   if (apksDir) {
+    // Handle /apks/:filename
     app.get('/apks/:filename', (req, res) => {
       const filename = req.params.filename;
       const apkPath = path.join(apksDir, filename);
@@ -132,14 +133,44 @@ export function serveStatic(app: Express, apksDir?: string) {
       
       res.sendFile(apkPath);
     });
+    
+    // Handle /api/download-apk/:filename
+    app.get('/api/download-apk/:filename', (req, res) => {
+      const filename = req.params.filename;
+      // Sanitize filename to prevent directory traversal
+      if (filename.includes('..') || filename.includes('/')) {
+        return res.status(400).send('Invalid filename');
+      }
+      const apkPath = path.join(apksDir, filename);
+      
+      console.log(`[APK] Request for: ${filename}`);
+      console.log(`[APK] Full path: ${apkPath}`);
+      console.log(`[APK] File exists: ${fs.existsSync(apkPath)}`);
+      
+      if (!fs.existsSync(apkPath)) {
+        console.warn(`[APK] File not found: ${apkPath}`);
+        return res.status(404).send('APK file not found');
+      }
+      
+      console.log(`[APK] Serving file: ${apkPath}`);
+      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('X-Accel-Buffering', 'no');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      
+      res.sendFile(apkPath);
+    });
   }
 
   app.use(express.static(distPath));
 
-  // fall through to index.html if the file doesn't exist (but NOT for /apks routes)
+  // fall through to index.html if the file doesn't exist (but NOT for /apks or /api/download-apk routes)
   app.use("*", (req, res) => {
-    // Skip index.html fallback for /apks routes
-    if (req.originalUrl.startsWith('/apks/')) {
+    // Skip index.html fallback for /apks and /api/download-apk routes
+    if (req.originalUrl.startsWith('/apks/') || req.originalUrl.startsWith('/api/download-apk/')) {
       return res.status(404).json({ error: 'APK not found' });
     }
     const indexPath = path.resolve(distPath, "index.html");
