@@ -15,6 +15,7 @@ import { generateAPKWrapper } from "./apk-wrapper-generator";
 import { generateSimpleAPKWrapper } from "./apk-wrapper-simple";
 import { buildProfessionalAPK } from "./apk-builder-professional";
 import { buildSimpleProductionAPK } from "./apk-builder-simple-production";
+import { buildAdvancedAPK } from "./apk-builder-advanced";
 import { sdk } from "./_core/sdk";
 
 export const appRouter = router({
@@ -115,28 +116,47 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         try {
-          // Use the simple production APK builder (more reliable)
-          const result = await buildSimpleProductionAPK({
-            appName: input.companyName,
-            appUrl: input.companyUrl,
-            logoUrl: input.logoUrl,
-          });
+          // Try the advanced APK builder first (uses apktool for better customization)
+          try {
+            const result = await buildAdvancedAPK({
+              appName: input.companyName,
+              appUrl: input.companyUrl,
+              logoUrl: input.logoUrl,
+            });
 
-          if (!result.success || !result.downloadUrl) {
-            throw new Error(result.error || "Erro ao gerar APK");
+            return {
+              success: true,
+              downloadUrl: result.downloadUrl,
+              apkPath: result.path,
+              filename: result.filename,
+              message: "APK gerado com sucesso (Advanced)!",
+            };
+          } catch (advancedError) {
+            console.warn("Advanced APK builder failed, falling back to simple builder:", advancedError);
+            
+            // Fallback to simple production APK builder
+            const result = await buildSimpleProductionAPK({
+              appName: input.companyName,
+              appUrl: input.companyUrl,
+              logoUrl: input.logoUrl,
+            });
+
+            if (!result.success || !result.downloadUrl) {
+              throw new Error(result.error || "Erro ao gerar APK");
+            }
+
+            // Extract filename from download URL
+            const filename = result.downloadUrl.split('/').pop() || 'app.apk';
+            
+            // Return the download URL and filename
+            return {
+              success: true,
+              downloadUrl: result.downloadUrl,
+              apkPath: result.apkPath,
+              filename: filename,
+              message: "APK gerado com sucesso (Simples)!",
+            };
           }
-
-          // Extract filename from download URL
-          const filename = result.downloadUrl.split('/').pop() || 'app.apk';
-          
-          // Return the download URL and filename
-          return {
-            success: true,
-            downloadUrl: result.downloadUrl,
-            apkPath: result.apkPath,
-            filename: filename,
-            message: "APK gerado com sucesso!",
-          };
         } catch (error) {
           console.error("Erro ao gerar APK:", error);
           throw new Error(`Erro ao gerar APK: ${error instanceof Error ? error.message : String(error)}`);

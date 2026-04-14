@@ -37,9 +37,11 @@ describe('APK Download Express Endpoint', () => {
 
       const req = http.request(options, (res) => {
         expect(res.statusCode).toBe(200);
-        expect(res.headers['content-type']).toBe('application/vnd.android.package-archive');
+        expect(res.headers['content-type']).toBe('application/octet-stream');
         expect(res.headers['content-disposition']).toContain(`attachment; filename="${testFilename}"`);
         expect(res.headers['content-length']).toBeDefined();
+        expect(res.headers['x-download-options']).toBe('noopen');
+        expect(res.headers['content-transfer-encoding']).toBe('binary');
 
         let data = '';
         res.on('data', (chunk) => {
