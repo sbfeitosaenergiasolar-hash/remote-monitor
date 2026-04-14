@@ -56,32 +56,48 @@ export default function APKBuilderPage() {
         }),
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
       const result = await response.json();
-      console.log('Build result:', result);
+      console.log('Build result:', result, 'Type:', typeof result, 'Is Array:', Array.isArray(result));
 
       if (interval !== null) clearInterval(interval);
       setBuildProgress(100);
 
-      // Handle tRPC response format - can be array or object
-      let data;
-      if (Array.isArray(result)) {
+      // Handle tRPC response format
+      let data = null;
+      
+      // Try multiple parsing strategies
+      if (Array.isArray(result) && result.length > 0) {
         // Batch format: [{ result: { data: {...} } }]
-        data = result[0]?.result?.data;
+        console.log('Parsing as batch format');
+        const item = result[0];
+        data = item?.result?.data || item?.data || item;
       } else if (result?.result?.data) {
-        // Normal format: { result: { data: {...} } }
+        // Normal tRPC format: { result: { data: {...} } }
+        console.log('Parsing as normal tRPC format');
         data = result.result.data;
-      } else if (result?.data) {
-        // Direct format: { data: {...} }
-        data = result.data;
+      } else if (result?.success !== undefined) {
+        // Direct response format: { success, downloadUrl, filename, ... }
+        console.log('Parsing as direct response format');
+        data = result;
+      } else {
+        // Fallback: assume result is the data
+        console.log('Parsing as fallback');
+        data = result;
       }
+      
+      console.log('Parsed data:', data);
       
       if (data?.success && data?.downloadUrl && data?.filename) {
         setDownloadUrl(data.downloadUrl);
         setDownloadFilename(data.filename);
         setSuccess(true);
       } else {
-        console.error('Invalid response format:', result);
-        setError(data?.error || 'Erro ao gerar APK - formato de resposta inválido');
+        console.error('Invalid response format:', result, 'Parsed data:', data);
+        setError(data?.error || data?.message || 'Erro ao gerar APK - formato de resposta inválido');
       }
     } catch (error) {
       setError('Erro ao gerar APK: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
