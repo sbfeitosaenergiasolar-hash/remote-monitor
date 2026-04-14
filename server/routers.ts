@@ -124,15 +124,52 @@ export const appRouter = router({
             throw new Error(result.error || "Erro ao gerar APK");
           }
 
-          // Return the download URL
+          // Return the download URL and filename
           return {
             success: true,
             downloadUrl: result.downloadUrl,
+            apkPath: result.apkPath,
+            filename: result.apkPath ? path.basename(result.apkPath) : undefined,
             message: "APK gerado com sucesso!",
           };
         } catch (error) {
           console.error("Erro ao gerar APK:", error);
           throw new Error(`Erro ao gerar APK: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }),
+    
+    download: publicProcedure
+      .input(z.object({
+        filename: z.string().min(1),
+      }))
+      .query(async ({ input }) => {
+        try {
+          if (input.filename.includes('..') || input.filename.includes('/')) {
+            throw new Error('Invalid filename');
+          }
+          
+          const apksDir = process.env.NODE_ENV === 'production'
+            ? '/app/public/apks'
+            : path.join(process.cwd(), 'public/apks');
+          
+          const filepath = path.join(apksDir, input.filename);
+          
+          if (!fs.existsSync(filepath)) {
+            throw new Error('APK file not found');
+          }
+          
+          const fileBuffer = fs.readFileSync(filepath);
+          const base64 = fileBuffer.toString('base64');
+          
+          return {
+            success: true,
+            filename: input.filename,
+            data: base64,
+            size: fileBuffer.length,
+          };
+        } catch (error) {
+          console.error('[APK] Download error:', error);
+          throw new Error(`Erro ao baixar APK: ${error instanceof Error ? error.message : String(error)}`);
         }
       }),
   }),

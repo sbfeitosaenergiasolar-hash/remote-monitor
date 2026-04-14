@@ -25,7 +25,9 @@ export default function APKBuilderPage() {
   const [isBuilding, setIsBuilding] = useState(false);
   const [buildProgress, setBuildProgress] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [downloadFilename, setDownloadFilename] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const buildMutation = trpc.apk.build.useMutation();
 
@@ -80,8 +82,9 @@ export default function APKBuilderPage() {
       clearInterval(interval);
       setBuildProgress(100);
 
-      if (result.success && result.downloadUrl) {
+      if (result.success && result.downloadUrl && result.filename) {
         setDownloadUrl(result.downloadUrl);
+        setDownloadFilename(result.filename);
         // Removed auto-download - user can click the button manually
       } else {
         setError('Erro ao gerar APK');
@@ -91,6 +94,52 @@ export default function APKBuilderPage() {
       clearInterval(interval);
     } finally {
       setIsBuilding(false);
+    }
+  };
+
+  const handleDownloadAPK = async () => {
+    if (!downloadFilename) return;
+    
+    setIsDownloading(true);
+    try {
+      // Call tRPC download endpoint to get base64 data
+      // Use the tRPC client directly via fetch to bypass React hooks
+      const response = await fetch('/api/trpc/apk.download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          json: { filename: downloadFilename },
+        }),
+      }).then(r => r.json()).then(r => r.result.data);
+      
+      if (response && response.success && response.data) {
+        // Convert base64 to blob
+        const binaryString = atob(response.data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: 'application/vnd.android.package-archive' });
+        
+        // Create blob URL and trigger download
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = response.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      } else {
+        setError('Erro ao fazer download do APK');
+      }
+    } catch (err) {
+      console.error('Download error:', err);
+      setError('Erro ao fazer download: ' + (err instanceof Error ? err.message : 'Erro desconhecido'));
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -224,20 +273,20 @@ export default function APKBuilderPage() {
                   </div>
                 )}
 
-                {downloadUrl && (
+                {downloadUrl && downloadFilename && (
                   <div className="mt-4 p-3 bg-green-900/20 border border-green-400/30 rounded-lg">
                     <p className="text-green-300 text-sm">✅ APK gerado com sucesso!</p>
-                    <p className="text-slate-400 text-xs mt-2 break-all">{downloadUrl}</p>
+                    <p className="text-slate-400 text-xs mt-2 break-all">{downloadFilename}</p>
                     <Button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        // Use window.location.href directly for download
-                        window.location.href = downloadUrl;
-                      }}
-                      className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded"
+                      onClick={handleDownloadAPK}
+                      disabled={isDownloading}
+                      className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded disabled:opacity-50"
                     >
-                      📥 Baixar APK
+                      {isDownloading ? (
+                        <>⏳ Baixando...</>
+                      ) : (
+                        <>📥 Baixar APK</>
+                      )}
                     </Button>
                   </div>
                 )}
