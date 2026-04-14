@@ -48,17 +48,24 @@ export async function setupVite(app: express.Express, server: Server, apksDir?: 
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
       res.setHeader('X-Content-Type-Options', 'nosniff');
+      // Headers to bypass Cloudflare/proxy authentication
+      res.setHeader('X-Skip-Auth', 'true');
+      res.setHeader('X-Bypass-Auth', 'true');
+      res.setHeader('Authorization-Skip', 'true');
+      res.setHeader('X-Accel-Buffering', 'no');
       
       res.sendFile(apkPath);
     });
   }
 
   app.use(vite.middlewares);
+
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
     
-    // Skip Vite middleware for /apks routes - let them be handled by the static handler
+    // Skip this middleware for /apks/ routes - they should be handled by the static handler
     if (url.startsWith('/apks/')) {
+      console.log(`[APK] Skipping Vite middleware for: ${url}`);
       return next();
     }
 

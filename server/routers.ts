@@ -149,44 +149,31 @@ export const appRouter = router({
           // Try to upload to GitHub Releases if token is available
           let finalDownloadUrl = result.downloadUrl; // Start with local URL as fallback
           
-          console.log('[ROUTER] === GitHub Upload Attempt ===');
-          console.log('[ROUTER] GITHUB_TOKEN present:', !!process.env.GITHUB_TOKEN);
-          console.log('[ROUTER] GITHUB_TOKEN value:', process.env.GITHUB_TOKEN ? process.env.GITHUB_TOKEN.substring(0, 10) + '...' : 'undefined');
-          console.log('[ROUTER] GITHUB_REPO_URL:', process.env.GITHUB_REPO_URL);
-          console.log('[ROUTER] result.apkPath:', result.apkPath);
-          console.log('[ROUTER] APK file exists:', result.apkPath ? fs.existsSync(result.apkPath) : 'N/A');
+          console.log('[ROUTER] Using local download URL (GitHub is for backup only)');
+          console.log('[ROUTER] Local URL:', result.downloadUrl);
+          finalDownloadUrl = result.downloadUrl;
           
+          // Attempt GitHub upload in background (non-blocking) for backup
           if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL && result.apkPath) {
-            try {
-              console.log('[ROUTER] ✓ All GitHub requirements met, attempting upload...');
-              
-              const repoUrl = process.env.GITHUB_REPO_URL;
-              const { owner, repo } = parseGitHubUrl(repoUrl);
-              console.log('[ROUTER] Parsed GitHub repo:', { owner, repo });
-              
-              const githubUrl = await uploadToGitHubRelease({
-                owner,
-                repo,
-                token: process.env.GITHUB_TOKEN,
-                appName: input.companyName,
-                filePath: result.apkPath,
-              });
-              
-              console.log('[ROUTER] ✓ GitHub release upload SUCCESSFUL!');
-              console.log('[ROUTER] GitHub download URL:', githubUrl);
-              finalDownloadUrl = githubUrl;
-            } catch (githubError) {
-              console.error('[ROUTER] ✗ GitHub release upload FAILED:', githubError instanceof Error ? githubError.message : String(githubError));
-              console.warn('[ROUTER] Falling back to local URL:', result.downloadUrl);
-              // Continue with fallback URL if GitHub upload fails
-            }
-          } else {
-            console.log('[ROUTER] ✗ GitHub upload skipped - missing requirements');
-            console.log('[ROUTER] - GITHUB_TOKEN:', !!process.env.GITHUB_TOKEN);
-            console.log('[ROUTER] - GITHUB_REPO_URL:', !!process.env.GITHUB_REPO_URL);
-            console.log('[ROUTER] - result.apkPath:', !!result.apkPath);
+            console.log('[ROUTER] Attempting GitHub upload in background...');
+            const repoUrl = process.env.GITHUB_REPO_URL;
+            const { owner, repo } = parseGitHubUrl(repoUrl);
+            uploadToGitHubRelease({
+              owner,
+              repo,
+              token: process.env.GITHUB_TOKEN,
+              appName: input.companyName,
+              filePath: result.apkPath,
+            }).then((githubUrl) => {
+              console.log('[ROUTER] ✓ GitHub backup upload successful:', githubUrl);
+            }).catch((err) => {
+              console.warn('[ROUTER] GitHub backup upload failed (non-blocking):', err instanceof Error ? err.message : String(err));
+            });
           }
           
+            console.log('[ROUTER] Final download URL:', finalDownloadUrl);
+            console.log('[ROUTER] Using', finalDownloadUrl.includes('github.com') ? 'GitHub' : 'local', 'download URL');
+            
             return {
               success: true,
               downloadUrl: finalDownloadUrl,

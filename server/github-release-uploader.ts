@@ -79,6 +79,7 @@ export async function uploadToGitHubRelease(options: GitHubReleaseOptions): Prom
           'Accept': 'application/vnd.github.v3+json',
           'Content-Type': 'application/vnd.android.package-archive',
           'Content-Length': fileSize.toString(),
+          'Content-Disposition': `attachment; filename="${fileName}"`,
         },
         body: fileBuffer,
       } as any
@@ -95,6 +96,9 @@ export async function uploadToGitHubRelease(options: GitHubReleaseOptions): Prom
 
     console.log('[GITHUB] Upload successful!');
     console.log('[GITHUB] Download URL:', downloadUrl);
+    console.log('[GITHUB] Asset browser_download_url:', assetData.browser_download_url);
+    console.log('[GITHUB] Asset content_type:', assetData.content_type);
+    console.log('[GITHUB] Asset size:', assetData.size);
 
     return downloadUrl;
   } catch (error) {
