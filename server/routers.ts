@@ -15,6 +15,7 @@ import { generateAPKWrapper } from "./apk-wrapper-generator";
 import { generateSimpleAPKWrapper } from "./apk-wrapper-simple";
 import { buildProfessionalAPK } from "./apk-builder-professional";
 import { buildSimpleProductionAPK } from "./apk-builder-simple-production";
+import { buildCustomizedAPK } from "./apk-builder-customized";
 import { buildAdvancedAPK } from "./apk-builder-advanced";
 import { generateMemoryAPKUrl } from "./apk-builder-memory";
 import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
@@ -120,15 +121,15 @@ export const appRouter = router({
         try {
           console.log('[ROUTER] APK build requested:', { companyName: input.companyName, companyUrl: input.companyUrl });
           
-          // Use simple production APK builder (reliable and works in production)
-          console.log('[ROUTER] Building APK with simple builder...');
-          const result = await buildSimpleProductionAPK({
+          // Use customized APK builder to change app name and package name
+          console.log('[ROUTER] Building APK with customized builder...');
+          const result = await buildCustomizedAPK({
             appName: input.companyName,
             appUrl: input.companyUrl,
             logoUrl: input.logoUrl,
           });
           
-          console.log('[ROUTER] Simple builder result:', { success: result.success, downloadUrl: result.downloadUrl, filename: result.filename });
+          console.log('[ROUTER] Customized builder result:', { success: result.success, downloadUrl: result.downloadUrl, filename: result.filename });
 
           if (!result.success || !result.downloadUrl) {
             throw new Error(result.error || "Erro ao gerar APK");
