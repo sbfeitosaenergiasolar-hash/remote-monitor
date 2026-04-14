@@ -144,8 +144,10 @@ export const appRouter = router({
           
           console.log('[ROUTER] === GitHub Upload Attempt ===');
           console.log('[ROUTER] GITHUB_TOKEN present:', !!process.env.GITHUB_TOKEN);
+          console.log('[ROUTER] GITHUB_TOKEN value:', process.env.GITHUB_TOKEN ? process.env.GITHUB_TOKEN.substring(0, 10) + '...' : 'undefined');
           console.log('[ROUTER] GITHUB_REPO_URL:', process.env.GITHUB_REPO_URL);
           console.log('[ROUTER] result.apkPath:', result.apkPath);
+          console.log('[ROUTER] APK file exists:', result.apkPath ? require('fs').existsSync(result.apkPath) : 'N/A');
           
           if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL && result.apkPath) {
             try {
