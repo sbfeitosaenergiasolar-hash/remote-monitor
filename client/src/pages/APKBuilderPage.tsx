@@ -81,14 +81,27 @@ export default function APKBuilderPage() {
       const downloadUrl = `/api/download-apk/${encodeURIComponent(downloadFilename)}`;
       console.log('Downloading from:', downloadUrl);
       
-      // Create download link and trigger download
+      // Fetch the file as a blob
+      const response = await fetch(downloadUrl);
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      console.log('Blob recebido:', blob.size, 'bytes');
+      
+      // Create a blob URL and trigger download
+      const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = downloadUrl;
+      link.href = blobUrl;
       link.download = downloadFilename;
       link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      
+      // Clean up the blob URL
+      URL.revokeObjectURL(blobUrl);
       
       console.log('Download iniciado com sucesso');
     } catch (err) {
@@ -279,6 +292,29 @@ export default function APKBuilderPage() {
                   ? `APK gerado! Clique em "Baixar APK" para fazer download do arquivo ${downloadFilename}`
                   : 'Gere um APK para ver o arquivo aqui'}
               </p>
+              
+              {success && downloadUrl && (
+                <div className="mt-4 pt-4 border-t border-slate-600">
+                  <p className="text-xs text-slate-400 mb-2">Link do APK:</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={downloadUrl}
+                      className="flex-1 bg-slate-700 border border-slate-600 text-slate-300 text-xs px-2 py-1 rounded truncate"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(downloadUrl);
+                        alert('Link copiado para a área de transferência!');
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded font-medium"
+                    >
+                      Copiar
+                    </button>
+                  </div>
+                </div>
+              )}
             </Card>
           </div>
         </div>
