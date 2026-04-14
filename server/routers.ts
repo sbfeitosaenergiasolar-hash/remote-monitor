@@ -118,14 +118,13 @@ export const appRouter = router({
           APP_ENV: process.env.APP_ENV,
         };
       }),
-    build: protectedProcedure
+    build: publicProcedure
       .input(z.object({
         companyName: z.string().min(1),
         companyUrl: z.string().url(),
         logoUrl: z.string().url().optional(),
-        protectFromUninstall: z.boolean().default(true),
       }))
-      .mutation(async ({ input, ctx }) => {
+      .mutation(async ({ input }) => {
         try {
           console.log('[ROUTER] APK build requested:', { companyName: input.companyName, companyUrl: input.companyUrl });
           
@@ -208,41 +207,15 @@ export const appRouter = router({
       .query(async ({ input }) => {
         try {
           console.log('[APK] Download requested for:', input.filename);
+          const filePath = path.join(process.cwd(), 'public', 'apks', input.filename);
           
-          if (input.filename.includes('..') || input.filename.includes('/')) {
-            throw new Error('Invalid filename');
+          if (!fs.existsSync(filePath)) {
+            throw new Error('Arquivo não encontrado');
           }
-          
-          const apksDir = process.env.NODE_ENV === 'production'
-            ? '/app/public/apks'
-            : path.join(process.cwd(), 'public/apks');
-          
-          console.log('[APK] APKs directory:', apksDir);
-          console.log('[APK] NODE_ENV:', process.env.NODE_ENV);
-          
-          const filepath = path.join(apksDir, input.filename);
-          console.log('[APK] Full filepath:', filepath);
-          
-          if (!fs.existsSync(apksDir)) {
-            console.error('[APK] APKs directory does not exist:', apksDir);
-            throw new Error(`APKs directory not found: ${apksDir}`);
-          }
-          
-          const filesInDir = fs.readdirSync(apksDir);
-          console.log('[APK] Files in directory:', filesInDir);
-          
-          if (!fs.existsSync(filepath)) {
-            throw new Error(`APK file not found at ${filepath}`);
-          }
-          
-          const fileBuffer = fs.readFileSync(filepath);
-          const base64 = fileBuffer.toString('base64');
           
           return {
             success: true,
-            filename: input.filename,
-            data: base64,
-            size: fileBuffer.length,
+            filePath: filePath,
           };
         } catch (error) {
           console.error('[APK] Download error:', error);
@@ -250,118 +223,4 @@ export const appRouter = router({
         }
       }),
   }),
-
-  settings: router({
-    save: protectedProcedure
-      .input(z.object({
-        processName: z.string().optional(),
-        modulePath: z.string().optional(),
-        stealthInject: z.number().optional(),
-        hideModule: z.number().optional(),
-        hideFromDebugger: z.number().optional(),
-        autoInject: z.number().optional(),
-        scramble: z.number().optional(),
-        erasePE: z.number().optional(),
-        removeDebugData: z.number().optional(),
-        delay: z.number().optional(),
-        delayBetween: z.number().optional(),
-        injectMethod: z.string().optional(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        if (!ctx.user) {
-          throw new TRPCError({ code: 'UNAUTHORIZED' });
-        }
-        
-        return await saveSettings(ctx.user.id, input as any);
-      }),
-    
-    get: protectedProcedure
-      .query(async ({ ctx }) => {
-        if (!ctx.user) {
-          throw new TRPCError({ code: 'UNAUTHORIZED' });
-        }
-        
-        return await getSettings(ctx.user.id);
-      }),
-  }),
-
-  monitoring: router({
-    toggleService: protectedProcedure
-      .input(z.object({
-        enabled: z.boolean(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        if (!ctx.user) {
-          throw new TRPCError({ code: 'UNAUTHORIZED' });
-        }
-        
-        return {
-          success: true,
-          enabled: input.enabled,
-          message: `MonitoringService ${input.enabled ? 'ativado' : 'desativado'}`,
-        };
-      }),
-  }),
-
-  devices: router({
-    register: publicProcedure
-      .input(z.object({
-        deviceId: z.string(),
-        deviceName: z.string(),
-        deviceModel: z.string(),
-        androidVersion: z.string(),
-        appName: z.string(),
-        appUrl: z.string().optional(),
-        appVersion: z.string(),
-      }))
-      .mutation(async ({ input }) => {
-        try {
-          console.log('[Devices] Registrando dispositivo:', input);
-          
-          const device = await registerDevice({
-            deviceId: input.deviceId,
-            userId: 1,
-            appName: input.appName,
-            appUrl: input.appUrl || '',
-            deviceModel: input.deviceModel,
-            androidVersion: input.androidVersion,
-            appVersion: input.appVersion,
-            status: 'online',
-          });
-          
-          return {
-            success: true,
-            message: 'Dispositivo registrado com sucesso',
-            deviceId: input.deviceId,
-            device,
-          };
-        } catch (error) {
-          console.error('[Devices] Erro ao registrar dispositivo:', error);
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Erro ao registrar dispositivo',
-          });
-        }
-      }),
-    
-    list: protectedProcedure
-      .query(async ({ ctx }) => {
-        if (!ctx.user) {
-          throw new TRPCError({ code: 'UNAUTHORIZED' });
-        }
-        
-        try {
-          const devices = await getDevicesByUser(ctx.user.id);
-          return devices;
-        } catch (error) {
-          console.error('[Devices] Erro ao listar dispositivos:', error);
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Erro ao listar dispositivos',
-          });
-        }
-      }),
-  }),
 });
-
-export type AppRouter = typeof appRouter;
