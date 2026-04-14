@@ -107,5 +107,5 @@ export function generateMemoryAPKUrl(appName: string): string {
     .toLowerCase();
 
   const domain = process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space';
-  return `${domain}/api/apk-stream?app=${encodeURIComponent(sanitizedName)}`;
+  return `${domain}/download-apk/${encodeURIComponent(sanitizedName)}`;
 }

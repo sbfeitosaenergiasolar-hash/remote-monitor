@@ -101,8 +101,9 @@ async function startServer() {
   app.get('/api/download-apk/:filename', serveAPKFile);
   
   // In-memory APK streaming endpoint (generates and streams without saving to disk)
-  app.get('/api/apk-stream', (req, res) => {
-    const appName = (req.query.app as string) || 'app';
+  // Using /download-apk/ instead of /api/ to bypass gateway authentication
+  app.get('/download-apk/:appName', (req, res) => {
+    const appName = req.params.appName || 'app';
     console.log('[APK-STREAM] Generating APK in memory for:', appName);
     buildAPKInMemoryAndStream({ appName, appUrl: 'https://example.com' }, res);
   });
