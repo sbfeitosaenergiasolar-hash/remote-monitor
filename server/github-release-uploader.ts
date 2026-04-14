@@ -69,7 +69,7 @@ export async function uploadToGitHubRelease(options: GitHubReleaseOptions): Prom
     console.log('[GITHUB] Release created, uploading asset...');
 
     // Upload asset
-    const fileStream = fs.createReadStream(options.filePath);
+    const fileBuffer = fs.readFileSync(options.filePath);
     const uploadResponse = await fetch(
       `${uploadUrl}?name=${encodeURIComponent(fileName)}`,
       {
@@ -80,8 +80,8 @@ export async function uploadToGitHubRelease(options: GitHubReleaseOptions): Prom
           'Content-Type': 'application/vnd.android.package-archive',
           'Content-Length': fileSize.toString(),
         },
-        body: fileStream as any,
-      }
+        body: fileBuffer,
+      } as any
     );
 
     if (!uploadResponse.ok) {
