@@ -50,12 +50,19 @@ export default function APKBuilderPage() {
       if (interval) clearInterval(interval);
 
       console.log('APK Build Response:', data);
+      console.log('Response details:', {
+        success: data?.success,
+        downloadUrl: data?.downloadUrl,
+        filename: data?.filename,
+        message: data?.message,
+      });
 
       setBuildProgress(100);
 
       // Check if build was successful
       if (data?.success && data?.downloadUrl) {
         const filename = data.filename || data.downloadUrl.split('/').pop() || 'app.apk';
+        console.log('Setting download state:', { downloadUrl: data.downloadUrl, filename });
         setDownloadUrl(data.downloadUrl);
         setDownloadFilename(filename);
         setSuccess(true);
