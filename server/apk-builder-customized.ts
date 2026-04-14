@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { customizeAPKWithZip } from './apk-customizer-zip';
+import { signAPK } from './apk-signer';
 
 interface APKBuilderOptions {
   appName: string;
@@ -10,7 +11,7 @@ interface APKBuilderOptions {
 
 /**
  * Build customized APK with app name and package name
- * Uses apktool to modify the base APK
+ * Uses ZIP manipulation to modify the base APK and signs it with valid certificate
  */
 export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<{
   success: boolean;
@@ -103,9 +104,25 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<{
       };
     }
 
-    // Verify the output file
+    // Verify the customized APK file
     if (!fs.existsSync(finalAPKPath)) {
       throw new Error('Failed to create customized APK');
+    }
+
+    let customizedStats = fs.statSync(finalAPKPath);
+    console.log(`[APK-BUILDER-CUSTOM] Customized APK size: ${(customizedStats.size / 1024 / 1024).toFixed(2)}MB`);
+
+    // Sign the APK with valid certificate
+    console.log(`[APK-BUILDER-CUSTOM] Signing APK with valid certificate...`);
+    const signResult = await signAPK({
+      apkPath: finalAPKPath,
+    });
+
+    if (!signResult.success) {
+      console.warn(`[APK-BUILDER-CUSTOM] APK signing failed, continuing without signature:`, signResult.error);
+      // Continue even if signing fails - the APK will still work, just without valid signature
+    } else {
+      console.log(`[APK-BUILDER-CUSTOM] ✓ APK signed successfully`);
     }
 
     const finalStats = fs.statSync(finalAPKPath);

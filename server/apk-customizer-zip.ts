@@ -1,9 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as zlib from 'zlib';
+import { exec } from 'child_process';
 import { promisify } from 'util';
 
-const exec = require('child_process').exec;
 const execAsync = promisify(exec);
 
 interface APKCustomizerOptions {
