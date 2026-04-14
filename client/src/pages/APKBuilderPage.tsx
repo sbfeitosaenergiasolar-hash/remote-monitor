@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { AlertCircle, CheckCircle2, Download } from 'lucide-react';
+import { trpc } from '@/lib/trpc';
 
 export default function APKBuilderPage() {
   const [config, setConfig] = useState({
@@ -13,18 +14,18 @@ export default function APKBuilderPage() {
     logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT5m8BQnb3hqlmxu_ejrE3y3PGUlgCVyE7Og&s',
   });
 
-  const [isBuilding, setIsBuilding] = useState(false);
   const [buildProgress, setBuildProgress] = useState(0);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
   const [downloadFilename, setDownloadFilename] = useState('');
 
+  const buildMutation = trpc.apk.build.useMutation();
+
   const handleBuildAPK = async () => {
     setError('');
     setSuccess(false);
     setDownloadUrl('');
-    setIsBuilding(true);
     setBuildProgress(0);
 
     try {
@@ -34,50 +35,19 @@ export default function APKBuilderPage() {
         setBuildProgress((prev) => Math.min(prev + Math.random() * 30, 90));
       }, 500);
 
-      // Call tRPC endpoint using trpc client
-      const response = await fetch('/api/trpc/apk.build', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          json: {
-            companyName: config.appName,
-            companyUrl: config.appUrl,
-            logoUrl: config.logoUrl || undefined,
-            protectFromUninstall: true,
-          },
-        }),
+      // Call tRPC endpoint using mutation
+      const data = await buildMutation.mutateAsync({
+        companyName: config.appName,
+        companyUrl: config.appUrl,
+        logoUrl: config.logoUrl || undefined,
+        protectFromUninstall: true,
       });
 
       if (interval) clearInterval(interval);
 
-      // Check if response is ok
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-
-      const result = await response.json();
-      console.log('APK Build Response:', result);
+      console.log('APK Build Response:', data);
 
       setBuildProgress(100);
-
-      // Extract data from response - handle multiple formats
-      let data = null;
-      
-      if (Array.isArray(result)) {
-        // Batch format
-        data = result[0]?.result?.data;
-      } else if (result?.result?.data) {
-        // Normal tRPC format
-        data = result.result.data;
-      } else if (result?.success) {
-        // Direct response
-        data = result;
-      }
-
-      console.log('Extracted data:', data);
 
       // Check if build was successful
       if (data?.success && data?.downloadUrl) {
@@ -86,13 +56,11 @@ export default function APKBuilderPage() {
         setDownloadFilename(filename);
         setSuccess(true);
       } else {
-        throw new Error(data?.error || data?.message || 'Erro ao gerar APK');
+        throw new Error(data?.message || 'Erro ao gerar APK');
       }
     } catch (err) {
       console.error('Build error:', err);
       setError(err instanceof Error ? err.message : 'Erro ao gerar APK');
-    } finally {
-      setIsBuilding(false);
     }
   };
 
@@ -190,10 +158,10 @@ export default function APKBuilderPage() {
             {/* Build Button */}
             <Button
               onClick={handleBuildAPK}
-              disabled={isBuilding || !config.appName || !config.appUrl}
+              disabled={buildMutation.isPending || !config.appName || !config.appUrl}
               className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 text-lg"
             >
-              {isBuilding ? `Gerando... ${Math.round(buildProgress)}%` : '⬇️ Gerar APK'}
+              {buildMutation.isPending ? `Gerando... ${Math.round(buildProgress)}%` : '⬇️ Gerar APK'}
             </Button>
 
             {/* Download Button */}
