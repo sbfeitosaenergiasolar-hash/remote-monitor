@@ -108,9 +108,17 @@ export const appRouter = router({
         return await getEvents();
       }),
   }),
-
   apk: router({
-    build: publicProcedure
+    testEnv: publicProcedure
+      .query(() => {
+        return {
+          GITHUB_TOKEN: process.env.GITHUB_TOKEN ? 'Present' : 'Missing',
+          GITHUB_REPO_URL: process.env.GITHUB_REPO_URL || 'Missing',
+          NODE_ENV: process.env.NODE_ENV,
+          APP_ENV: process.env.APP_ENV,
+        };
+      }),
+    build: protectedProcedure
       .input(z.object({
         companyName: z.string().min(1),
         companyUrl: z.string().url(),
