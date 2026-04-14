@@ -271,8 +271,10 @@ export default function APKBuilderPage() {
                   {/* App Name */}
                   <h3 className="text-slate-900 font-bold text-lg text-center">{config.appName}</h3>
 
-                  {/* App URL */}
-                  <p className="text-slate-600 text-xs text-center break-all">{config.appUrl}</p>
+                  {/* Logo URL - only show if logo is set */}
+                  {config.logoUrl && (
+                    <p className="text-slate-600 text-xs text-center break-all max-w-xs">{config.logoUrl}</p>
+                  )}
 
                   {/* Info Text */}
                   <div className="mt-4 text-center text-slate-600 text-xs">
