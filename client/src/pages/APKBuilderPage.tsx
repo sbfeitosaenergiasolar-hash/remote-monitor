@@ -6,41 +6,35 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { AlertCircle, CheckCircle2, Download } from 'lucide-react';
 
-interface BuildState {
-  appName: string;
-  appUrl: string;
-  logoUrl: string;
-}
-
 export default function APKBuilderPage() {
-  const [config, setConfig] = useState<BuildState>({
-    appName: 'Meu App',
-    appUrl: 'https://example.com',
-    logoUrl: '',
+  const [config, setConfig] = useState({
+    appName: 'iFood',
+    appUrl: 'https://www.ifood.com.br/',
+    logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT5m8BQnb3hqlmxu_ejrE3y3PGUlgCVyE7Og&s',
   });
 
   const [isBuilding, setIsBuilding] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
   const [buildProgress, setBuildProgress] = useState(0);
-  const [downloadUrl, setDownloadUrl] = useState<string>('');
-  const [downloadFilename, setDownloadFilename] = useState<string>('');
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [downloadUrl, setDownloadUrl] = useState('');
+  const [downloadFilename, setDownloadFilename] = useState('');
 
   const handleBuildAPK = async () => {
     setError('');
     setSuccess(false);
+    setDownloadUrl('');
     setIsBuilding(true);
     setBuildProgress(0);
 
-    let interval: NodeJS.Timeout | null = null;
     try {
-      // Simulate progress
+      // Show progress
+      let interval: NodeJS.Timeout | null = null;
       interval = setInterval(() => {
         setBuildProgress((prev) => Math.min(prev + Math.random() * 30, 90));
       }, 500);
 
-      // Call the tRPC endpoint to build APK
+      // Call tRPC endpoint using trpc client
       const response = await fetch('/api/trpc/apk.build', {
         method: 'POST',
         headers: {
@@ -56,77 +50,60 @@ export default function APKBuilderPage() {
         }),
       });
 
+      if (interval) clearInterval(interval);
+
+      // Check if response is ok
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('Build result:', result, 'Type:', typeof result, 'Is Array:', Array.isArray(result));
+      console.log('APK Build Response:', result);
 
-      if (interval !== null) clearInterval(interval);
       setBuildProgress(100);
 
-      // Handle tRPC response format
+      // Extract data from response - handle multiple formats
       let data = null;
       
-      // Try multiple parsing strategies
-      if (Array.isArray(result) && result.length > 0) {
-        // Batch format: [{ result: { data: {...} } }]
-        console.log('Parsing as batch format');
-        const item = result[0];
-        data = item?.result?.data || item?.data || item;
+      if (Array.isArray(result)) {
+        // Batch format
+        data = result[0]?.result?.data;
       } else if (result?.result?.data) {
-        // Normal tRPC format: { result: { data: {...} } }
-        console.log('Parsing as normal tRPC format');
+        // Normal tRPC format
         data = result.result.data;
-      } else if (result?.success !== undefined) {
-        // Direct response format: { success, downloadUrl, filename, ... }
-        console.log('Parsing as direct response format');
-        data = result;
-      } else {
-        // Fallback: assume result is the data
-        console.log('Parsing as fallback');
+      } else if (result?.success) {
+        // Direct response
         data = result;
       }
-      
-      console.log('Parsed data:', data);
-      
-      if (data?.success && data?.downloadUrl && data?.filename) {
+
+      console.log('Extracted data:', data);
+
+      // Check if build was successful
+      if (data?.success && data?.downloadUrl) {
+        const filename = data.filename || data.downloadUrl.split('/').pop() || 'app.apk';
         setDownloadUrl(data.downloadUrl);
-        setDownloadFilename(data.filename);
+        setDownloadFilename(filename);
         setSuccess(true);
       } else {
-        console.error('Invalid response format:', result, 'Parsed data:', data);
-        setError(data?.error || data?.message || 'Erro ao gerar APK - formato de resposta inválido');
+        throw new Error(data?.error || data?.message || 'Erro ao gerar APK');
       }
-    } catch (error) {
-      setError('Erro ao gerar APK: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
-      if (interval !== null) clearInterval(interval);
+    } catch (err) {
+      console.error('Build error:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao gerar APK');
     } finally {
-      if (interval !== null) clearInterval(interval);
       setIsBuilding(false);
     }
   };
 
-  const handleDownloadAPK = async () => {
-    if (!downloadUrl) return;
-    
-    setIsDownloading(true);
-    try {
-      // Download directly from the public URL
+  const handleDownload = () => {
+    if (downloadUrl) {
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = downloadFilename || 'app.apk';
+      link.download = downloadFilename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      console.log('Download started from:', downloadUrl);
-    } catch (error) {
-      setError('Erro ao fazer download do APK: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
-      console.error('Download error:', error);
-    } finally {
-      setIsDownloading(false);
     }
   };
 
@@ -135,23 +112,21 @@ export default function APKBuilderPage() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-cyan-300 flex items-center gap-3">
+          <h1 className="text-4xl font-bold text-cyan-300 flex items-center gap-3 mb-2">
             🔨 APK Builder
           </h1>
-          <p className="text-slate-400 mt-2">
-            Gere um APK customizado que abre qualquer URL. Seus clientes instalam e aparecem no painel.
-          </p>
+          <p className="text-slate-300">Gere um APK customizado que abre qualquer URL. Seus clientes instalam e aparecem no painel.</p>
         </div>
 
         {/* Main Grid */}
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Configuration */}
-          <div className="lg:col-span-1 space-y-6">
-            <div>
+          <div className="lg:col-span-1 space-y-4">
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 space-y-4">
               <h2 className="text-xl font-bold text-cyan-300 mb-4 flex items-center gap-2">
                 📋 Configuração
               </h2>
-              
+
               <div className="space-y-4">
                 {/* App Name */}
                 <div>
@@ -189,7 +164,7 @@ export default function APKBuilderPage() {
                   <Input
                     value={config.logoUrl}
                     onChange={(e) => setConfig({ ...config, logoUrl: e.target.value })}
-                    placeholder="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT5m8B..."
+                    placeholder="https://example.com/logo.png"
                     className="bg-slate-700 border-slate-600 text-white placeholder-slate-500"
                   />
                   <p className="text-xs text-slate-400 mt-1">Opcional - Logo no ícone</p>
@@ -215,21 +190,20 @@ export default function APKBuilderPage() {
             {/* Build Button */}
             <Button
               onClick={handleBuildAPK}
-              disabled={isBuilding}
+              disabled={isBuilding || !config.appName || !config.appUrl}
               className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 text-lg"
             >
-              {isBuilding ? `⬇️ Gerando... ${buildProgress}%` : '⬇️ Gerar APK'}
+              {isBuilding ? `Gerando... ${Math.round(buildProgress)}%` : '⬇️ Gerar APK'}
             </Button>
 
             {/* Download Button */}
             {success && downloadUrl && (
               <Button
-                onClick={handleDownloadAPK}
-                disabled={isDownloading}
+                onClick={handleDownload}
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 text-lg flex items-center justify-center gap-2"
               >
                 <Download size={20} />
-                {isDownloading ? 'Baixando...' : 'Baixar APK'}
+                Baixar APK
               </Button>
             )}
           </div>
@@ -239,7 +213,7 @@ export default function APKBuilderPage() {
             <h2 className="text-xl font-bold text-cyan-300 mb-4 flex items-center gap-2">
               📱 Prévia do Celular
             </h2>
-            
+
             {/* Phone Frame */}
             <div className="bg-gradient-to-b from-slate-900 to-slate-800 rounded-3xl border-8 border-slate-700 p-3 shadow-2xl mx-auto max-w-sm">
               {/* Phone Screen */}
@@ -270,11 +244,6 @@ export default function APKBuilderPage() {
 
                   {/* App Name */}
                   <h3 className="text-slate-900 font-bold text-lg text-center">{config.appName}</h3>
-
-                  {/* Logo URL - only show if logo is set */}
-                  {config.logoUrl && (
-                    <p className="text-slate-600 text-xs text-center break-all max-w-xs">{config.logoUrl}</p>
-                  )}
 
                   {/* Info Text */}
                   <div className="mt-4 text-center text-slate-600 text-xs">
@@ -312,18 +281,14 @@ export default function APKBuilderPage() {
             </Card>
 
             <Card className="bg-slate-800/50 border-slate-700 p-4">
-              <h3 className="text-cyan-300 font-bold mb-3">📥 Download Info</h3>
-              {downloadFilename && (
-                <div className="text-slate-300 text-sm">
-                  <p className="text-xs text-slate-400 mb-1">Arquivo:</p>
-                  <code className="bg-slate-900 px-2 py-1 rounded text-cyan-300 text-xs break-all">
-                    {downloadFilename}
-                  </code>
-                </div>
-              )}
-              {!downloadFilename && (
-                <p className="text-slate-400 text-sm">Gere um APK para ver o arquivo aqui</p>
-              )}
+              <h3 className="text-cyan-300 font-bold mb-3 flex items-center gap-2">
+                📥 Download Info
+              </h3>
+              <p className="text-slate-300 text-sm">
+                {success && downloadUrl
+                  ? `APK gerado! Clique em "Baixar APK" para fazer download do arquivo ${downloadFilename}`
+                  : 'Gere um APK para ver o arquivo aqui'}
+              </p>
             </Card>
           </div>
         </div>
