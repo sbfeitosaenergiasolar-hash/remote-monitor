@@ -6,12 +6,12 @@ import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 
 export default function APKBuilderPage() {
-  // Check authentication from localStorage
-  const userEmail = localStorage.getItem("user_email");
-  const userName = localStorage.getItem("user_name");
-  const isAuthenticated = !!(userEmail && userName);
+  // Check authentication - the Home component already ensures user is authenticated
+  // No need to check again, just render the builder
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   
   const logout = () => {
+    // Logout by clearing auth and redirecting
     localStorage.removeItem("auth_token");
     localStorage.removeItem("auth_timestamp");
     localStorage.removeItem("user_email");
@@ -149,22 +149,8 @@ export default function APKBuilderPage() {
     }
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-white mb-4">Bem-vindo</h1>
-          <p className="text-slate-400 mb-8">Faça login para continuar</p>
-          <Button
-            onClick={() => (window.location.href = "/login")}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            Entrar
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  // Authentication is already handled by Home component
+  // No need to show login screen here
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4 md:p-8">

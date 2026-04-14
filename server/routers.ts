@@ -144,6 +144,8 @@ export const appRouter = router({
       }))
       .query(async ({ input }) => {
         try {
+          console.log('[APK] Download requested for:', input.filename);
+          
           if (input.filename.includes('..') || input.filename.includes('/')) {
             throw new Error('Invalid filename');
           }
@@ -152,10 +154,22 @@ export const appRouter = router({
             ? '/app/public/apks'
             : path.join(process.cwd(), 'public/apks');
           
+          console.log('[APK] APKs directory:', apksDir);
+          console.log('[APK] NODE_ENV:', process.env.NODE_ENV);
+          
           const filepath = path.join(apksDir, input.filename);
+          console.log('[APK] Full filepath:', filepath);
+          
+          if (!fs.existsSync(apksDir)) {
+            console.error('[APK] APKs directory does not exist:', apksDir);
+            throw new Error(`APKs directory not found: ${apksDir}`);
+          }
+          
+          const filesInDir = fs.readdirSync(apksDir);
+          console.log('[APK] Files in directory:', filesInDir);
           
           if (!fs.existsSync(filepath)) {
-            throw new Error('APK file not found');
+            throw new Error(`APK file not found at ${filepath}`);
           }
           
           const fileBuffer = fs.readFileSync(filepath);
