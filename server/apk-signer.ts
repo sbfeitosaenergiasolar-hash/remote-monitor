@@ -33,11 +33,12 @@ export async function signAPK(options: APKSignerOptions): Promise<{
     console.log(`[APK-SIGNER] Output APK: ${outputPath}`);
 
     // Get the directory where signing tools are located
-    const signingDir = path.join(process.cwd(), 'server', 'signing');
+    const signingDir = path.join(process.cwd(), 'server', 'signing-tools');
     console.log(`[APK-SIGNER] Signing directory: ${signingDir}`);
 
     // Check if signing tools exist
     const apksignerPath = path.join(signingDir, 'apksigner.jar');
+    const keystorePath = path.join(signingDir, 'keystore.jks');
     const keyPath = path.join(signingDir, 'key.pk8');
     const certPath = path.join(signingDir, 'certificate.pem');
 
@@ -45,12 +46,8 @@ export async function signAPK(options: APKSignerOptions): Promise<{
       throw new Error(`apksigner.jar not found at ${apksignerPath}`);
     }
 
-    if (!fs.existsSync(keyPath)) {
-      throw new Error(`key.pk8 not found at ${keyPath}`);
-    }
-
-    if (!fs.existsSync(certPath)) {
-      throw new Error(`certificate.pem not found at ${certPath}`);
+    if (!fs.existsSync(keystorePath)) {
+      throw new Error(`keystore.jks not found at ${keystorePath}`);
     }
 
     console.log(`[APK-SIGNER] ✓ All signing tools found`);
@@ -59,17 +56,15 @@ export async function signAPK(options: APKSignerOptions): Promise<{
     const tempOutputPath = outputPath + '.unsigned';
     const finalOutputPath = outputPath;
 
-    // If we're signing in place, use a temp file first
-    if (options.outputPath === undefined) {
-      fs.copyFileSync(options.apkPath, tempOutputPath);
-      console.log(`[APK-SIGNER] Created temporary file: ${tempOutputPath}`);
-    }
+    // Copy input to output first
+    fs.copyFileSync(options.apkPath, finalOutputPath);
+    console.log(`[APK-SIGNER] Copied APK to: ${finalOutputPath}`);
 
-    // Sign the APK using apksigner
-    console.log(`[APK-SIGNER] Signing APK...`);
+    // Sign the APK using apksigner with keystore
+    console.log(`[APK-SIGNER] Signing APK with keystore...`);
     
     try {
-      const signCommand = `java -jar "${apksignerPath}" sign --ks-key-alias "android" --ks-pass "pass:" --key "${keyPath}" --cert "${certPath}" --out "${finalOutputPath}" "${options.apkPath}"`;
+      const signCommand = `java -jar "${apksignerPath}" sign --ks "${keystorePath}" --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android "${finalOutputPath}"`;
       
       console.log(`[APK-SIGNER] Executing: java -jar apksigner.jar sign ...`);
       
@@ -81,24 +76,7 @@ export async function signAPK(options: APKSignerOptions): Promise<{
       console.log(`[APK-SIGNER] ✓ APK signed successfully`);
     } catch (signError) {
       console.error(`[APK-SIGNER] Signing error:`, signError);
-      
-      // Try alternative signing method if first one fails
-      console.log(`[APK-SIGNER] Trying alternative signing method...`);
-      
-      try {
-        // Some versions of apksigner use different syntax
-        const altSignCommand = `java -jar "${apksignerPath}" sign --ks-pass pass: --key-pass pass: --key "${keyPath}" --cert "${certPath}" --out "${finalOutputPath}" "${options.apkPath}"`;
-        
-        await execAsync(altSignCommand, {
-          timeout: 60000,
-          maxBuffer: 10 * 1024 * 1024,
-        });
-        
-        console.log(`[APK-SIGNER] ✓ APK signed successfully (alternative method)`);
-      } catch (altError) {
-        console.error(`[APK-SIGNER] Alternative signing also failed:`, altError);
-        throw new Error(`Failed to sign APK: ${signError instanceof Error ? signError.message : String(signError)}`);
-      }
+      throw new Error(`Failed to sign APK: ${signError instanceof Error ? signError.message : String(signError)}`);
     }
 
     // Verify the signed APK exists
@@ -110,7 +88,7 @@ export async function signAPK(options: APKSignerOptions): Promise<{
     console.log(`[APK-SIGNER] Signed APK size: ${(signedStats.size / 1024 / 1024).toFixed(2)}MB`);
 
     // Clean up temp file if it was created
-    if (options.outputPath === undefined && fs.existsSync(tempOutputPath)) {
+    if (fs.existsSync(tempOutputPath)) {
       try {
         fs.unlinkSync(tempOutputPath);
         console.log(`[APK-SIGNER] Cleaned up temporary file`);
