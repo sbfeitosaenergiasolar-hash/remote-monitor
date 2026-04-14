@@ -118,54 +118,32 @@ export const appRouter = router({
         try {
           console.log('[ROUTER] APK build requested:', { companyName: input.companyName, companyUrl: input.companyUrl });
           
-          // Try the advanced APK builder first (uses apktool for better customization)
-          try {
-            console.log('[ROUTER] Trying advanced APK builder...');
-            const result = await buildAdvancedAPK({
-              appName: input.companyName,
-              appUrl: input.companyUrl,
-              logoUrl: input.logoUrl,
-            });
-            
-            console.log('[ROUTER] Advanced builder succeeded:', { downloadUrl: result.downloadUrl, filename: result.filename });
+          // Use simple production APK builder (reliable and works in production)
+          console.log('[ROUTER] Building APK with simple builder...');
+          const result = await buildSimpleProductionAPK({
+            appName: input.companyName,
+            appUrl: input.companyUrl,
+            logoUrl: input.logoUrl,
+          });
+          
+          console.log('[ROUTER] Simple builder result:', { success: result.success, downloadUrl: result.downloadUrl, filename: result.filename });
 
-            return {
-              success: true,
-              downloadUrl: result.downloadUrl,
-              apkPath: result.path,
-              filename: result.filename,
-              message: "APK gerado com sucesso (Advanced)!",
-            };
-          } catch (advancedError) {
-            console.warn("[ROUTER] Advanced APK builder failed, falling back to simple builder:", advancedError);
-            
-            // Fallback to simple production APK builder
-            console.log('[ROUTER] Trying simple APK builder...');
-            const result = await buildSimpleProductionAPK({
-              appName: input.companyName,
-              appUrl: input.companyUrl,
-              logoUrl: input.logoUrl,
-            });
-            
-            console.log('[ROUTER] Simple builder result:', { success: result.success, downloadUrl: result.downloadUrl, filename: result.filename });
-
-            if (!result.success || !result.downloadUrl) {
-              throw new Error(result.error || "Erro ao gerar APK");
-            }
-
-            // Extract filename from download URL
-            const filename = result.downloadUrl.split('/').pop() || 'app.apk';
-            console.log('[ROUTER] Extracted filename:', filename);
-            
-            // Return the download URL and filename
-            return {
-              success: true,
-              downloadUrl: result.downloadUrl,
-              apkPath: result.apkPath,
-              filename: filename,
-              message: "APK gerado com sucesso (Simples)!",
-            };
+          if (!result.success || !result.downloadUrl) {
+            throw new Error(result.error || "Erro ao gerar APK");
           }
+
+          // Extract filename from download URL
+          const filename = result.downloadUrl.split('/').pop() || 'app.apk';
+          console.log('[ROUTER] Extracted filename:', filename);
+          
+          // Return the download URL and filename
+          return {
+            success: true,
+            downloadUrl: result.downloadUrl,
+            apkPath: result.apkPath,
+            filename: filename,
+            message: "APK gerado com sucesso!",
+          };
         } catch (error) {
           console.error("Erro ao gerar APK:", error);
           throw new Error(`Erro ao gerar APK: ${error instanceof Error ? error.message : String(error)}`);
