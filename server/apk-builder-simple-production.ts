@@ -2,7 +2,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { storagePut } from './storage';
 
 const execAsync = promisify(exec);
 
@@ -114,47 +113,20 @@ export async function buildSimpleProductionAPK(options: APKBuilderOptions): Prom
     const finalStats = fs.statSync(finalAPKPath);
     console.log(`[APK-SIMPLE] Final APK size: ${(finalStats.size / 1024 / 1024).toFixed(2)}MB`);
 
-    // Upload APK to S3 for reliable production access
-    console.log(`[APK-SIMPLE] Uploading APK to S3...`);
-    try {
-      const fileBuffer = fs.readFileSync(finalAPKPath);
-      console.log(`[APK-SIMPLE] File buffer size: ${fileBuffer.length} bytes`);
-      
-      const s3Key = `apks/${finalAPKName}`;
-      console.log(`[APK-SIMPLE] S3 key: ${s3Key}`);
-      
-      const result = await storagePut(s3Key, fileBuffer, 'application/vnd.android.package-archive');
-      console.log(`[APK-SIMPLE] S3 upload successful:`, result);
-      
-      return {
-        success: true,
-        apkPath: finalAPKPath,
-        downloadUrl: result.url,
-        filename: finalAPKName
-      };
-    } catch (s3Error) {
-      console.error('[APK-SIMPLE] S3 upload failed:', s3Error);
-      console.error('[APK-SIMPLE] Error details:', {
-        message: s3Error instanceof Error ? s3Error.message : String(s3Error),
-        stack: s3Error instanceof Error ? s3Error.stack : undefined,
-      });
-      
-      // Fallback: return local URL if S3 fails (for development)
-      if (process.env.NODE_ENV !== 'production') {
-        const domain = process.env.VITE_APP_URL || 'http://localhost:3000';
-        const downloadUrl = `${domain}/apks/${finalAPKName}`;
-        console.log(`[APK-SIMPLE] Falling back to local URL: ${downloadUrl}`);
-        
-        return {
-          success: true,
-          apkPath: finalAPKPath,
-          downloadUrl: downloadUrl,
-          filename: finalAPKName
-        };
-      }
-      
-      // In production, fail if S3 upload fails
-      throw s3Error;
+    // Return download URL for the APK
+    // File is served via Express /apks/ endpoint
+    console.log(`[APK-SIMPLE] APK generated successfully at: ${finalAPKPath}`);
+    
+    // Build the download URL - use the configured domain
+    const domain = process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space';
+    const downloadUrl = `${domain}/apks/${finalAPKName}`;
+    console.log(`[APK-SIMPLE] Download URL: ${downloadUrl}`);
+    
+    return {
+      success: true,
+      apkPath: finalAPKPath,
+      downloadUrl: downloadUrl,
+      filename: finalAPKName
     }
   } catch (error) {
     console.error('[APK-SIMPLE] Error in simple APK build:', error);
