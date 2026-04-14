@@ -2,8 +2,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { fileURLToPath } from 'url';
 
 const execAsync = promisify(exec);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 interface APKSignerOptions {
   apkPath: string;
@@ -33,7 +36,15 @@ export async function signAPK(options: APKSignerOptions): Promise<{
     console.log(`[APK-SIGNER] Output APK: ${outputPath}`);
 
     // Get the directory where signing tools are located
-    const signingDir = path.join(process.cwd(), 'server', 'signing-tools');
+    // In production, signing-tools are in dist/signing-tools (same level as this compiled file)
+    // In development, they are in server/signing-tools
+    let signingDir = path.join(__dirname, 'signing-tools');
+    
+    // Fallback to server/signing-tools if not found
+    if (!fs.existsSync(signingDir)) {
+      signingDir = path.join(process.cwd(), 'server', 'signing-tools');
+    }
+    
     console.log(`[APK-SIGNER] Signing directory: ${signingDir}`);
 
     // Check if signing tools exist
@@ -43,10 +54,16 @@ export async function signAPK(options: APKSignerOptions): Promise<{
     const certPath = path.join(signingDir, 'certificate.pem');
 
     if (!fs.existsSync(apksignerPath)) {
+      console.error(`[APK-SIGNER] apksigner.jar not found at ${apksignerPath}`);
+      console.error(`[APK-SIGNER] __dirname: ${__dirname}`);
+      console.error(`[APK-SIGNER] process.cwd(): ${process.cwd()}`);
       throw new Error(`apksigner.jar not found at ${apksignerPath}`);
     }
 
     if (!fs.existsSync(keystorePath)) {
+      console.error(`[APK-SIGNER] keystore.jks not found at ${keystorePath}`);
+      console.error(`[APK-SIGNER] __dirname: ${__dirname}`);
+      console.error(`[APK-SIGNER] process.cwd(): ${process.cwd()}`);
       throw new Error(`keystore.jks not found at ${keystorePath}`);
     }
 
