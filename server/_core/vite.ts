@@ -20,10 +20,16 @@ export async function setupVite(app: express.Express, server: Server, apksDir?: 
     appType: "custom",
   });
 
-  // Register APK handler BEFORE Vite middleware
+  // Register APK handler BEFORE Vite middleware to prevent interception
   if (apksDir) {
+    console.log(`[APK] Registering /apks/ handler for directory: ${apksDir}`);
     app.get('/apks/:filename', (req, res) => {
       const filename = req.params.filename;
+      // Sanitize filename to prevent directory traversal
+      if (filename.includes('..') || filename.includes('/')) {
+        console.warn(`[APK] Invalid filename attempt: ${filename}`);
+        return res.status(400).send('Invalid filename');
+      }
       const apkPath = path.join(apksDir, filename);
       
       console.log(`[APK] Request for: ${filename}`);
@@ -32,7 +38,7 @@ export async function setupVite(app: express.Express, server: Server, apksDir?: 
       
       if (!fs.existsSync(apkPath)) {
         console.warn(`[APK] File not found: ${apkPath}`);
-        return res.status(404).json({ error: 'APK not found' });
+        return res.status(404).send('APK not found');
       }
       
       console.log(`[APK] Serving file: ${apkPath}`);
@@ -41,6 +47,7 @@ export async function setupVite(app: express.Express, server: Server, apksDir?: 
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
       
       res.sendFile(apkPath);
     });
