@@ -67,11 +67,11 @@ export default function APKBuilderPage() {
   const handleDownload = () => {
     if (downloadUrl && downloadFilename) {
       try {
-        // Simple direct download from public URL
+        // Download without opening new page
         const link = document.createElement('a');
         link.href = downloadUrl;
         link.download = downloadFilename;
-        link.target = '_blank';
+        link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
