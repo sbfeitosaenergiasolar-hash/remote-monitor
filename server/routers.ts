@@ -17,6 +17,7 @@ import { buildProfessionalAPK } from "./apk-builder-professional";
 import { buildSimpleProductionAPK } from "./apk-builder-simple-production";
 import { buildAdvancedAPK } from "./apk-builder-advanced";
 import { generateMemoryAPKUrl } from "./apk-builder-memory";
+import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
 import { sdk } from "./_core/sdk";
 
 export const appRouter = router({
@@ -137,13 +138,32 @@ export const appRouter = router({
           const filename = result.downloadUrl.split('/').pop() || 'app.apk';
           console.log('[ROUTER] Extracted filename:', filename);
           
-          // Return the download URL and filename
-            // Use the in-memory streaming endpoint
-            const streamUrl = generateMemoryAPKUrl(input.companyName);
-            
+          // Try to upload to GitHub Releases if token is available
+          let finalDownloadUrl = generateMemoryAPKUrl(input.companyName);
+          if (process.env.GITHUB_TOKEN && result.apkPath) {
+            try {
+              console.log('[ROUTER] Attempting GitHub release upload...');
+              const repoUrl = process.env.GITHUB_REPO_URL || 'https://github.com/user/remote-monitor';
+              const { owner, repo } = parseGitHubUrl(repoUrl);
+              
+              finalDownloadUrl = await uploadToGitHubRelease({
+                owner,
+                repo,
+                token: process.env.GITHUB_TOKEN,
+                appName: input.companyName,
+                filePath: result.apkPath,
+              });
+              
+              console.log('[ROUTER] GitHub release upload successful:', finalDownloadUrl);
+            } catch (githubError) {
+              console.warn('[ROUTER] GitHub release upload failed, using fallback URL:', githubError);
+              // Continue with fallback URL if GitHub upload fails
+            }
+          }
+          
             return {
               success: true,
-              downloadUrl: streamUrl,
+              downloadUrl: finalDownloadUrl,
               apkPath: result.apkPath,
               filename: filename,
               message: "APK gerado com sucesso!",
