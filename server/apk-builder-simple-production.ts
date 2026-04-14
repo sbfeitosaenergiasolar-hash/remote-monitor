@@ -73,23 +73,37 @@ export async function buildSimpleProductionAPK(options: APKBuilderOptions): Prom
     const finalAPKName = `${sanitizedName}-${timestamp}-${randomSuffix}.apk`;
     console.log(`[APK-SIMPLE] Generated filename: ${finalAPKName}`);
 
-    // Determine output directory
-    const outputDir = process.env.NODE_ENV === 'production' 
-      ? '/app/public/apks'
-      : path.join(process.cwd(), 'public/apks');
+    // Determine output directory - use consistent path
+    // In production, this will be /app/public/apks (from Dockerfile WORKDIR)
+    // In development, this will be ./public/apks (from cwd)
+    const outputDir = path.join(process.cwd(), 'public', 'apks');
+    console.log(`[APK-SIMPLE] Output directory: ${outputDir}`);
+    console.log(`[APK-SIMPLE] NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log(`[APK-SIMPLE] process.cwd(): ${process.cwd()}`);
 
     // Ensure output directory exists
     if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-      console.log(`[APK-SIMPLE] Created output directory: ${outputDir}`);
+      try {
+        fs.mkdirSync(outputDir, { recursive: true });
+        console.log(`[APK-SIMPLE] Created output directory: ${outputDir}`);
+      } catch (mkdirError) {
+        console.error(`[APK-SIMPLE] Failed to create directory: ${outputDir}`, mkdirError);
+        throw mkdirError;
+      }
     }
 
     const finalAPKPath = path.join(outputDir, finalAPKName);
+    console.log(`[APK-SIMPLE] Final APK path: ${finalAPKPath}`);
 
     // Copy base APK to final location
     console.log(`[APK-SIMPLE] Copying APK from ${baseAPK} to ${finalAPKPath}`);
-    fs.copyFileSync(baseAPK, finalAPKPath);
-    console.log(`[APK-SIMPLE] APK copied successfully`);
+    try {
+      fs.copyFileSync(baseAPK, finalAPKPath);
+      console.log(`[APK-SIMPLE] APK copied successfully`);
+    } catch (copyError) {
+      console.error(`[APK-SIMPLE] Failed to copy APK:`, copyError);
+      throw copyError;
+    }
 
     // Verify the copied file
     if (!fs.existsSync(finalAPKPath)) {
