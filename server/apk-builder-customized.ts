@@ -131,7 +131,7 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<{
 
     // Build the download URL
     const domain = process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space';
-    const downloadUrl = `${domain}/apks/${finalAPKName}`;
+    const downloadUrl = `${domain}/download/${finalAPKName}`;
     console.log(`[APK-BUILDER-CUSTOM] Download URL: ${downloadUrl}`);
 
     return {
