@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { customizeAPK } from './apk-customizer';
+import { customizeAPKWithZip } from './apk-customizer-zip';
 
 interface APKBuilderOptions {
   appName: string;
@@ -89,11 +89,10 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<{
 
     // Customize the APK with new app name and package name
     console.log(`[APK-BUILDER-CUSTOM] Customizing APK with app name: ${options.appName}`);
-    const customizeResult = await customizeAPK({
+    const customizeResult = await customizeAPKWithZip({
       baseApkPath: baseAPK,
       outputPath: finalAPKPath,
       appName: options.appName,
-      logoUrl: options.logoUrl,
     });
 
     if (!customizeResult.success) {
