@@ -65,17 +65,32 @@ export default function APKBuilderPage() {
   };
 
   const handleDownload = async () => {
-    if (downloadUrl) {
+    if (downloadFilename) {
       try {
-        // Fetch the file as a blob
-        const response = await fetch(downloadUrl);
+        // Use tRPC to download the file (avoids CORS issues)
+        const response = await fetch(`/api/trpc/apk.download?input=${JSON.stringify({filename: downloadFilename})}`);
+        
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: Failed to download file`);
         }
         
-        const blob = await response.blob();
+        const data = await response.json();
         
-        // Create a blob URL and download
+        // Handle tRPC response format
+        let fileData = data;
+        if (data.result?.data) {
+          fileData = data.result.data;
+        }
+        
+        // Decode base64 to blob
+        const binaryString = atob(fileData.content);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: 'application/vnd.android.package-archive' });
+        
+        // Create download link
         const blobUrl = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = blobUrl;
@@ -84,7 +99,7 @@ export default function APKBuilderPage() {
         link.click();
         document.body.removeChild(link);
         
-        // Clean up the blob URL
+        // Clean up
         window.URL.revokeObjectURL(blobUrl);
       } catch (err) {
         console.error('Download error:', err);
