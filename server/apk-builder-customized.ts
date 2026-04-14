@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { customizeAPKWithApktool } from './apk-customizer-apktool';
+import { customizeAPKWithAPKEditor } from './apk-customizer-apkeditor';
 import { signAPK } from './apk-signer';
 
 interface APKBuilderOptions {
@@ -90,17 +90,18 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<{
 
     // Customize the APK with new app name and package name
     console.log(`[APK-BUILDER-CUSTOM] Customizing APK with app name: ${options.appName}`);
-    const customizeResult = await customizeAPKWithApktool({
-      baseApkPath: baseAPK,
-      outputPath: finalAPKPath,
-      appName: options.appName,
-    });
-
-    if (!customizeResult.success) {
-      console.error('[APK-BUILDER-CUSTOM] Customization failed:', customizeResult.error);
+    try {
+      const customizedApkPath = await customizeAPKWithAPKEditor({
+        apkPath: baseAPK,
+        appName: options.appName,
+        outputPath: finalAPKPath,
+      });
+      console.log(`[APK-BUILDER-CUSTOM] ✓ APK customization completed: ${customizedApkPath}`);
+    } catch (customizeError) {
+      console.error('[APK-BUILDER-CUSTOM] Customization failed:', customizeError);
       return {
         success: false,
-        error: `APK customization failed: ${customizeResult.error}`,
+        error: `APK customization failed: ${customizeError instanceof Error ? customizeError.message : String(customizeError)}`,
       };
     }
 
