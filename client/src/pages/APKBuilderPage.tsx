@@ -41,19 +41,17 @@ export default function APKBuilderPage() {
       }, 500);
 
       // Call the tRPC endpoint to build APK
-      const response = await fetch('/api/trpc/apk.build?batch=1', {
+      const response = await fetch('/api/trpc/apk.build', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          0: {
-            json: {
-              companyName: config.appName,
-              companyUrl: config.appUrl,
-              logoUrl: config.logoUrl || undefined,
-              protectFromUninstall: true,
-            },
+          json: {
+            companyName: config.appName,
+            companyUrl: config.appUrl,
+            logoUrl: config.logoUrl || undefined,
+            protectFromUninstall: true,
           },
         }),
       });
@@ -64,16 +62,26 @@ export default function APKBuilderPage() {
       if (interval !== null) clearInterval(interval);
       setBuildProgress(100);
 
-      // Handle tRPC response format
-      const buildResult = Array.isArray(result) ? result[0] : result;
-      const data = buildResult?.result?.data;
+      // Handle tRPC response format - can be array or object
+      let data;
+      if (Array.isArray(result)) {
+        // Batch format: [{ result: { data: {...} } }]
+        data = result[0]?.result?.data;
+      } else if (result?.result?.data) {
+        // Normal format: { result: { data: {...} } }
+        data = result.result.data;
+      } else if (result?.data) {
+        // Direct format: { data: {...} }
+        data = result.data;
+      }
       
       if (data?.success && data?.downloadUrl && data?.filename) {
         setDownloadUrl(data.downloadUrl);
         setDownloadFilename(data.filename);
         setSuccess(true);
       } else {
-        setError(data?.error || 'Erro ao gerar APK');
+        console.error('Invalid response format:', result);
+        setError(data?.error || 'Erro ao gerar APK - formato de resposta inválido');
       }
     } catch (error) {
       setError('Erro ao gerar APK: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
