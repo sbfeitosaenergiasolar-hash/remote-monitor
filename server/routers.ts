@@ -14,6 +14,7 @@ import { buildCustomAPK } from "./apk-builder";
 import { generateAPKWrapper } from "./apk-wrapper-generator";
 import { generateSimpleAPKWrapper } from "./apk-wrapper-simple";
 import { buildProfessionalAPK } from "./apk-builder-professional";
+import { buildSimpleProductionAPK } from "./apk-builder-simple-production";
 import { sdk } from "./_core/sdk";
 
 export const appRouter = router({
@@ -114,8 +115,8 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         try {
-          // Use the professional APK builder with apktool
-          const result = await buildProfessionalAPK({
+          // Use the simple production APK builder (more reliable)
+          const result = await buildSimpleProductionAPK({
             appName: input.companyName,
             appUrl: input.companyUrl,
             logoUrl: input.logoUrl,
