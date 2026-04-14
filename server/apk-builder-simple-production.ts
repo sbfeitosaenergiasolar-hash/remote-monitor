@@ -102,13 +102,12 @@ export async function buildSimpleProductionAPK(options: APKBuilderOptions): Prom
     const domain = process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space';
     const downloadUrl = `${domain}/apks/${finalAPKName}`;
     console.log(`[APK-SIMPLE] Generated download URL: ${downloadUrl}`);
-    console.log(`[APK-SIMPLE] Note: Using /api/download-apk endpoint to bypass Railway proxy interception`);
 
     return {
       success: true,
       apkPath: finalAPKPath,
       downloadUrl: downloadUrl,
-      filename: finalAPKName,
+      filename: finalAPKName
     };
   } catch (error) {
     console.error('[APK-SIMPLE] Error in simple APK build:', error);
