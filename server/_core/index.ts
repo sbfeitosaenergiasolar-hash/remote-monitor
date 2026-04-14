@@ -36,21 +36,8 @@ async function startServer() {
 
   const app = express();
   const server = createServer(app);
-  // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-  // Add a header to skip authentication for /apks routes
-  // This helps bypass any authentication middleware in proxies/gateways
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/apks/')) {
-      res.setHeader('X-Skip-Auth', 'true');
-      console.log(`[APK] Request for: ${req.path}`);
-    }
-    next();
-  });
-
-  // Determine APK directory
+  // Determine APK directory FIRST (before any middleware)
   const apksDir = process.env.NODE_ENV === 'production' 
     ? '/app/public/apks'
     : path.join(process.cwd(), 'public', 'apks');
@@ -103,14 +90,28 @@ async function startServer() {
     });
   };
 
-  // CRITICAL: Serve APK files BEFORE any other middleware
-  // This ensures downloads work without authentication
-  // Try multiple endpoints to bypass proxy authentication
+  // ⚠️ CRITICAL: Register APK handlers BEFORE ANY OTHER MIDDLEWARE
+  // This must be FIRST to bypass authentication completely
+  console.log('[APK] Registering APK handlers BEFORE any middleware');
   app.get('/apks/:filename', serveAPKFile);
   app.get('/download/:filename', serveAPKFile);
   app.get('/static/apk/:filename', serveAPKFile);
   app.get('/file/:filename', serveAPKFile);
   app.get('/api/download-apk/:filename', serveAPKFile);
+
+  // NOW configure body parser with larger size limit for file uploads
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+  // Add a header to skip authentication for /apks routes
+  // This helps bypass any authentication middleware in proxies/gateways
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/apks/')) {
+      res.setHeader('X-Skip-Auth', 'true');
+      console.log(`[APK] Request for: ${req.path}`);
+    }
+    next();
+  });
 
   // tRPC API
   app.use(
