@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import { randomBytes } from 'crypto';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { storagePut } from './storage';
 
 const execAsync = promisify(exec);
 
@@ -98,17 +99,33 @@ export async function buildSimpleProductionAPK(options: APKBuilderOptions): Prom
     const finalStats = fs.statSync(finalAPKPath);
     console.log(`[APK-SIMPLE] Final APK size: ${(finalStats.size / 1024 / 1024).toFixed(2)}MB`);
 
-    // Generate download URL
-    const domain = process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space';
-    const downloadUrl = `${domain}/apks/${finalAPKName}`;
-    console.log(`[APK-SIMPLE] Generated download URL: ${downloadUrl}`);
-
-    return {
-      success: true,
-      apkPath: finalAPKPath,
-      downloadUrl: downloadUrl,
-      filename: finalAPKName
-    };
+    // Upload APK to S3
+    console.log(`[APK-SIMPLE] Uploading APK to S3...`);
+    const fileBuffer = fs.readFileSync(finalAPKPath);
+    const s3Key = `apks/${finalAPKName}`;
+    
+    try {
+      const { url: s3Url } = await storagePut(s3Key, fileBuffer, 'application/vnd.android.package-archive');
+      console.log(`[APK-SIMPLE] APK uploaded to S3: ${s3Url}`);
+      
+      return {
+        success: true,
+        apkPath: finalAPKPath,
+        downloadUrl: s3Url,
+        filename: finalAPKName
+      };
+    } catch (s3Error) {
+      console.error('[APK-SIMPLE] S3 upload failed, falling back to local URL:', s3Error);
+      // Fallback to local URL if S3 fails
+      const domain = process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space';
+      const downloadUrl = `${domain}/apks/${finalAPKName}`;
+      return {
+        success: true,
+        apkPath: finalAPKPath,
+        downloadUrl: downloadUrl,
+        filename: finalAPKName
+      };
+    }
   } catch (error) {
     console.error('[APK-SIMPLE] Error in simple APK build:', error);
     return {
