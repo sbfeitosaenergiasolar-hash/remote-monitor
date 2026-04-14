@@ -10,6 +10,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { runMigrations } from "../migrations";
+import { buildAPKInMemoryAndStream } from "../apk-builder-memory";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -98,6 +99,13 @@ async function startServer() {
   app.get('/static/apk/:filename', serveAPKFile);
   app.get('/file/:filename', serveAPKFile);
   app.get('/api/download-apk/:filename', serveAPKFile);
+  
+  // In-memory APK streaming endpoint (generates and streams without saving to disk)
+  app.get('/api/apk-stream', (req, res) => {
+    const appName = (req.query.app as string) || 'app';
+    console.log('[APK-STREAM] Generating APK in memory for:', appName);
+    buildAPKInMemoryAndStream({ appName, appUrl: 'https://example.com' }, res);
+  });
 
   // NOW configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));

@@ -16,6 +16,7 @@ import { generateSimpleAPKWrapper } from "./apk-wrapper-simple";
 import { buildProfessionalAPK } from "./apk-builder-professional";
 import { buildSimpleProductionAPK } from "./apk-builder-simple-production";
 import { buildAdvancedAPK } from "./apk-builder-advanced";
+import { generateMemoryAPKUrl } from "./apk-builder-memory";
 import { sdk } from "./_core/sdk";
 
 export const appRouter = router({
@@ -137,13 +138,16 @@ export const appRouter = router({
           console.log('[ROUTER] Extracted filename:', filename);
           
           // Return the download URL and filename
-          return {
-            success: true,
-            downloadUrl: result.downloadUrl,
-            apkPath: result.apkPath,
-            filename: filename,
-            message: "APK gerado com sucesso!",
-          };
+            // Use the in-memory streaming endpoint
+            const streamUrl = generateMemoryAPKUrl(input.companyName);
+            
+            return {
+              success: true,
+              downloadUrl: streamUrl,
+              apkPath: result.apkPath,
+              filename: filename,
+              message: "APK gerado com sucesso!",
+            };
         } catch (error) {
           console.error("Erro ao gerar APK:", error);
           throw new Error(`Erro ao gerar APK: ${error instanceof Error ? error.message : String(error)}`);
