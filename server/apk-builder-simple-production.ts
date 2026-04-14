@@ -101,11 +101,21 @@ export async function buildSimpleProductionAPK(options: APKBuilderOptions): Prom
 
     // Upload APK to S3
     console.log(`[APK-SIMPLE] Uploading APK to S3...`);
+    console.log(`[APK-SIMPLE] File path: ${finalAPKPath}`);
+    console.log(`[APK-SIMPLE] File exists: ${fs.existsSync(finalAPKPath)}`);
+    
     const fileBuffer = fs.readFileSync(finalAPKPath);
+    console.log(`[APK-SIMPLE] File buffer size: ${fileBuffer.length} bytes`);
+    
     const s3Key = `apks/${finalAPKName}`;
+    console.log(`[APK-SIMPLE] S3 key: ${s3Key}`);
     
     try {
-      const { url: s3Url } = await storagePut(s3Key, fileBuffer, 'application/vnd.android.package-archive');
+      console.log(`[APK-SIMPLE] Starting S3 upload...`);
+      const result = await storagePut(s3Key, fileBuffer, 'application/vnd.android.package-archive');
+      console.log(`[APK-SIMPLE] S3 upload result:`, result);
+      
+      const s3Url = result.url;
       console.log(`[APK-SIMPLE] APK uploaded to S3: ${s3Url}`);
       
       return {
@@ -115,10 +125,17 @@ export async function buildSimpleProductionAPK(options: APKBuilderOptions): Prom
         filename: finalAPKName
       };
     } catch (s3Error) {
-      console.error('[APK-SIMPLE] S3 upload failed, falling back to local URL:', s3Error);
+      console.error('[APK-SIMPLE] S3 upload failed:', s3Error);
+      console.error('[APK-SIMPLE] Error details:', {
+        message: s3Error instanceof Error ? s3Error.message : String(s3Error),
+        stack: s3Error instanceof Error ? s3Error.stack : undefined,
+      });
+      
       // Fallback to local URL if S3 fails
       const domain = process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space';
       const downloadUrl = `${domain}/apks/${finalAPKName}`;
+      console.log(`[APK-SIMPLE] Falling back to local URL: ${downloadUrl}`);
+      
       return {
         success: true,
         apkPath: finalAPKPath,
