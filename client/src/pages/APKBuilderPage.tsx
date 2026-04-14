@@ -21,6 +21,10 @@ export default function APKBuilderPage() {
   const [downloadFilename, setDownloadFilename] = useState('');
 
   const buildMutation = trpc.apk.build.useMutation();
+  const downloadMutation = trpc.apk.download.useQuery(
+    { filename: downloadFilename },
+    { enabled: false } // Only fetch when manually triggered
+  );
 
   const handleBuildAPK = async () => {
     setError('');
@@ -64,21 +68,32 @@ export default function APKBuilderPage() {
     }
   };
 
-  const handleDownload = () => {
-    if (downloadUrl && downloadFilename) {
-      try {
-        // Download without opening new page
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = downloadFilename;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch (err) {
-        console.error('Download error:', err);
-        setError(err instanceof Error ? err.message : 'Erro ao fazer download');
-      }
+  const handleDownload = async () => {
+    if (!downloadFilename) {
+      setError('Nome do arquivo não disponível');
+      return;
+    }
+
+    try {
+      setError('');
+      
+      // Use direct Express endpoint for download
+      const downloadUrl = `/api/download-apk/${encodeURIComponent(downloadFilename)}`;
+      console.log('Downloading from:', downloadUrl);
+      
+      // Create download link and trigger download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = downloadFilename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      console.log('Download iniciado com sucesso');
+    } catch (err) {
+      console.error('Download error:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao fazer download');
     }
   };
 

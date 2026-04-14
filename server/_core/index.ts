@@ -108,6 +108,7 @@ async function startServer() {
   app.get('/download/:filename', serveAPKFile);
   app.get('/static/apk/:filename', serveAPKFile);
   app.get('/file/:filename', serveAPKFile);
+  app.get('/api/download-apk/:filename', serveAPKFile);
 
   // tRPC API
   app.use(
