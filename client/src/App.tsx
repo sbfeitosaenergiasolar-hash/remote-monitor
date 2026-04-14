@@ -27,6 +27,9 @@ function App() {
   const [user, setUser] = useState<User | undefined>();
   const [loading, setLoading] = useState(true);
   const [location] = useLocation();
+  
+  // Move useMutation to top level - hooks must be called unconditionally
+  const loginMutation = trpc.auth.login.useMutation();
 
   // Verificar autenticação ao carregar
   useEffect(() => {
@@ -84,11 +87,16 @@ function App() {
     if (!email || !password) return;
     
     try {
-      // Call the server-side login procedure
-      const loginMutation = trpc.auth.login.useMutation();
+      // Use the mutation hook that's already declared at top level
       const result = await loginMutation.mutateAsync({ email, password });
       
       if (result.success && result.user) {
+        // Store auth data in localStorage
+        localStorage.setItem("auth_token", "token_" + Date.now());
+        localStorage.setItem("auth_timestamp", Date.now().toString());
+        localStorage.setItem("user_email", result.user.email);
+        localStorage.setItem("user_name", result.user.name);
+        
         setUser({
           email: result.user.email,
           name: result.user.name,
