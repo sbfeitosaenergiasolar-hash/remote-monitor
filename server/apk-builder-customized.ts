@@ -129,10 +129,13 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<{
     const finalStats = fs.statSync(finalAPKPath);
     console.log(`[APK-BUILDER-CUSTOM] Final APK size: ${(finalStats.size / 1024 / 1024).toFixed(2)}MB`);
 
-    // Build the download URL
+    // Build the download URL with public token for sharing
     const domain = process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space';
-    const downloadUrl = `${domain}/download/${finalAPKName}`;
+    // Generate a simple token (timestamp + random)
+    const token = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+    const downloadUrl = `${domain}/public-download/${finalAPKName}?token=${token}`;
     console.log(`[APK-BUILDER-CUSTOM] Download URL: ${downloadUrl}`);
+    console.log(`[APK-BUILDER-CUSTOM] Public token: ${token}`);
 
     return {
       success: true,

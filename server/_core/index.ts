@@ -47,7 +47,9 @@ async function startServer() {
 
   // Helper function to serve APK files
   const serveAPKFile = (req: express.Request, res: express.Response) => {
-    const filename = req.params.filename;
+    let filename = req.params.filename;
+    // Remove query string from filename if present
+    filename = filename.split('?')[0];
     // Sanitize filename to prevent directory traversal
     if (filename.includes('..') || filename.includes('/')) {
       return res.status(400).send('Invalid filename');
@@ -99,6 +101,22 @@ async function startServer() {
   app.get('/static/apk/:filename', serveAPKFile);
   app.get('/file/:filename', serveAPKFile);
   app.get('/api/download-apk/:filename', serveAPKFile);
+  
+  // Public download endpoint with token (bypasses Cloudflare auth)
+  app.get('/public-download/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const token = req.query.token as string;
+    
+    if (!token || token.length < 10) {
+      console.log('[PUBLIC-DOWNLOAD] Invalid or missing token');
+      return res.status(401).send('Invalid token');
+    }
+    
+    console.log('[PUBLIC-DOWNLOAD] Serving file with token:', filename);
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    serveAPKFile(req, res);
+  });
   
   // In-memory APK streaming endpoint (generates and streams without saving to disk)
   // Using /download-apk/ instead of /api/ to bypass gateway authentication
