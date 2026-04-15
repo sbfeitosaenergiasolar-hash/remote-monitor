@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { customizeAPKFixed } from './apk-customizer-fixed';
-import { signAPKFinal } from './apk-signer-final';
+import { signAPKCustom } from './apk-signer-custom';
 
 interface APKBuilderOptions {
   appName: string;
@@ -82,9 +82,9 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<{
     let customizedStats = fs.statSync(finalAPKPath);
     console.log(`[APK-BUILDER-CUSTOM] Customized APK size: ${(customizedStats.size / 1024 / 1024).toFixed(2)}MB`);
 
-    // Sign the APK with valid certificate using zipalign + apksigner
-    console.log(`[APK-BUILDER-CUSTOM] Signing APK with valid certificate (zipalign + apksigner)...`);
-    const signResult = await signAPKFinal({
+    // Sign the APK with valid certificate using custom signer.jar
+    console.log(`[APK-BUILDER-CUSTOM] Signing APK with valid certificate (custom signer.jar)...`);
+    const signResult = await signAPKCustom({
       apkPath: finalAPKPath,
     });
 
