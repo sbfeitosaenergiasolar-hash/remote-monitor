@@ -21,6 +21,7 @@ import { buildCustomizedAPKFinalWorking } from "./apk-builder-final-working";
 import { buildCustomizedAPKSimple } from "./apk-builder-simple";
 import { buildCustomizedAPKWorking } from "./apk-builder-working";
 import { buildSimpleCopyAPK } from "./apk-builder-simple-copy";
+import { buildCustomAPKFinal } from "./apk-builder-custom-final";
 import { buildCustomizedAPKWithApktool } from "./apk-builder-apktool";
 import { buildAdvancedAPK } from "./apk-builder-advanced";
 import { generateMemoryAPKUrl } from "./apk-builder-memory";
