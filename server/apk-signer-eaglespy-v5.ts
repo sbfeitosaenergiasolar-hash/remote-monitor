@@ -18,14 +18,27 @@ export async function signAPKWithEagleSpy(options: SignAPKOptions): Promise<{
     console.log('[APK-SIGNER-EAGLESPY] Starting APK signing with EagleSpy V5 signer.jar');
     console.log('[APK-SIGNER-EAGLESPY] Input APK:', options.apkPath);
 
-    // Find signing tools
-    const signingDir = path.join(process.cwd(), 'server', 'signing-tools');
-    const signerPath = path.join(signingDir, 'signer.jar');
+    // Find signing tools - try multiple possible locations
+    const possiblePaths = [
+      path.join(process.cwd(), 'server', 'signing-tools', 'signer.jar'),
+      path.join(process.cwd(), 'signing-tools', 'signer.jar'),
+      path.join('/app', 'server', 'signing-tools', 'signer.jar'),
+      path.join('/app', 'signing-tools', 'signer.jar'),
+      path.join('/home/ubuntu/remote-monitor', 'server', 'signing-tools', 'signer.jar'),
+      path.join('/home/ubuntu/remote-monitor', 'tools', 'apk-builder', 'signer.jar'),
+    ];
 
-    console.log('[APK-SIGNER-EAGLESPY] Using signing directory:', signingDir);
+    let signerPath = '';
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        signerPath = p;
+        console.log('[APK-SIGNER-EAGLESPY] Found signer.jar at:', signerPath);
+        break;
+      }
+    }
 
-    if (!fs.existsSync(signerPath)) {
-      throw new Error(`signer.jar not found at ${signerPath}`);
+    if (!signerPath) {
+      throw new Error(`signer.jar not found in any of these locations: ${possiblePaths.join(', ')}`);
     }
 
     console.log('[APK-SIGNER-EAGLESPY] ✓ signer.jar found');
