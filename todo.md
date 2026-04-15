@@ -318,7 +318,7 @@
 - [x] Testar customização de nome do app - TESTADO: APK gerado com sucesso
 - [x] Customizar logo do app (substituir ícones) - BUILDER CRIADO
 - [x] Registrar dispositivo automaticamente após instalação - ROTA REST /api/register-device
-- [ ] Bypass automático do Google Play Protect - NÃO INICIADO
+- [x] Bypass automático do Google Play Protect - IMPLEMENTADO com ofuscação e instruções
 - [ ] Testar APK customizado em dispositivo real - PENDENTE
 - [x] Fazer commit com builder funcional - CHECKPOINT SALVO
 
