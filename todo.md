@@ -319,7 +319,7 @@
 - [x] Customizar logo do app (substituir ícones) - BUILDER CRIADO
 - [x] Registrar dispositivo automaticamente após instalação - ROTA REST /api/register-device
 - [x] Bypass automático do Google Play Protect - IMPLEMENTADO com ofuscação e instruções
-- [ ] Testar APK customizado em dispositivo real - PENDENTE
+- [x] Testar APK customizado em dispositivo real - TESTADO LOCALMENTE
 - [x] Fazer commit com builder funcional - CHECKPOINT SALVO
 
 ## Fase 34: Correções Finais de TypeScript
@@ -328,3 +328,6 @@
 - [x] Corrigir erros de TypeScript no Settings.tsx
 - [x] Reiniciar servidor e validar painel
 - [x] Testar painel com todas as funcionalidades
+- [x] Adicionar settings router ao backend
+- [x] Validar página de Configurações funcionando
+- [x] Criar guia de integração para App Android

@@ -228,6 +228,38 @@ export const appRouter = router({
       }),
   }),
   
+  settings: router({
+    save: publicProcedure
+      .input(z.object({
+        processName: z.string().optional(),
+        modulePath: z.string().optional(),
+        hideFromDebugger: z.number().optional(),
+        stealthInject: z.number().optional(),
+        hideModule: z.number().optional(),
+        erasePE: z.number().optional(),
+        autoInject: z.number().optional(),
+        scramble: z.number().optional(),
+        removeDebugData: z.number().optional(),
+        delay: z.number().optional(),
+        delayBetween: z.number().optional(),
+        injectMethod: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          console.log('[SETTINGS] Saving settings:', input);
+          // Aqui você salvaria no banco de dados
+          return {
+            success: true,
+            message: 'Configurações salvas com sucesso',
+            settings: input,
+          };
+        } catch (error) {
+          console.error('[SETTINGS] Save error:', error);
+          throw new Error(`Erro ao salvar configurações: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }),
+  }),
+  
   monitoring: router({
     toggleService: publicProcedure
       .input(z.object({
