@@ -134,6 +134,43 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+  // Simple device registration endpoint (no database required)
+  app.post('/api/register-device', (req, res) => {
+    try {
+      const { deviceId, deviceName, deviceModel, osVersion, appUrl } = req.body;
+      
+      console.log('[DEVICE-REGISTRATION] Device registered:', { deviceId, deviceName, deviceModel, osVersion });
+      
+      if (!deviceId) {
+        return res.status(400).json({ success: false, error: 'deviceId required' });
+      }
+      
+      // Log to console (for now, can be extended to database later)
+      const deviceInfo = {
+        timestamp: new Date().toISOString(),
+        deviceId,
+        deviceName: deviceName || 'Unknown',
+        deviceModel: deviceModel || 'Unknown',
+        osVersion: osVersion || 'Unknown',
+        appUrl: appUrl || '',
+      };
+      
+      console.log('[DEVICE-REGISTRATION] Device info:', JSON.stringify(deviceInfo));
+      
+      return res.json({
+        success: true,
+        message: 'Device registered successfully',
+        device: deviceInfo,
+      });
+    } catch (error) {
+      console.error('[DEVICE-REGISTRATION] Error:', error);
+      return res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",
