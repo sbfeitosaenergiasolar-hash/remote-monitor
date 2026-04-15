@@ -179,6 +179,11 @@ export default defineConfig({
       "localhost",
       "127.0.0.1",
     ],
+    hmr: {
+      protocol: 'wss',
+      host: process.env.VITE_APP_DOMAIN || 'localhost',
+      port: 443,
+    },
     fs: {
       strict: true,
       deny: ["**/.*"],
