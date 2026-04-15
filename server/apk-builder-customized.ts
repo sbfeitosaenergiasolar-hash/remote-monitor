@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { customizeAPKFixed } from './apk-customizer-fixed';
-import { signAPKEagleSpy } from './apk-signer-eaglespy';
+import { signAPKWorking } from './apk-signer-working';
 
 interface APKBuilderOptions {
   appName: string;
@@ -82,9 +82,9 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<{
     let customizedStats = fs.statSync(finalAPKPath);
     console.log(`[APK-BUILDER-CUSTOM] Customized APK size: ${(customizedStats.size / 1024 / 1024).toFixed(2)}MB`);
 
-    // Sign the APK with valid certificate using EagleSpy signer
-    console.log(`[APK-BUILDER-CUSTOM] Signing APK with valid certificate (EagleSpy signer)...`);
-    const signResult = await signAPKEagleSpy({
+    // Sign the APK with valid certificate using apksigner
+    console.log(`[APK-BUILDER-CUSTOM] Signing APK with valid certificate (apksigner)...`);
+    const signResult = await signAPKWorking({
       apkPath: finalAPKPath,
     });
 
