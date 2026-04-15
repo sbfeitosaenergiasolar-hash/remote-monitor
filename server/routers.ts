@@ -24,7 +24,7 @@ import { buildSimpleCopyAPK } from "./apk-builder-simple-copy";
 import { buildCustomizedAPKWithApktool } from "./apk-builder-apktool";
 import { buildAdvancedAPK } from "./apk-builder-advanced";
 import { generateMemoryAPKUrl } from "./apk-builder-memory";
-// GitHub upload disabled - using local download URLs only
+import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
 import { sdk } from "./_core/sdk";
 
 export const appRouter = router({
@@ -164,12 +164,28 @@ export const appRouter = router({
           const filename = result.filename || result.downloadUrl.split('/').pop() || 'app.apk';
           console.log('[ROUTER] Extracted filename:', filename);
           
-          // Use local download URL
-          // ALWAYS use local download URL
-          const finalDownloadUrl = result.downloadUrl;
+          // Try to upload to GitHub Releases
+          let finalDownloadUrl = result.downloadUrl;
+          try {
+            if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL && result.apkPath) {
+              console.log('[ROUTER] Uploading to GitHub Releases...');
+              const { owner, repo } = parseGitHubUrl(process.env.GITHUB_REPO_URL);
+              const githubDownloadUrl = await uploadToGitHubRelease({
+                owner,
+                repo,
+                token: process.env.GITHUB_TOKEN,
+                appName: input.companyName,
+                filePath: result.apkPath,
+              });
+              console.log('[ROUTER] GitHub download URL:', githubDownloadUrl);
+              finalDownloadUrl = githubDownloadUrl; // Use GitHub URL
+            }
+          } catch (error) {
+            console.warn('[ROUTER] GitHub upload failed, using local URL:', error instanceof Error ? error.message : String(error));
+            // Fallback to local URL if GitHub upload fails
+          }
           
           console.log('[ROUTER] Final download URL:', finalDownloadUrl);
-          console.log('[ROUTER] Using local download URL');
             
             return {
               success: true,
