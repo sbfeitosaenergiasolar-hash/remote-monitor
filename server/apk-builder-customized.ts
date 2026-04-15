@@ -129,10 +129,11 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<{
     const finalStats = fs.statSync(finalAPKPath);
     console.log(`[APK-BUILDER-CUSTOM] Final APK size: ${(finalStats.size / 1024 / 1024).toFixed(2)}MB`);
 
-    // Build the download URL - use GitHub releases (public)
-    const releaseTag = `apk-${Date.now()}`;
-    const downloadUrl = `https://github.com/sbfeitosaenergiasolar-hash/remote-monitor/releases/download/${releaseTag}/${finalAPKName}`;
+    // Build the download URL - use local server endpoint
+    const downloadUrl = `/download/${finalAPKName}`;
     console.log(`[APK-BUILDER-CUSTOM] Download URL: ${downloadUrl}`);
+    console.log(`[APK-BUILDER-CUSTOM] APK saved at: ${finalAPKPath}`);
+    console.log(`[APK-BUILDER-CUSTOM] File size: ${(finalStats.size / 1024 / 1024).toFixed(2)}MB`);
 
     return {
       success: true,
