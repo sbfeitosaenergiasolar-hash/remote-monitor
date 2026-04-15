@@ -42,9 +42,23 @@ export async function buildCustomizedAPKSimple(options: APKBuilderOptions): Prom
     console.log(`[APK-BUILDER-SIMPLE] Temp directory: ${tempDir}`);
 
     // Step 2: Find base APK
-    const baseAPKPath = path.join(process.cwd(), 'server', 'base-apk', 'Blockchain-Registered.apk');
-    if (!fs.existsSync(baseAPKPath)) {
-      throw new Error(`Base APK not found at: ${baseAPKPath}`);
+    const possiblePaths = [
+      path.join(process.cwd(), 'public', 'apks', 'Blockchain-Registered.apk'),
+      path.join(process.cwd(), 'server', 'base-apk', 'Blockchain-Registered.apk'),
+      path.join('/app', 'public', 'apks', 'Blockchain-Registered.apk'),
+      path.join('/app', 'server', 'base-apk', 'Blockchain-Registered.apk'),
+    ];
+    
+    let baseAPKPath = '';
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        baseAPKPath = p;
+        break;
+      }
+    }
+    
+    if (!baseAPKPath) {
+      throw new Error(`Base APK not found in any of these locations: ${possiblePaths.join(', ')}`);
     }
     console.log(`[APK-BUILDER-SIMPLE] Base APK found: ${baseAPKPath}`);
 
