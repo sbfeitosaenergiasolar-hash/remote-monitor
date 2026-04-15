@@ -68,7 +68,7 @@ async function startServer() {
     const fileSize = stats.size;
     
     // Set headers for download - CRITICAL: Force download behavior
-    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+    res.setHeader('Content-Type', 'application/octet-stream');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Length', fileSize);
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
