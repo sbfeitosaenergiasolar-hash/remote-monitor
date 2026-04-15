@@ -44,18 +44,33 @@ export async function customizeAPKWithAPKEditor(options: APKCustomizerOptions): 
     console.log(`[APK-APKEDITOR-V2] App Name: ${options.appName}`);
     console.log(`[APK-APKEDITOR-V2] Output Path: ${outputPath}`);
 
-    // Get signing tools directory
-    const signingDir = path.join(process.cwd(), 'server', 'signing-tools');
+    // Get signing tools directory - support multiple paths (dev and production)
+    const possibleSigningDirs = [
+      path.join(process.cwd(), 'server', 'signing-tools'),
+      path.join('/app', 'server', 'signing-tools'),
+      path.join('/app', 'dist', 'signing-tools'),
+    ];
+
+    let signingDir = '';
+    for (const dir of possibleSigningDirs) {
+      if (fs.existsSync(path.join(dir, 'APKEditor.jar'))) {
+        signingDir = dir;
+        break;
+      }
+    }
+
+    if (!signingDir) {
+      throw new Error(`APKEditor.jar not found in any of: ${possibleSigningDirs.join(', ')}`);
+    }
+
     const apkeditorPath = path.join(signingDir, 'APKEditor.jar');
     const keystorePath = path.join(signingDir, 'keystore.jks');
-
-    if (!fs.existsSync(apkeditorPath)) {
-      throw new Error(`APKEditor.jar not found at ${apkeditorPath}`);
-    }
 
     if (!fs.existsSync(keystorePath)) {
       throw new Error(`keystore.jks not found at ${keystorePath}`);
     }
+
+    console.log(`[APK-APKEDITOR-V2] Using signing directory: ${signingDir}`);
 
     // Create temp directory
     fs.mkdirSync(tempDir, { recursive: true });
