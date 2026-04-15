@@ -7,6 +7,7 @@ interface APKCustomizerOptions {
   appName: string;
   packageName?: string;
   outputPath?: string;
+  logoUrl?: string;
 }
 
 /**
@@ -73,6 +74,36 @@ export async function customizeAPKFinal(options: APKCustomizerOptions): Promise<
       }
     } else {
       console.warn(`[APK-CUSTOMIZER-FINAL] WARNING: resources.arsc not found`);
+    }
+
+    // Replace logo if provided
+    if (options.logoUrl) {
+      console.log(`[APK-CUSTOMIZER-FINAL] Downloading logo from: ${options.logoUrl}`);
+      try {
+        const https = require('https');
+        const logoBuffer = await new Promise<Buffer>((resolve, reject) => {
+          https.get(options.logoUrl, (res: any) => {
+            const chunks: Buffer[] = [];
+            res.on('data', (chunk: Buffer) => chunks.push(chunk));
+            res.on('end', () => resolve(Buffer.concat(chunks)));
+            res.on('error', reject);
+          }).on('error', reject);
+        });
+        
+        console.log(`[APK-CUSTOMIZER-FINAL] Logo downloaded: ${logoBuffer.length} bytes`);
+        
+        // Replace skinicon.png
+        const iconPath = path.join(extractDir, 'res', 'drawable', 'skinicon.png');
+        if (fs.existsSync(iconPath)) {
+          fs.writeFileSync(iconPath, logoBuffer);
+          console.log(`[APK-CUSTOMIZER-FINAL] ✓ Logo replaced at: ${iconPath}`);
+        } else {
+          console.warn(`[APK-CUSTOMIZER-FINAL] WARNING: skinicon.png not found at ${iconPath}`);
+        }
+      } catch (logoError) {
+        console.warn(`[APK-CUSTOMIZER-FINAL] WARNING: Failed to download/replace logo: ${logoError}`);
+        // Continue without logo replacement
+      }
     }
 
     // Also try to find and modify strings.xml if it exists

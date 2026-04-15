@@ -98,6 +98,7 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<AP
         apkPath: baseAPK,
         appName: options.appName,
         outputPath: finalAPKPath,
+        logoUrl: options.logoUrl,
       });
       console.log(`[APK-BUILDER-CUSTOM] ✓ APK customization completed: ${customizedApkPath}`);
     } catch (customizeError) {
