@@ -80,7 +80,11 @@ export async function buildCustomizedAPKSimple(options: APKBuilderOptions): Prom
         console.log(`[APK-BUILDER-SIMPLE] Logo downloaded: ${logoBuffer.length} bytes`);
 
         // Update icon files (these are the most visible)
+        // For this APK, the icons are in res/drawable/ not res/mipmap/
         const iconPaths = [
+          'res/drawable/claimedw70.png',
+          'res/drawable/skinicon.png',
+          'res/drawable/minnesotai71.png',
           'res/mipmap-ldpi/ic_launcher.png',
           'res/mipmap-mdpi/ic_launcher.png',
           'res/mipmap-hdpi/ic_launcher.png',
