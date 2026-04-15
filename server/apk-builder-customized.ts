@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { customizeAPKFixed } from './apk-customizer-fixed';
-import { signAPKFixed } from './apk-signer-fixed';
+import { signAPKWithJarSigner } from './apk-signer-jarsigner';
 
 interface APKBuilderOptions {
   appName: string;
@@ -82,9 +82,9 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<{
     let customizedStats = fs.statSync(finalAPKPath);
     console.log(`[APK-BUILDER-CUSTOM] Customized APK size: ${(customizedStats.size / 1024 / 1024).toFixed(2)}MB`);
 
-    // Sign the APK with valid certificate
-    console.log(`[APK-BUILDER-CUSTOM] Signing APK with valid certificate...`);
-    const signResult = await signAPKFixed({
+    // Sign the APK with valid certificate using jarsigner
+    console.log(`[APK-BUILDER-CUSTOM] Signing APK with valid certificate (jarsigner)...`);
+    const signResult = await signAPKWithJarSigner({
       apkPath: finalAPKPath,
     });
 
