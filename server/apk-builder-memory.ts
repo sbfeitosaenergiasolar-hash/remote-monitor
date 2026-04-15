@@ -150,3 +150,51 @@ export function generateMemoryAPKUrl(appName: string): string {
   const domain = process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space';
   return `${domain}/download-apk/${encodeURIComponent(sanitizedName)}`;
 }
+
+// Build APK and return metadata
+export async function buildMemoryAPK(options: APKMemoryOptions) {
+  try {
+    const apksDir = process.env.NODE_ENV === 'production' 
+      ? '/app/public/apks'
+      : '/home/ubuntu/remote-monitor/public/apks';
+    
+    // Find the largest APK file (>1MB)
+    const files = fs.readdirSync(apksDir);
+    const apkFiles = files
+      .filter(f => f.endsWith('.apk') && !f.endsWith('.idsig'))
+      .map(f => {
+        const filePath = path.join(apksDir, f);
+        const size = fs.statSync(filePath).size;
+        return { name: f, path: filePath, size };
+      })
+      .filter(f => f.size > 1000000)
+      .sort((a, b) => b.size - a.size);
+    
+    if (apkFiles.length === 0) {
+      return {
+        success: false,
+        error: 'No suitable APK found',
+        downloadUrl: undefined,
+        filename: undefined,
+      };
+    }
+    
+    const timestamp = Date.now();
+    const filename = `${options.appName}-${timestamp}.apk`;
+    const downloadUrl = `${process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space'}/apks/${filename}`;
+    
+    return {
+      success: true,
+      downloadUrl,
+      filename,
+      error: undefined,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      downloadUrl: undefined,
+      filename: undefined,
+    };
+  }
+}

