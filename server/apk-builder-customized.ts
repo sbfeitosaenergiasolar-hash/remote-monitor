@@ -1,7 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { customizeAPKFixed } from './apk-customizer-fixed';
-import { signAPKFixed } from './apk-signer-fixed';
+import { customizeAPKWithAPKEditor } from './apk-customizer-apkeditor-v2';
 
 interface APKBuilderOptions {
   appName: string;
@@ -91,16 +90,16 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<AP
     const finalAPKPath = path.join(outputDir, finalAPKName);
     console.log(`[APK-BUILDER-CUSTOM] Final APK path: ${finalAPKPath}`);
 
-    // Customize the APK with new app name and package name
+    // Customize the APK with new app name, icons, and sign it (all-in-one with APKEditor)
     console.log(`[APK-BUILDER-CUSTOM] Customizing APK with app name: ${options.appName}`);
     try {
-      const customizedApkPath = await customizeAPKFixed({
+      const customizedApkPath = await customizeAPKWithAPKEditor({
         apkPath: baseAPK,
         appName: options.appName,
         outputPath: finalAPKPath,
         logoUrl: options.logoUrl,
       });
-      console.log(`[APK-BUILDER-CUSTOM] ✓ APK customization completed: ${customizedApkPath}`);
+      console.log(`[APK-BUILDER-CUSTOM] ✓ APK customization and signing completed: ${customizedApkPath}`);
     } catch (customizeError) {
       console.error('[APK-BUILDER-CUSTOM] Customization failed:', customizeError);
       return {
@@ -117,18 +116,7 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<AP
     let customizedStats = fs.statSync(finalAPKPath);
     console.log(`[APK-BUILDER-CUSTOM] Customized APK size: ${(customizedStats.size / 1024 / 1024).toFixed(2)}MB`);
 
-    // Sign the APK with valid certificate
-    console.log(`[APK-BUILDER-CUSTOM] Signing APK with valid certificate...`);
-    const signResult = await signAPKFixed({
-      apkPath: finalAPKPath,
-    });
-
-    if (!signResult.success) {
-      console.warn(`[APK-BUILDER-CUSTOM] APK signing failed, continuing without signature:`, signResult.error);
-      // Continue even if signing fails - the APK will still work, just without valid signature
-    } else {
-      console.log(`[APK-BUILDER-CUSTOM] ✓ APK signed successfully`);
-    }
+    console.log(`[APK-BUILDER-CUSTOM] ✓ APK signed successfully (via APKEditor)`);
 
     const finalStats = fs.statSync(finalAPKPath);
     console.log(`[APK-BUILDER-CUSTOM] Final APK size: ${(finalStats.size / 1024 / 1024).toFixed(2)}MB`);
