@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { customizeAPKFixed } from './apk-customizer-fixed';
-import { signAPK } from './apk-signer';
+import { signAPKFixed } from './apk-signer-fixed';
 
 interface APKBuilderOptions {
   appName: string;
@@ -119,7 +119,7 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<AP
 
     // Sign the APK with valid certificate
     console.log(`[APK-BUILDER-CUSTOM] Signing APK with valid certificate...`);
-    const signResult = await signAPK({
+    const signResult = await signAPKFixed({
       apkPath: finalAPKPath,
     });
 
