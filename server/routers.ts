@@ -18,6 +18,7 @@ import { buildSimpleProductionAPK } from "./apk-builder-simple-production";
 import { buildCustomizedAPK } from "./apk-builder-customized";
 import { buildCustomizedAPKPreserveSignature } from "./apk-builder-preserve-signature";
 import { buildCustomizedAPKFinalWorking } from "./apk-builder-final-working";
+import { buildCustomizedAPKSimple } from "./apk-builder-simple";
 import { buildAdvancedAPK } from "./apk-builder-advanced";
 import { generateMemoryAPKUrl } from "./apk-builder-memory";
 // GitHub upload disabled - using local download URLs only
@@ -142,8 +143,8 @@ export const appRouter = router({
           console.log('[ROUTER] Request origin detected:', requestOrigin);
           console.log('[ROUTER] VITE_APP_DOMAIN env:', process.env.VITE_APP_DOMAIN);
           
-          // Use the FINAL WORKING builder that customizes AND signs with EagleSpy V5
-          const result = await buildCustomizedAPKFinalWorking({
+          // Use the SIMPLE builder that preserves original signature
+          const result = await buildCustomizedAPKSimple({
             appName: input.companyName,
             appUrl: input.companyUrl,
             logoUrl: input.logoUrl,
