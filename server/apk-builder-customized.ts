@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { customizeAPKWithNodeJS } from './apk-customizer-nodejs';
+import { customizeAPKFinal } from './apk-customizer-final';
 import { signAPK } from './apk-signer';
 
 interface APKBuilderOptions {
@@ -94,7 +94,7 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<AP
     // Customize the APK with new app name and package name
     console.log(`[APK-BUILDER-CUSTOM] Customizing APK with app name: ${options.appName}`);
     try {
-      const customizedApkPath = await customizeAPKWithNodeJS({
+      const customizedApkPath = await customizeAPKFinal({
         apkPath: baseAPK,
         appName: options.appName,
         outputPath: finalAPKPath,
