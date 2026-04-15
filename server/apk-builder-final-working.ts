@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import { customizeAPKPreserveSignature } from './apk-customizer-preserve-signature';
 import { signAPKWithEagleSpy } from './apk-signer-eaglespy-v5';
 import { signAPKWithApksigner } from './apk-signer-apksigner';
+import { signAPKWithJarsigner } from './apk-signer-native';
 
 interface APKBuilderOptions {
   appName: string;
@@ -89,9 +90,9 @@ export async function buildCustomizedAPKFinalWorking(options: APKBuilderOptions)
     const customizedStats = fs.statSync(finalAPKPath);
     console.log(`[APK-BUILDER-FINAL] Customized APK size: ${(customizedStats.size / 1024 / 1024).toFixed(2)}MB`);
 
-    // Step 2: Sign the APK with apksigner.jar (more reliable for Railway)
-    console.log(`[APK-BUILDER-FINAL] Step 2: Signing APK with apksigner.jar...`);
-    const signResult = await signAPKWithApksigner({
+    // Step 2: Sign the APK with jarsigner (native Java tool - most reliable for Railway)
+    console.log(`[APK-BUILDER-FINAL] Step 2: Signing APK with jarsigner (native Java)...`);
+    const signResult = await signAPKWithJarsigner({
       apkPath: finalAPKPath,
     });
 
