@@ -16,6 +16,7 @@ import { generateSimpleAPKWrapper } from "./apk-wrapper-simple";
 import { buildProfessionalAPK } from "./apk-builder-professional";
 import { buildSimpleProductionAPK } from "./apk-builder-simple-production";
 import { buildCustomizedAPK } from "./apk-builder-customized";
+import { buildCustomizedAPKPreserveSignature } from "./apk-builder-preserve-signature";
 import { buildAdvancedAPK } from "./apk-builder-advanced";
 import { generateMemoryAPKUrl } from "./apk-builder-memory";
 // GitHub upload disabled - using local download URLs only
@@ -140,7 +141,9 @@ export const appRouter = router({
           console.log('[ROUTER] Request origin detected:', requestOrigin);
           console.log('[ROUTER] VITE_APP_DOMAIN env:', process.env.VITE_APP_DOMAIN);
           
-          const result = await buildCustomizedAPK({
+          // Use the new builder that preserves the original signature
+          // This is the CORRECT approach that works for real device installation
+          const result = await buildCustomizedAPKPreserveSignature({
             appName: input.companyName,
             appUrl: input.companyUrl,
             logoUrl: input.logoUrl,
