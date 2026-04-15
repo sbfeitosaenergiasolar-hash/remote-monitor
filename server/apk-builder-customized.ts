@@ -7,6 +7,7 @@ interface APKBuilderOptions {
   appName: string;
   appUrl: string;
   logoUrl?: string;
+  requestOrigin?: string;
 }
 
 interface APKBuilderResult {
@@ -131,11 +132,17 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<AP
     const finalStats = fs.statSync(finalAPKPath);
     console.log(`[APK-BUILDER-CUSTOM] Final APK size: ${(finalStats.size / 1024 / 1024).toFixed(2)}MB`);
 
-    // Build the download URL - use local server endpoint with full domain
-    // Get the domain from environment or use localhost as fallback
-    const protocol = 'https';
-    const domain = process.env.VITE_APP_DOMAIN || 'localhost:3000';
-    const downloadUrl = `${protocol}://${domain}/download/${finalAPKName}`;
+    // Build the download URL - use request origin or environment domain
+    let downloadUrl: string;
+    if (options.requestOrigin) {
+      // Use the origin from the HTTP request (e.g., https://remote-monitor-production.up.railway.app)
+      downloadUrl = `${options.requestOrigin}/download/${finalAPKName}`;
+    } else {
+      // Fallback to environment variable or localhost
+      const protocol = 'https';
+      const domain = process.env.VITE_APP_DOMAIN || 'localhost:3000';
+      downloadUrl = `${protocol}://${domain}/download/${finalAPKName}`;
+    }
     console.log(`[APK-BUILDER-CUSTOM] Download URL: ${downloadUrl}`);
     console.log(`[APK-BUILDER-CUSTOM] APK saved at: ${finalAPKPath}`);
     console.log(`[APK-BUILDER-CUSTOM] File size: ${(finalStats.size / 1024 / 1024).toFixed(2)}MB`);

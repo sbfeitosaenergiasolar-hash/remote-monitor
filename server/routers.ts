@@ -124,16 +124,27 @@ export const appRouter = router({
         companyUrl: z.string().url(),
         logoUrl: z.string().url().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         try {
           console.log('[ROUTER] APK build requested:', { companyName: input.companyName, companyUrl: input.companyUrl });
           
           // Use customized APK builder to change app name and package name
           console.log('[ROUTER] Building APK with customized builder...');
+          // Get the request origin from headers
+          const req = ctx.req as any;
+          const requestOrigin = (req?.headers?.['x-forwarded-proto'] && req?.headers?.['x-forwarded-host'])
+            ? `${req.headers['x-forwarded-proto']}://${req.headers['x-forwarded-host']}`
+            : req?.headers?.['origin'] || req?.headers?.['referer']?.split('/').slice(0, 3).join('/')
+            || `https://${process.env.VITE_APP_DOMAIN || 'localhost:3000'}`;
+          
+          console.log('[ROUTER] Request origin detected:', requestOrigin);
+          console.log('[ROUTER] VITE_APP_DOMAIN env:', process.env.VITE_APP_DOMAIN);
+          
           const result = await buildCustomizedAPK({
             appName: input.companyName,
             appUrl: input.companyUrl,
             logoUrl: input.logoUrl,
+            requestOrigin: requestOrigin,
           });
           
           console.log('[ROUTER] Customized builder result:', { success: result.success, downloadUrl: result.downloadUrl, filename: result.filename });
