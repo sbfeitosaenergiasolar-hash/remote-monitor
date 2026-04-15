@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
@@ -10,7 +11,6 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { runMigrations } from "../migrations";
 import { buildAPKInMemoryAndStream } from "../apk-builder-memory";
-import { getDb } from "../db";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -122,10 +122,6 @@ async function startServer() {
     serveAPKFile(req, res);
   });
   
-  // NOW configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
-
   // In-memory APK streaming endpoint (generates and streams without saving to disk)
   // Using /download-apk/ instead of /api/ to bypass gateway authentication
   app.get('/download-apk/:appName', (req, res) => {
@@ -134,57 +130,9 @@ async function startServer() {
     buildAPKInMemoryAndStream({ appName, appUrl: 'https://example.com' }, res);
   });
 
-  // REST endpoint for device registration (called by APK)
-  app.post('/api/register-device', async (req, res) => {
-    try {
-      const { deviceId, deviceName, deviceModel, osVersion, appUrl } = req.body;
-      
-      console.log('[DEVICE-REGISTRATION] Registering device:', { deviceId, deviceName });
-      
-      if (!deviceId) {
-        return res.status(400).json({ success: false, error: 'Missing deviceId' });
-      }
-      
-      // Get database connection
-      const db = await getDb();
-      if (!db) {
-        console.error('[DEVICE-REGISTRATION] Database not available');
-        return res.status(500).json({ success: false, error: 'Database not available' });
-      }
-      
-      try {
-        // Use raw SQL to insert without appName field
-        const { sql } = await import('drizzle-orm');
-        
-        // Insert device using raw SQL
-        const result = await db.execute(sql`
-          INSERT INTO devices (deviceId, userId, deviceModel, androidVersion, appUrl, status, lastSeen, createdAt)
-          VALUES (${deviceId}, 1, ${deviceModel || 'Unknown'}, ${osVersion || 'Unknown'}, ${appUrl || ''}, 'online', NOW(), NOW())
-          ON DUPLICATE KEY UPDATE status = 'online', lastSeen = NOW()
-        `);
-        
-        console.log('[DEVICE-REGISTRATION] Device registered successfully:', deviceId);
-        
-        return res.json({
-          success: true,
-          deviceId,
-          message: 'Dispositivo registrado com sucesso!',
-        });
-      } catch (dbError) {
-        console.error('[DEVICE-REGISTRATION] DB Error:', dbError);
-        return res.status(500).json({
-          success: false,
-          error: 'Database error: ' + (dbError instanceof Error ? dbError.message : String(dbError)),
-        });
-      }
-    } catch (error) {
-      console.error('[DEVICE-REGISTRATION] Error:', error);
-      return res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  });
+  // NOW configure body parser with larger size limit for file uploads
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
   // tRPC API
   app.use(
@@ -201,13 +149,16 @@ async function startServer() {
     serveStatic(app, apksDir);
   }
 
-  const port = await findAvailablePort();
-  server.listen(port, "0.0.0.0", () => {
+  const preferredPort = parseInt(process.env.PORT || "3000");
+  const port = await findAvailablePort(preferredPort);
+
+  if (port !== preferredPort) {
+    console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
+  }
+
+  server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
   });
 }
 
-startServer().catch((err) => {
-  console.error("Failed to start server:", err);
-  process.exit(1);
-});
+startServer().catch(console.error);
