@@ -19,6 +19,7 @@ import { buildCustomizedAPK } from "./apk-builder-customized";
 import { buildCustomizedAPKPreserveSignature } from "./apk-builder-preserve-signature";
 import { buildCustomizedAPKFinalWorking } from "./apk-builder-final-working";
 import { buildCustomizedAPKSimple } from "./apk-builder-simple";
+import { buildCustomizedAPKWorking } from "./apk-builder-working";
 import { buildAdvancedAPK } from "./apk-builder-advanced";
 import { generateMemoryAPKUrl } from "./apk-builder-memory";
 // GitHub upload disabled - using local download URLs only
@@ -144,7 +145,7 @@ export const appRouter = router({
           console.log('[ROUTER] VITE_APP_DOMAIN env:', process.env.VITE_APP_DOMAIN);
           
           // Use the SIMPLE builder that preserves original signature
-          const result = await buildCustomizedAPKSimple({
+          const result = await buildCustomizedAPKWorking({
             appName: input.companyName,
             appUrl: input.companyUrl,
             logoUrl: input.logoUrl,
