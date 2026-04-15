@@ -228,6 +228,26 @@ export const appRouter = router({
       }),
   }),
   
+  monitoring: router({
+    toggleService: publicProcedure
+      .input(z.object({
+        enabled: z.boolean(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          console.log('[MONITORING] Toggle service:', input.enabled ? 'ON' : 'OFF');
+          return {
+            success: true,
+            enabled: input.enabled,
+            message: input.enabled ? 'Monitoramento ativado' : 'Monitoramento desativado',
+          };
+        } catch (error) {
+          console.error('[MONITORING] Toggle error:', error);
+          throw new Error(`Erro ao controlar monitoramento: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }),
+  }),
+  
   devices: router({
     register: publicProcedure
       .input(z.object({
