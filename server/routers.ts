@@ -149,7 +149,9 @@ export const appRouter = router({
           // Use local download URL
           let finalDownloadUrl = result.downloadUrl;
           
-          // Attempt GitHub upload in background (non-blocking) for backup
+          // GitHub upload disabled - using local download URL only
+          // Uncomment below to enable GitHub backup upload
+          /*
           if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL && result.apkPath) {
             console.log('[ROUTER] Attempting GitHub upload in background for backup...');
             const repoUrl = process.env.GITHUB_REPO_URL;
@@ -168,6 +170,7 @@ export const appRouter = router({
               console.warn('[ROUTER] GitHub backup upload failed (non-blocking):', err instanceof Error ? err.message : String(err));
             });
           }
+          */
           
             console.log('[ROUTER] Final download URL:', finalDownloadUrl);
             console.log('[ROUTER] Using', finalDownloadUrl.includes('github.com') ? 'GitHub' : 'local', 'download URL');
