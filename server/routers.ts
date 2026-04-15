@@ -18,7 +18,7 @@ import { buildSimpleProductionAPK } from "./apk-builder-simple-production";
 import { buildCustomizedAPK } from "./apk-builder-customized";
 import { buildAdvancedAPK } from "./apk-builder-advanced";
 import { generateMemoryAPKUrl } from "./apk-builder-memory";
-import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
+// GitHub upload disabled - using local download URLs only
 import { sdk } from "./_core/sdk";
 
 export const appRouter = router({
@@ -158,30 +158,11 @@ export const appRouter = router({
           console.log('[ROUTER] Extracted filename:', filename);
           
           // Use local download URL
-          let finalDownloadUrl = result.downloadUrl;
+          // ALWAYS use local download URL
+          const finalDownloadUrl = result.downloadUrl;
           
-          // Attempt GitHub upload in background (non-blocking) for backup
-          if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL && result.apkPath) {
-            console.log('[ROUTER] Attempting GitHub upload in background for backup...');
-            const repoUrl = process.env.GITHUB_REPO_URL;
-            const { owner, repo } = parseGitHubUrl(repoUrl);
-            const releaseTag = `apk-${Date.now()}`;
-            uploadToGitHubRelease({
-              owner,
-              repo,
-              token: process.env.GITHUB_TOKEN,
-              appName: input.companyName,
-              releaseTag: releaseTag,
-              filePath: result.apkPath,
-            }).then((githubUrl) => {
-              console.log('[ROUTER] ✓ GitHub backup upload successful:', githubUrl);
-            }).catch((err) => {
-              console.warn('[ROUTER] GitHub backup upload failed (non-blocking):', err instanceof Error ? err.message : String(err));
-            });
-          }
-          
-            console.log('[ROUTER] Final download URL:', finalDownloadUrl);
-            console.log('[ROUTER] Using', finalDownloadUrl.includes('github.com') ? 'GitHub' : 'local', 'download URL');
+          console.log('[ROUTER] Final download URL:', finalDownloadUrl);
+          console.log('[ROUTER] Using local download URL');
             
             return {
               success: true,
