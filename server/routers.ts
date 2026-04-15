@@ -146,7 +146,7 @@ export const appRouter = router({
           console.log('[ROUTER] Request origin detected:', requestOrigin);
           console.log('[ROUTER] VITE_APP_DOMAIN env:', process.env.VITE_APP_DOMAIN);
           
-          // Use SIMPLE COPY builder - works reliably
+          // Use SIMPLE COPY builder - only reliable method
           const result = await buildSimpleCopyAPK({
             appName: input.companyName,
             appUrl: input.companyUrl,
