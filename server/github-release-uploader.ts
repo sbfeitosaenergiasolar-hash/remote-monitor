@@ -63,7 +63,8 @@ export async function uploadToGitHubRelease(options: GitHubReleaseOptions): Prom
     }
 
     const releaseData = await createReleaseResponse.json() as any;
-    const uploadUrl = releaseData.upload_url.replace('{?name,label}', '');
+    // Remove {?name,label} from upload URL
+    const uploadUrl = releaseData.upload_url.split('{')[0];
 
     console.log('[GITHUB] Release created, uploading asset...');
 
@@ -87,10 +88,15 @@ export async function uploadToGitHubRelease(options: GitHubReleaseOptions): Prom
     if (!uploadResponse.ok) {
       const error = await uploadResponse.text();
       console.error('[GITHUB] Error uploading asset:', error);
+      console.error('[GITHUB] Response status:', uploadResponse.status);
       throw new Error(`Failed to upload asset: ${uploadResponse.status}`);
     }
 
     const assetData = await uploadResponse.json() as any;
+    if (!assetData.browser_download_url) {
+      console.error('[GITHUB] Asset data:', JSON.stringify(assetData, null, 2));
+      throw new Error('No browser_download_url in response');
+    }
     const downloadUrl = assetData.browser_download_url;
 
     console.log('[GITHUB] Upload successful!');

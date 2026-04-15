@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import { uploadToGitHubRelease, parseGitHubUrl } from './github-release-uploader';
 
 interface APKBuildOptions {
   companyName: string;
@@ -108,9 +109,37 @@ export async function buildCustomAPK(options: APKBuildOptions): Promise<{
       console.log(`[APK-BUILDER] ✓ APK wrapper created successfully`);
       console.log(`[APK-BUILDER] File: ${result.filename}`);
       console.log(`[APK-BUILDER] Size: ${result.size_mb.toFixed(2)}MB`);
+      console.log(`[APK-BUILDER] Path: ${result.apk_path}`);
 
-      // Return download URL
-      const downloadUrl = `/download/${result.filename}`;
+      // Try to upload to GitHub Releases
+      let downloadUrl = `/download/${result.filename}`;
+      
+      if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL) {
+        try {
+          console.log('[APK-BUILDER] Uploading to GitHub Releases...');
+          const repoUrl = process.env.GITHUB_REPO_URL;
+          const { owner, repo } = parseGitHubUrl(repoUrl);
+          const releaseTag = `apk-${Date.now()}`;
+          
+          const githubUrl = await uploadToGitHubRelease({
+            owner,
+            repo,
+            token: process.env.GITHUB_TOKEN,
+            appName: options.companyName,
+            releaseTag: releaseTag,
+            filePath: result.apk_path,
+          });
+          
+          console.log('[APK-BUILDER] ✓ GitHub upload successful:', githubUrl);
+          downloadUrl = githubUrl;
+        } catch (githubError) {
+          console.warn('[APK-BUILDER] GitHub upload failed, using local download:', githubError instanceof Error ? githubError.message : String(githubError));
+          // Fallback to local download URL
+          downloadUrl = `/download/${result.filename}`;
+        }
+      } else {
+        console.log('[APK-BUILDER] GitHub token not configured, using local download URL');
+      }
 
       return {
         success: true,
