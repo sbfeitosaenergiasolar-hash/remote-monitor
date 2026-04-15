@@ -22,11 +22,14 @@ import { buildCustomizedAPKSimple } from "./apk-builder-simple";
 import { buildCustomizedAPKWorking } from "./apk-builder-working";
 import { buildSimpleCopyAPK } from "./apk-builder-simple-copy";
 import { buildCustomAPKFinal } from "./apk-builder-custom-final";
+import { buildAPKWithJava } from "./apk-builder-java";
 import { buildCustomizedAPKWithApktool } from "./apk-builder-apktool";
 import { buildAdvancedAPK } from "./apk-builder-advanced";
 import { generateMemoryAPKUrl } from "./apk-builder-memory";
 import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
 import { sdk } from "./_core/sdk";
+
+const OUTPUT_DIR = "/home/ubuntu/remote-monitor/public/apks";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -168,7 +171,7 @@ export const appRouter = router({
           // Try to upload to GitHub Releases
           let finalDownloadUrl = result.downloadUrl;
           try {
-            if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL && result.apkPath) {
+            if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL && result.success) {
               console.log('[ROUTER] Uploading to GitHub Releases...');
               const { owner, repo } = parseGitHubUrl(process.env.GITHUB_REPO_URL);
               const githubDownloadUrl = await uploadToGitHubRelease({
@@ -176,7 +179,7 @@ export const appRouter = router({
                 repo,
                 token: process.env.GITHUB_TOKEN,
                 appName: input.companyName,
-                filePath: result.apkPath,
+                filePath: path.join(OUTPUT_DIR, result.filename),
               });
               console.log('[ROUTER] GitHub download URL:', githubDownloadUrl);
               finalDownloadUrl = githubDownloadUrl; // Use GitHub URL
@@ -191,7 +194,7 @@ export const appRouter = router({
             return {
               success: true,
               downloadUrl: finalDownloadUrl,
-              apkPath: result.apkPath,
+              apkPath: path.join(OUTPUT_DIR, result.filename),
               filename: filename,
               message: "APK gerado com sucesso!",
             };
