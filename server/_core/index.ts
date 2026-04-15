@@ -97,6 +97,7 @@ async function startServer() {
   // This must be FIRST to bypass authentication completely
   console.log('[APK] Registering APK handlers BEFORE any middleware');
   app.get('/apks/:filename', serveAPKFile);
+  app.get('/raw/:filename', serveAPKFile);
   app.get('/download/:filename', serveAPKFile);
   app.get('/static/apk/:filename', serveAPKFile);
   app.get('/file/:filename', serveAPKFile);

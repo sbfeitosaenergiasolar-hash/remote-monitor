@@ -154,11 +154,13 @@ export const appRouter = router({
             console.log('[ROUTER] Attempting GitHub upload in background for backup...');
             const repoUrl = process.env.GITHUB_REPO_URL;
             const { owner, repo } = parseGitHubUrl(repoUrl);
+            const releaseTag = `apk-${Date.now()}`;
             uploadToGitHubRelease({
               owner,
               repo,
               token: process.env.GITHUB_TOKEN,
               appName: input.companyName,
+              releaseTag: releaseTag,
               filePath: result.apkPath,
             }).then((githubUrl) => {
               console.log('[ROUTER] ✓ GitHub backup upload successful:', githubUrl);

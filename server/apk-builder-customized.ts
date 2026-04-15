@@ -129,9 +129,9 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<{
     const finalStats = fs.statSync(finalAPKPath);
     console.log(`[APK-BUILDER-CUSTOM] Final APK size: ${(finalStats.size / 1024 / 1024).toFixed(2)}MB`);
 
-    // Build the download URL - use local server for public sharing
-    const domain = process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space';
-    const downloadUrl = `${domain}/apks/${finalAPKName}`;
+    // Build the download URL - use GitHub releases (public)
+    const releaseTag = `apk-${Date.now()}`;
+    const downloadUrl = `https://github.com/sbfeitosaenergiasolar-hash/remote-monitor/releases/download/${releaseTag}/${finalAPKName}`;
     console.log(`[APK-BUILDER-CUSTOM] Download URL: ${downloadUrl}`);
 
     return {
