@@ -98,10 +98,8 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<{
     const finalStats = fs.statSync(finalAPKPath);
     console.log(`[APK-BUILDER-CUSTOM] Final APK size: ${(finalStats.size / 1024 / 1024).toFixed(2)}MB`);
 
-    // Build the download URL - ALWAYS use VITE_APP_DOMAIN (Manus domain)
-    const protocol = 'https';
-    const domain = process.env.VITE_APP_DOMAIN || 'localhost:3000';
-    const downloadUrl = `${protocol}://${domain}/download/${finalAPKName}`;
+    // Build the download URL - use Railway domain for proper header handling
+    const downloadUrl = `https://remote-monitor-production.up.railway.app/download/${finalAPKName}`;
     console.log(`[APK-BUILDER-CUSTOM] Download URL: ${downloadUrl}`);
     console.log(`[APK-BUILDER-CUSTOM] APK saved at: ${finalAPKPath}`);
     console.log(`[APK-BUILDER-CUSTOM] File size: ${(finalStats.size / 1024 / 1024).toFixed(2)}MB`);
