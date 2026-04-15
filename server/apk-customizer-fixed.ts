@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as https from 'https';
 import AdmZip from 'adm-zip';
-import https from 'https';
 
 interface APKCustomizerOptions {
   apkPath: string;
@@ -109,7 +109,7 @@ export async function customizeAPKFixed(options: APKCustomizerOptions): Promise<
 
     // 3. Remove invalid signature (META-INF/) so we can re-sign
     console.log(`[APK-CUSTOMIZER-FIXED] Removing invalid signature...`);
-    const metaInfEntries = zip.getEntries().filter(entry => entry.entryName.startsWith('META-INF/'));
+    const metaInfEntries = zip.getEntries().filter((entry: any) => entry.entryName.startsWith('META-INF/'));
     for (const entry of metaInfEntries) {
       zip.deleteFile(entry);
       console.log(`[APK-CUSTOMIZER-FIXED] Removed ${entry.entryName}`);

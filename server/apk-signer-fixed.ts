@@ -38,7 +38,7 @@ export async function signAPKFixed(options: APKSignerOptions): Promise<{
     console.log(`[APK-SIGNER-FIXED] Removing old signature...`);
     try {
       const zip = new AdmZip(options.apkPath);
-      const metaInfEntries = zip.getEntries().filter(entry => entry.entryName.startsWith('META-INF/'));
+      const metaInfEntries = zip.getEntries().filter((entry: any) => entry.entryName.startsWith('META-INF/'));
       
       if (metaInfEntries.length > 0) {
         for (const entry of metaInfEntries) {
