@@ -7,6 +7,7 @@ interface APKBuilderOptions {
   appUrl: string;
   logoUrl?: string;
   requestOrigin?: string;
+  appDomain?: string;
 }
 
 /**
@@ -89,11 +90,13 @@ export async function buildCustomizedAPKPreserveSignature(options: APKBuilderOpt
     // NO RE-SIGNING NEEDED - Original signature is preserved and valid!
     console.log(`[APK-BUILDER-PRESERVE] ✓ APK is ready for installation (signature preserved)`);
 
-    // Generate download URL
-    const downloadUrl = `/download/${finalAPKName}`;
+    // Generate download URL with full domain
+    const appDomain = process.env.VITE_APP_DOMAIN || 'localhost:3000';
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'https';
+    const downloadUrl = `${protocol}://${appDomain}/download/${finalAPKName}`;
+    console.log(`[APK-BUILDER-PRESERVE] Generated absolute download URL: ${downloadUrl}`);
 
     console.log(`[APK-BUILDER-PRESERVE] ✓ APK build completed successfully`);
-    console.log(`[APK-BUILDER-PRESERVE] Download URL: ${downloadUrl}`);
 
     return {
       success: true,
