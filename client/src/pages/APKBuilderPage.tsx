@@ -35,11 +35,25 @@ export default function APKBuilderPage() {
     setBuildProgress(0);
 
     try {
-      // Show progress
+      // Show progress with more realistic steps
       let interval: NodeJS.Timeout | null = null;
+      let step = 0;
+      const steps = [
+        { progress: 10, message: 'Preparando ambiente...' },
+        { progress: 25, message: 'Carregando APK base...' },
+        { progress: 40, message: 'Baixando logo...' },
+        { progress: 60, message: 'Modificando recursos...' },
+        { progress: 80, message: 'Finalizando APK...' },
+      ];
+      
       interval = setInterval(() => {
-        setBuildProgress((prev) => Math.min(prev + Math.random() * 30, 90));
-      }, 500);
+        if (step < steps.length) {
+          setBuildProgress(steps[step].progress);
+          step++;
+        } else {
+          setBuildProgress((prev) => Math.min(prev + Math.random() * 5, 95));
+        }
+      }, 800);
 
       // Call tRPC endpoint using mutation
       console.log('[APK] Calling buildMutation.mutateAsync...');

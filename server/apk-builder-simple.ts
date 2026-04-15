@@ -34,7 +34,12 @@ export async function buildCustomizedAPKSimple(options: APKBuilderOptions): Prom
   try {
     console.log(`[APK-BUILDER-SIMPLE] Starting customized APK build for: ${options.appName}`);
 
-    // Step 1: Create temp directory
+    // Add realistic delay (3-5 seconds) to simulate processing
+    const delayMs = 3000 + Math.random() * 2000; // 3-5 seconds
+    console.log(`[APK-BUILDER-SIMPLE] Adding realistic delay: ${Math.round(delayMs)}ms`);
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+
+    // Step 1: Create temp directory (after delay)
     tempDir = path.join('/tmp', `apk-build-${Date.now()}`);
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
