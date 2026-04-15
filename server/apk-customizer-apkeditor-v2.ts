@@ -80,7 +80,7 @@ export async function customizeAPKWithAPKEditor(options: APKCustomizerOptions): 
     // Step 1: Decode APK with APKEditor
     console.log(`[APK-APKEDITOR-V2] Decoding APK with APKEditor...`);
     try {
-      const decodeCmd = `java -jar "${apkeditorPath}" d -i "${options.apkPath}" -o "${decodedDir}" -type xml`;
+      const decodeCmd = `java -jar "${apkeditorPath}" d -i "${options.apkPath}" -o "${decodedDir}"`;
       console.log(`[APK-APKEDITOR-V2] Executing: java -jar APKEditor.jar d ...`);
       
       const { stdout, stderr } = await execAsync(decodeCmd, {
