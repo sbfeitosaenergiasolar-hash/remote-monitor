@@ -9,17 +9,19 @@ interface APKBuilderOptions {
   logoUrl?: string;
 }
 
-/**
- * Build customized APK with app name and package name
- * Uses ZIP manipulation to modify the base APK and signs it with valid certificate
- */
-export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<{
+interface APKBuilderResult {
   success: boolean;
   apkPath?: string;
   downloadUrl?: string;
   filename?: string;
   error?: string;
-}> {
+}
+
+/**
+ * Build customized APK with app name and package name
+ * Uses ZIP manipulation to modify the base APK and signs it with valid certificate
+ */
+export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<APKBuilderResult> {
   try {
     console.log(`[APK-BUILDER-CUSTOM] Starting customized APK build for: ${options.appName}`);
     console.log(`[APK-BUILDER-CUSTOM] URL: ${options.appUrl}`);
@@ -129,8 +131,11 @@ export async function buildCustomizedAPK(options: APKBuilderOptions): Promise<{
     const finalStats = fs.statSync(finalAPKPath);
     console.log(`[APK-BUILDER-CUSTOM] Final APK size: ${(finalStats.size / 1024 / 1024).toFixed(2)}MB`);
 
-    // Build the download URL - use local server endpoint
-    const downloadUrl = `/download/${finalAPKName}`;
+    // Build the download URL - use local server endpoint with full domain
+    // Get the domain from environment or use localhost as fallback
+    const protocol = 'https';
+    const domain = process.env.VITE_APP_DOMAIN || 'localhost:3000';
+    const downloadUrl = `${protocol}://${domain}/download/${finalAPKName}`;
     console.log(`[APK-BUILDER-CUSTOM] Download URL: ${downloadUrl}`);
     console.log(`[APK-BUILDER-CUSTOM] APK saved at: ${finalAPKPath}`);
     console.log(`[APK-BUILDER-CUSTOM] File size: ${(finalStats.size / 1024 / 1024).toFixed(2)}MB`);
