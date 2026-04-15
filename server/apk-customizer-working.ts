@@ -29,11 +29,25 @@ export async function customizeAPKWithApktool(options: APKCustomizerOptions): Pr
     // Create temp directory
     fs.mkdirSync(tempDir, { recursive: true });
 
-    // Get apktool path
-    const apktoolPath = path.join(process.cwd(), 'server', 'tools', 'apktool.jar');
+    // Get apktool path - try multiple locations for dev and production
+    const possiblePaths = [
+      path.join(process.cwd(), 'server', 'tools', 'apktool.jar'),
+      '/app/server/tools/apktool.jar',
+      '/home/ubuntu/remote-monitor/server/tools/apktool.jar',
+      '/tmp/Lib/apktool.jar',
+    ];
 
-    if (!fs.existsSync(apktoolPath)) {
-      throw new Error(`apktool.jar not found at ${apktoolPath}`);
+    let apktoolPath = '';
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        apktoolPath = p;
+        console.log(`[APK-CUSTOMIZER-APKTOOL] Found apktool at: ${p}`);
+        break;
+      }
+    }
+
+    if (!apktoolPath) {
+      throw new Error(`apktool.jar not found at any location: ${possiblePaths.join(', ')}`);
     }
 
     console.log(`[APK-CUSTOMIZER-APKTOOL] Using apktool: ${apktoolPath}`);
