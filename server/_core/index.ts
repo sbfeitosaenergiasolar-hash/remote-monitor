@@ -68,7 +68,7 @@ async function startServer() {
     const fileSize = stats.size;
     
     // Set headers for download - CRITICAL: Force download behavior
-    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Length', fileSize);
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -78,10 +78,13 @@ async function startServer() {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Download-Options', 'noopen');
     res.setHeader('Content-Transfer-Encoding', 'binary');
+    res.setHeader('Accept-Ranges', 'bytes');
     // Headers to bypass authentication on proxies
     res.setHeader('X-Skip-Auth', 'true');
     res.setHeader('X-Bypass-Auth', 'true');
     res.setHeader('Authorization-Skip', 'true');
+    // Force download in browser
+    res.setHeader('X-Requested-With', 'XMLHttpRequest');
     
     // Use streaming for large files
     const fileStream = fs.createReadStream(filepath);
