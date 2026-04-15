@@ -143,19 +143,15 @@ export const appRouter = router({
           }
 
           // Extract filename from download URL
-          const filename = result.downloadUrl.split('/').pop() || 'app.apk';
+          const filename = result.filename || result.downloadUrl.split('/').pop() || 'app.apk';
           console.log('[ROUTER] Extracted filename:', filename);
           
-          // Try to upload to GitHub Releases if token is available
-          let finalDownloadUrl = result.downloadUrl; // Start with local URL as fallback
-          
-          console.log('[ROUTER] Using local download URL (GitHub is for backup only)');
-          console.log('[ROUTER] Local URL:', result.downloadUrl);
-          finalDownloadUrl = result.downloadUrl;
+          // Use local download URL
+          let finalDownloadUrl = result.downloadUrl;
           
           // Attempt GitHub upload in background (non-blocking) for backup
           if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL && result.apkPath) {
-            console.log('[ROUTER] Attempting GitHub upload in background...');
+            console.log('[ROUTER] Attempting GitHub upload in background for backup...');
             const repoUrl = process.env.GITHUB_REPO_URL;
             const { owner, repo } = parseGitHubUrl(repoUrl);
             uploadToGitHubRelease({

@@ -7,6 +7,7 @@ interface GitHubReleaseOptions {
   token: string;
   appName: string;
   filePath: string;
+  releaseTag?: string;
 }
 
 /**
@@ -29,10 +30,8 @@ export async function uploadToGitHubRelease(options: GitHubReleaseOptions): Prom
 
     console.log(`[GITHUB] File: ${fileName}, Size: ${(fileSize / 1024 / 1024).toFixed(2)}MB`);
 
-    // Create release tag
-    const timestamp = Date.now();
-    const randomSuffix = Math.random().toString(36).substring(2, 8);
-    const releaseTag = `apk-${timestamp}-${randomSuffix}`;
+    // Create release tag (use provided or generate new one)
+    const releaseTag = options.releaseTag || `apk-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
     const releaseName = `${options.appName} APK - ${new Date().toLocaleString()}`;
 
     console.log(`[GITHUB] Creating release: ${releaseTag}`);
