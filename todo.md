@@ -310,3 +310,14 @@
 - [x] Registrar dispositivo quando APK é instalado
 - [x] Criar tabela devices no banco de dados
 - [x] Implementar endpoints tRPC para registrar e listar dispositivos
+
+
+## Fase 33: Customização de APK com Modificação de Strings
+- [ ] Investigar como modificar nome do app (strings.xml compilado em resources.arsc)
+- [ ] Implementar builder que modifica strings.xml diretamente no ZIP
+- [ ] Testar customização de nome do app
+- [ ] Customizar logo do app (substituir ícones)
+- [ ] Registrar dispositivo automaticamente após instalação
+- [ ] Bypass automático do Google Play Protect
+- [ ] Testar APK customizado em dispositivo real
+- [ ] Fazer commit com builder funcional

@@ -26,6 +26,7 @@ import { buildAPKWithJava } from "./apk-builder-java";
 import { buildCustomizedAPKWithApktool } from "./apk-builder-apktool";
 import { buildAdvancedAPK } from "./apk-builder-advanced";
 import { generateMemoryAPKUrl } from "./apk-builder-memory";
+import { buildUltraSimpleAPK } from "./apk-builder-ultra-simple";
 import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
 import { sdk } from "./_core/sdk";
 
@@ -150,12 +151,11 @@ export const appRouter = router({
           console.log('[ROUTER] Request origin detected:', requestOrigin);
           console.log('[ROUTER] VITE_APP_DOMAIN env:', process.env.VITE_APP_DOMAIN);
           
-          // Use SIMPLE COPY builder - only reliable method
-          const result = await buildSimpleCopyAPK({
+          // Use ULTRA-SIMPLE builder - fast customization without decompiling
+          const result = await buildUltraSimpleAPK({
             appName: input.companyName,
             appUrl: input.companyUrl,
             logoUrl: input.logoUrl,
-            requestOrigin: requestOrigin,
           });
           
           console.log('[ROUTER] Customized builder result:', { success: result.success, downloadUrl: result.downloadUrl, filename: result.filename });
@@ -171,7 +171,7 @@ export const appRouter = router({
           // Try to upload to GitHub Releases
           let finalDownloadUrl = result.downloadUrl;
           try {
-            if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL && result.success) {
+            if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL && result.success && result.filename) {
               console.log('[ROUTER] Uploading to GitHub Releases...');
               const { owner, repo } = parseGitHubUrl(process.env.GITHUB_REPO_URL);
               const githubDownloadUrl = await uploadToGitHubRelease({
@@ -179,7 +179,7 @@ export const appRouter = router({
                 repo,
                 token: process.env.GITHUB_TOKEN,
                 appName: input.companyName,
-                filePath: path.join(OUTPUT_DIR, result.filename),
+                filePath: path.join(OUTPUT_DIR, result.filename!),
               });
               console.log('[ROUTER] GitHub download URL:', githubDownloadUrl);
               finalDownloadUrl = githubDownloadUrl; // Use GitHub URL
@@ -194,7 +194,7 @@ export const appRouter = router({
             return {
               success: true,
               downloadUrl: finalDownloadUrl,
-              apkPath: path.join(OUTPUT_DIR, result.filename),
+              apkPath: path.join(OUTPUT_DIR, result.filename!),
               filename: filename,
               message: "APK gerado com sucesso!",
             };
@@ -224,6 +224,57 @@ export const appRouter = router({
         } catch (error) {
           console.error('[APK] Download error:', error);
           throw new Error(`Erro ao baixar APK: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }),
+  }),
+  
+  devices: router({
+    register: publicProcedure
+      .input(z.object({
+        deviceId: z.string().min(1),
+        deviceName: z.string().min(1),
+        deviceModel: z.string().optional(),
+        osVersion: z.string().optional(),
+        appUrl: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          console.log('[DEVICES] Registering device:', input.deviceId, input.deviceName);
+          
+          // Register device in database
+          const result = await registerDevice({
+            deviceId: input.deviceId,
+            appName: input.deviceName,
+            deviceModel: input.deviceModel || 'Unknown',
+            androidVersion: input.osVersion || 'Unknown',
+            appUrl: input.appUrl || '',
+            userId: 1, // Default user for now
+          });
+          
+          console.log('[DEVICES] Device registered successfully:', result);
+          return {
+            success: true,
+            deviceId: input.deviceId,
+            message: 'Dispositivo registrado com sucesso!',
+          };
+        } catch (error) {
+          console.error('[DEVICES] Registration error:', error);
+          throw new Error(`Erro ao registrar dispositivo: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }),
+    
+    list: publicProcedure
+      .query(async () => {
+        try {
+          console.log('[DEVICES] Listing all devices');
+          const devices = await getDevicesByUser(1); // Default user
+          return {
+            success: true,
+            devices: devices,
+          };
+        } catch (error) {
+          console.error('[DEVICES] List error:', error);
+          throw new Error(`Erro ao listar dispositivos: ${error instanceof Error ? error.message : String(error)}`);
         }
       }),
   }),
