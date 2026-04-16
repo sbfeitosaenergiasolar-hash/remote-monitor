@@ -361,3 +361,15 @@
 - [x] Mostrar estado de carregamento
 - [x] Testar página de Dispositivos
 - [x] Dispositivos agora aparecem quando registrados
+
+
+## Fase 38: Correção de Problemas Críticos - APK Base
+- [ ] Criar APK base novo com nome "FazTudo" correto (não Blockchain)
+- [ ] Modificar strings.xml para remover "Blockchain"
+- [ ] Modificar AndroidManifest.xml para package correto
+- [ ] Substituir ícone do app
+- [ ] Testar APK base novo
+- [ ] Customizar builder para modificar nome em strings.xml
+- [ ] Implementar registro automático de dispositivo quando app abre
+- [ ] Testar APK gerado no celular
+- [ ] Validar dispositivo aparecendo no painel após instalar

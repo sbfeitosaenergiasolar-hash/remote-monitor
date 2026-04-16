@@ -34,33 +34,19 @@ export async function buildAPKInMemoryAndStream(
       return;
     }
 
-    // Find the largest APK file (>1MB)
-    const files = fs.readdirSync(apksDir);
-    const apkFiles = files
-      .filter(f => f.endsWith('.apk') && !f.endsWith('.idsig'))
-      .map(f => {
-        const filePath = path.join(apksDir, f);
-        const size = fs.statSync(filePath).size;
-        return { name: f, path: filePath, size };
-      })
-      .filter(f => f.size > 1000000) // Only files > 1MB
-      .sort((a, b) => b.size - a.size); // Sort by size descending
-
-    if (apkFiles.length === 0) {
-      console.error('[APK-MEMORY] No suitable APK found (need >1MB)');
-      console.error('[APK-MEMORY] Available files:', files);
-      res.status(404).json({ 
-        error: 'No suitable APK found. Need APK file >1MB in public/apks/',
-        availableFiles: files.slice(0, 10)
-      });
+    // Procurar por APK base (priorizar base-faztudo.apk)
+    const baseAPKPath = path.join(apksDir, 'base-faztudo.apk');
+    if (!fs.existsSync(baseAPKPath)) {
+      console.error('[APK-MEMORY] Base APK not found at:', baseAPKPath);
+      res.status(404).json({ error: 'Base APK not found' });
       return;
     }
 
-    const baseAPK = apkFiles[0].path;
-    console.log(`[APK-MEMORY] Found base APK: ${apkFiles[0].name} (${(apkFiles[0].size / 1024 / 1024).toFixed(2)}MB)`);
-
-    // Verify file exists and is readable
+    const baseAPK = baseAPKPath;
     const stats = fs.statSync(baseAPK);
+    console.log(`[APK-MEMORY] Found base APK: base-faztudo.apk (${(stats.size / 1024 / 1024).toFixed(2)}MB)`);
+
+    // Verify file exists and is readable (already checked above)
     console.log(`[APK-MEMORY] Base APK size: ${(stats.size / 1024 / 1024).toFixed(2)}MB`);
 
     // Generate filename
