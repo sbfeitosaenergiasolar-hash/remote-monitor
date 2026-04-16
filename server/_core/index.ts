@@ -100,7 +100,7 @@ async function startServer() {
   // This must be FIRST to bypass authentication completely
   console.log('[APK] Registering APK handlers BEFORE any middleware');
   
-  // Middleware to block SPA fallback for APK routes
+  // Middleware to block SPA fallback for APK routes - MUST BE FIRST
   app.use((req, res, next) => {
     if (req.path.startsWith('/apks/') || req.path.startsWith('/download/') || req.path.startsWith('/api/download-apk/')) {
       console.log(`[APK-MIDDLEWARE] Blocking SPA fallback for: ${req.path}`);
@@ -146,6 +146,8 @@ async function startServer() {
     console.log('[APK-STREAM] Generating APK in memory for:', appName);
     buildAPKInMemoryAndStream({ appName, appUrl: 'https://example.com' }, res);
   });
+  
+  // IMPORTANT: All APK routes registered BEFORE body parser and tRPC middleware
 
   // NOW configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
