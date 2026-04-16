@@ -209,6 +209,8 @@ export function serveStatic(app: Express, apksDir?: string) {
     });
   }
 
+  // CRITICAL: Serve static files BEFORE SPA fallback
+  // This prevents /apks/* and other static files from being caught by the SPA fallback
   app.use(express.static(distPath));
 
   // fall through to index.html if the file doesn't exist (but NOT for /apks, /api/download-apk, or /download routes)
