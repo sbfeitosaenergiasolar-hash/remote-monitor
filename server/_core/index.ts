@@ -47,9 +47,9 @@ async function startServer() {
   
   // CRITICAL: Register simple APK route IMMEDIATELY - BEFORE ANY MIDDLEWARE
   // This is a direct route, not middleware, so it bypasses SPA fallback
-  app.get('/apks/:filename', (req, res) => {
-    const filename = req.params.filename;
-    console.log(`[APK-ROUTE] Direct route handler for: ${filename}`);
+  // Helper function to serve APK file
+  const serveApkFile = (filename: string, res: express.Response) => {
+    console.log(`[APK-ROUTE] Serving: ${filename}`);
     
     // Sanitize filename
     if (filename.includes('..') || filename.includes('/')) {
@@ -72,6 +72,20 @@ async function startServer() {
     res.setHeader('Cache-Control', 'public, max-age=3600');
     res.setHeader('X-Bypass-Auth', 'true');
     res.sendFile(filepath);
+  };
+  
+  // Register multiple routes for APK download
+  app.get('/apks/:filename', (req, res) => {
+    serveApkFile(req.params.filename, res);
+  });
+  
+  // Alternative route that might bypass proxy auth
+  app.get('/file/:filename', (req, res) => {
+    serveApkFile(req.params.filename, res);
+  });
+  
+  app.get('/download/:filename', (req, res) => {
+    serveApkFile(req.params.filename, res);
   });
 
   // Helper function to serve APK files
