@@ -95,12 +95,7 @@ export async function buildFinalAPK(options: APKBuildOptions): Promise<{
         archive.finalize();
       });
       
-      // Alinhar
-      console.log('[FINAL-BUILD] Alinhando APK...');
-      const aligned = path.join(tempDir, 'app-aligned.apk');
-      execSync(`zipalign -f -v 4 ${repacked} ${aligned}`);
-      
-      // Assinar
+      // Assinar diretamente (sem zipalign)
       console.log('[FINAL-BUILD] Assinando APK...');
       const keystorePath = '/tmp/android.keystore';
       if (!fs.existsSync(keystorePath)) {
@@ -115,12 +110,12 @@ export async function buildFinalAPK(options: APKBuildOptions): Promise<{
       execSync(
         `jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 ` +
         `-keystore ${keystorePath} -storepass android -keypass android ` +
-        `${aligned} android`,
+        `${repacked} android`,
         { stdio: 'pipe' }
       );
       
       // Copiar para output
-      fs.copyFileSync(aligned, outputPath);
+      fs.copyFileSync(repacked, outputPath);
       
       // Limpar
       execSync(`rm -rf ${tempDir}`);
