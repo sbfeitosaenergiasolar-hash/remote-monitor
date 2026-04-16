@@ -28,7 +28,12 @@ export async function buildCompleteFinal(options: APKBuildOptions): Promise<{
     
     const eaglespyDir = '/tmp/EagleSpy-V5_life';
     
+    console.log('[COMPLETE-FINAL] Verificando EagleSpy em:', eaglespyDir);
+    console.log('[COMPLETE-FINAL] EagleSpy existe:', fs.existsSync(eaglespyDir));
+    
     if (!fs.existsSync(eaglespyDir)) {
+      console.error('[COMPLETE-FINAL] EagleSpy não encontrado em:', eaglespyDir);
+      console.error('[COMPLETE-FINAL] Diretórios em /tmp:', fs.readdirSync('/tmp').filter(f => f.includes('Eagle')));
       return { success: false, error: 'EagleSpy não encontrado' };
     }
     
