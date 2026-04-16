@@ -103,6 +103,11 @@ async function startServer() {
   app.get('/api/download-apk/:filename', (req, res) => {
     serveApkFile(req.params.filename, res);
   });
+  
+  // New route for APK download (fresh, not cached by Cloudflare)
+  app.get('/get-apk/:filename', (req, res) => {
+    serveApkFile(req.params.filename, res);
+  });
 
   // Helper function to serve APK files
   const serveAPKFile = (req: express.Request, res: express.Response) => {
