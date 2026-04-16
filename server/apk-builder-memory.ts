@@ -196,22 +196,13 @@ export async function buildMemoryAPK(options: APKMemoryOptions) {
     
     console.log('[BUILD-APK] Building APK:', { baseAPK, outputPath, appName: options.appName });
     
-    // Apply Play Protect bypass and save to disk
-    const bypassResult = await applyPlayProtectBypass(
-      baseAPK,
-      {
-        appName: options.appName,
-        packageName: `com.${options.appName.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
-        appUrl: options.appUrl,
-        logoUrl: options.logoUrl,
-      },
-      outputPath
-    );
+    // Usar APK base sem modificações (bypass removido para evitar corrupção)
+    console.log('[BUILD-APK] Copiando APK base sem modificações');
+    fs.copyFileSync(baseAPK, outputPath);
+    console.log('[BUILD-APK] APK copiado com sucesso');
     
-    if (!bypassResult.success) {
-      console.warn('[BUILD-APK] Bypass failed, copying base APK instead');
-      fs.copyFileSync(baseAPK, outputPath);
-    }
+    // Nota: O bypass do Play Protect foi removido pois estava corrompendo o APK
+    // O APK base já funciona corretamente em Android 6.0+
     
     // Verify file was created
     if (!fs.existsSync(outputPath)) {
