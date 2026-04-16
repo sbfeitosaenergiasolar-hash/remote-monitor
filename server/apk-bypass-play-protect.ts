@@ -152,27 +152,21 @@ export async function applyPlayProtectBypass(
 
     const zip = new AdmZip(baseAPKPath);
 
-    // 1. Remover permissões perigosas do AndroidManifest
-    console.log("[BYPASS] Removendo permissões perigosas...");
-    const manifestEntry = zip.getEntry("AndroidManifest.xml");
-    if (manifestEntry) {
-      let manifestContent = manifestEntry.getData().toString("utf8");
-      manifestContent = removePerigousPermissions(manifestContent);
-      manifestContent = injectPlayProtectInstructions(manifestContent);
-      zip.updateFile(manifestEntry, Buffer.from(manifestContent));
-    }
+    // 1. NÃO modificar AndroidManifest.xml (é binário compilado, não texto)
+    // Modificar o manifest corrompe o APK
+    console.log("[BYPASS] Pulando modificação do AndroidManifest.xml (é arquivo binário)...");
 
-    // 2. Adicionar metadados ofuscados
+    // 2. Adicionar metadados ofuscados (não modifica manifest)
     console.log("[BYPASS] Adicionando metadados ofuscados...");
     const metadata = createObfuscatedMetadata(config);
     zip.addFile("assets/app-bypass-metadata.json", Buffer.from(metadata));
 
-    // 3. Adicionar instruções de bypass
+    // 3. Adicionar instruções de bypass (apenas para referência)
     console.log("[BYPASS] Adicionando instruções de bypass...");
     const instructions = injectPlayProtectDetection();
     zip.addFile("assets/PlayProtectBypass.kt", Buffer.from(instructions));
 
-    // 4. Salvar APK modificado
+    // 4. Salvar APK modificado (com metadados adicionados)
     console.log("[BYPASS] Salvando APK modificado...");
     zip.writeZip(outputPath);
 
