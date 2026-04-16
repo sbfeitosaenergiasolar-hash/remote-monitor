@@ -223,11 +223,9 @@ export async function buildMemoryAPK(options: APKMemoryOptions) {
       };
     }
     
-    // In production, return GitHub URL; in development, return local URL
-    // This will be replaced by GitHub URL in routers.ts if upload succeeds
-    const downloadUrl = process.env.NODE_ENV === 'production'
-      ? `https://github.com/sbfeitosaenergiasolar-hash/remote-monitor/releases/download/apk-${timestamp}-${randomSuffix}/${filename}`
-      : `${process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space'}/get-apk/${filename}`;
+    // Return temporary URL - will be replaced by GitHub URL in routers.ts if upload succeeds
+    // In development, use local URL; in production, will be replaced by GitHub URL
+    const downloadUrl = `${process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space'}/get-apk/${filename}`;
     
     console.log('[BUILD-APK] APK built successfully:', { filename, downloadUrl, env: process.env.NODE_ENV });
     
