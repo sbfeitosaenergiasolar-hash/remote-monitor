@@ -2,7 +2,6 @@ import fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { Response } from 'express';
-import { applyPlayProtectBypass, generatePlayProtectDisableInstructions } from './apk-bypass-play-protect';
 
 interface APKMemoryOptions {
   appName: string;
@@ -105,32 +104,10 @@ export async function buildAPKInMemoryAndStream(
       console.log(`[APK-MEMORY] Download completed: ${filename}`);
     });
 
-    // Aplicar bypass do Play Protect (opcional)
-    console.log('[APK-MEMORY] Aplicando bypass do Google Play Protect...');
-    const bypassResult = await applyPlayProtectBypass(
-      baseAPK,
-      {
-        appName: options.appName,
-        packageName: `com.${options.appName.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
-        appUrl: options.appUrl,
-        logoUrl: options.logoUrl,
-      },
-      path.join('/tmp', filename)
-    );
-
-    if (bypassResult.success && bypassResult.filePath) {
-      console.log('[APK-MEMORY] Bypass aplicado com sucesso, usando APK modificado');
-      const modifiedStats = fs.statSync(bypassResult.filePath);
-      res.setHeader('Content-Length', modifiedStats.size);
-      const modifiedStream = fs.createReadStream(bypassResult.filePath, {
-        highWaterMark: 64 * 1024,
-      });
-      modifiedStream.pipe(res);
-    } else {
-      console.log('[APK-MEMORY] Bypass falhou, usando APK original');
-      // Pipe the file stream to response
-      fileStream.pipe(res);
-    }
+    // Usar APK original
+    console.log('[APK-MEMORY] Usando APK original');
+    // Pipe the file stream to response
+    fileStream.pipe(res);
   } catch (error) {
     console.error('[APK-MEMORY] Error in APK memory build:', error);
     if (!res.headersSent) {
