@@ -69,7 +69,9 @@ async function startServer() {
     console.log(`[APK-ROUTE] Serving file: ${filepath}`);
     res.setHeader('Content-Type', 'application/vnd.android.package-archive');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.setHeader('X-Bypass-Auth', 'true');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Transfer-Encoding', 'binary');
@@ -165,7 +167,9 @@ async function startServer() {
       res.setHeader('X-Skip-Auth', 'true');
       res.setHeader('X-Bypass-Auth', 'true');
       res.setHeader('Authorization-Skip', 'true');
-      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
       // Extract filename from path and set it in req.params for serveAPKFile
       const pathMatch = req.path.match(/\/(apks|download|api\/download-apk)\/(.+)$/);
       if (pathMatch && pathMatch[2]) {
@@ -196,7 +200,9 @@ async function startServer() {
     }
     
     console.log('[PUBLIC-DOWNLOAD] Serving file with token:', filename);
-    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.setHeader('X-Robots-Tag', 'noindex, nofollow');
     serveAPKFile(req, res);
   });
