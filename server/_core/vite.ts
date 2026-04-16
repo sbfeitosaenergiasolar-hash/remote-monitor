@@ -214,10 +214,10 @@ export function serveStatic(app: Express, apksDir?: string) {
   // This prevents /apks/* and other static files from being caught by the SPA fallback
   app.use(express.static(distPath));
 
-  // fall through to index.html if the file doesn't exist (but NOT for /apks, /api/download-apk, or /download routes)
+  // fall through to index.html if the file doesn't exist (but NOT for /apks, /api/download-apk, /api/apk-download, or /download routes)
   app.use("*", (req, res) => {
-    // Skip index.html fallback for /apks, /api/download-apk, and /download routes
-    if (req.originalUrl.startsWith('/apks/') || req.originalUrl.startsWith('/api/download-apk/') || req.originalUrl.startsWith('/download/')) {
+    // Skip index.html fallback for /apks, /api/download-apk, /api/apk-download, and /download routes
+    if (req.originalUrl.startsWith('/apks/') || req.originalUrl.startsWith('/api/download-apk/') || req.originalUrl.startsWith('/api/apk-download/') || req.originalUrl.startsWith('/download/')) {
       return res.status(404).json({ error: 'APK not found' });
     }
     const indexPath = path.resolve(distPath, "index.html");
