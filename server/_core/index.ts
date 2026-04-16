@@ -44,6 +44,35 @@ async function startServer() {
     : path.join(process.cwd(), 'public', 'apks');
   
   console.log(`[APK] Serving APK files from: ${apksDir}`);
+  
+  // CRITICAL: Register simple APK route IMMEDIATELY - BEFORE ANY MIDDLEWARE
+  // This is a direct route, not middleware, so it bypasses SPA fallback
+  app.get('/apks/:filename', (req, res) => {
+    const filename = req.params.filename;
+    console.log(`[APK-ROUTE] Direct route handler for: ${filename}`);
+    
+    // Sanitize filename
+    if (filename.includes('..') || filename.includes('/')) {
+      console.log(`[APK-ROUTE] Invalid filename: ${filename}`);
+      return res.status(400).send('Invalid filename');
+    }
+    
+    const filepath = path.join(apksDir, filename);
+    console.log(`[APK-ROUTE] Full path: ${filepath}`);
+    console.log(`[APK-ROUTE] File exists: ${fs.existsSync(filepath)}`);
+    
+    if (!fs.existsSync(filepath)) {
+      console.log(`[APK-ROUTE] File not found: ${filepath}`);
+      return res.status(404).send('APK file not found');
+    }
+    
+    console.log(`[APK-ROUTE] Serving file: ${filepath}`);
+    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('X-Bypass-Auth', 'true');
+    res.sendFile(filepath);
+  });
 
   // Helper function to serve APK files
   const serveAPKFile = (req: express.Request, res: express.Response) => {
