@@ -104,6 +104,11 @@ async function startServer() {
   app.use((req, res, next) => {
     if (req.path.startsWith('/apks/') || req.path.startsWith('/download/') || req.path.startsWith('/api/download-apk/')) {
       console.log(`[APK-MIDDLEWARE] Blocking SPA fallback for: ${req.path}`);
+      // Add bypass headers BEFORE processing
+      res.setHeader('X-Skip-Auth', 'true');
+      res.setHeader('X-Bypass-Auth', 'true');
+      res.setHeader('Authorization-Skip', 'true');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
       // Extract filename from path and set it in req.params for serveAPKFile
       const pathMatch = req.path.match(/\/(apks|download|api\/download-apk)\/(.+)$/);
       if (pathMatch && pathMatch[2]) {
