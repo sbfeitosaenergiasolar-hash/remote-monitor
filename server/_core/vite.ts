@@ -125,6 +125,54 @@ export function serveStatic(app: Express, apksDir?: string) {
   // APK handlers already registered in index.ts BEFORE this function is called
   // Register APK handlers for production (as fallback)
   if (apksDir) {
+    // Handle /api/apk-download/:token/:filename (token-based download)
+    app.get('/api/apk-download/:token/:filename', (req, res) => {
+      try {
+        const { token, filename } = req.params;
+        
+        // Simple token validation
+        if (!token || token.length < 5) {
+          return res.status(401).json({ error: 'Invalid token' });
+        }
+        
+        // Sanitize filename
+        if (filename.includes('..') || filename.includes('/')) {
+          return res.status(400).json({ error: 'Invalid filename' });
+        }
+        
+        const apkPath = path.join(apksDir, filename);
+        
+        if (!fs.existsSync(apkPath)) {
+          console.log(`[APK-TOKEN-PROD] File not found: ${apkPath}`);
+          return res.status(404).json({ error: 'APK file not found' });
+        }
+        
+        console.log(`[APK-TOKEN-PROD] Serving file: ${apkPath}`);
+        const stats = fs.statSync(apkPath);
+        
+        res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Length', stats.size);
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Content-Transfer-Encoding', 'binary');
+        res.setHeader('Accept-Ranges', 'bytes');
+        
+        const fileStream = fs.createReadStream(apkPath);
+        fileStream.pipe(res);
+        
+        fileStream.on('error', (err) => {
+          console.error('[APK-TOKEN-PROD] Error streaming file:', err);
+          res.status(500).json({ error: 'Error downloading file' });
+        });
+      } catch (error) {
+        console.error('[APK-TOKEN-PROD] Error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+    
     // Handle /apks/:filename
     app.get('/apks/:filename', (req, res) => {
       const filename = req.params.filename;
