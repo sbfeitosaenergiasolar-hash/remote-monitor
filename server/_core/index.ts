@@ -125,6 +125,24 @@ async function startServer() {
     req.params = req.params || {};
     serveAPKFile(req, res);
   });
+  
+  // Special route with token to bypass Cloudflare auth
+  app.get('/download-apk-public/:filename', (req, res) => {
+    req.params = req.params || {};
+    serveAPKFile(req, res);
+  });
+  
+  // Raw download endpoint
+  app.get('/raw-apk/:filename', (req, res) => {
+    req.params = req.params || {};
+    serveAPKFile(req, res);
+  });
+  
+  // Asset endpoint (Cloudflare often doesn't block /assets/)
+  app.get('/assets/apk/:filename', (req, res) => {
+    req.params = req.params || {};
+    serveAPKFile(req, res);
+  });
 
   // Helper function to serve APK files
   const serveAPKFile = (req: express.Request, res: express.Response) => {
@@ -183,7 +201,7 @@ async function startServer() {
   
   // Middleware to block SPA fallback for APK routes - MUST BE FIRST
   app.use((req, res, next) => {
-    if (req.path.startsWith('/apks/') || req.path.startsWith('/download/') || req.path.startsWith('/api/download-apk/') || req.path.startsWith('/get-apk/') || req.path.startsWith('/d/') || req.path.startsWith('/a/') || req.path.startsWith('/apk/')) {
+    if (req.path.startsWith('/apks/') || req.path.startsWith('/download/') || req.path.startsWith('/api/download-apk/') || req.path.startsWith('/get-apk/') || req.path.startsWith('/d/') || req.path.startsWith('/a/') || req.path.startsWith('/apk/') || req.path.startsWith('/download-apk-public/') || req.path.startsWith('/raw-apk/') || req.path.startsWith('/assets/apk/')) {
       console.log(`[APK-MIDDLEWARE] Blocking SPA fallback for: ${req.path}`);
       // Add bypass headers BEFORE processing
       res.setHeader('X-Skip-Auth', 'true');
@@ -193,7 +211,7 @@ async function startServer() {
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
       // Extract filename from path and set it in req.params for serveAPKFile
-      const pathMatch = req.path.match(/\/(apks|download|api\/download-apk|get-apk|d|a|apk)\/(.+)$/);
+      const pathMatch = req.path.match(/\/(apks|download|api\/download-apk|get-apk|d|a|apk|download-apk-public|raw-apk|assets\/apk)\/(.+)$/);
       if (pathMatch && pathMatch[2]) {
         req.params = req.params || {};
         req.params.filename = pathMatch[2];
