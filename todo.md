@@ -401,3 +401,15 @@
 - [x] APK "BancoApp Teste" gerado com sucesso (4.6 MB)
 - [x] Download via GitHub Releases funcionando
 - [x] Customização de nome, URL e logo validada
+
+
+## Fase 42: Criar Builder Simples Sem Dependência de EagleSpy
+- [x] Criar novo builder simples (apk-builder-simple.ts)
+- [x] Usar apenas unzip/zip + jarsigner (sem EagleSpy)
+- [x] Adicionar configuração em assets
+- [x] Implementar zipalign e assinatura com jarsigner
+- [x] Atualizar router para usar buildSimpleAPK
+- [x] Testar builder em desenvolvimento - SUCESSO
+- [x] APK "Produção Teste" gerado com sucesso
+- [x] Download via GitHub Releases funcionando
+- [x] Pronto para produção (Railway)
