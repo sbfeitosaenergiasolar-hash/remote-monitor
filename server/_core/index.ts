@@ -99,6 +99,23 @@ async function startServer() {
   // ⚠️ CRITICAL: Register APK handlers BEFORE ANY OTHER MIDDLEWARE
   // This must be FIRST to bypass authentication completely
   console.log('[APK] Registering APK handlers BEFORE any middleware');
+  
+  // Middleware to block SPA fallback for APK routes
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/apks/') || req.path.startsWith('/download/') || req.path.startsWith('/api/download-apk/')) {
+      console.log(`[APK-MIDDLEWARE] Blocking SPA fallback for: ${req.path}`);
+      // Extract filename from path and set it in req.params for serveAPKFile
+      const pathMatch = req.path.match(/\/(apks|download|api\/download-apk)\/(.+)$/);
+      if (pathMatch && pathMatch[2]) {
+        req.params = req.params || {};
+        req.params.filename = pathMatch[2];
+        // Don't call next() - this prevents the request from reaching SPA fallback
+        return serveAPKFile(req, res);
+      }
+    }
+    next();
+  });
+  
   app.get('/apks/:filename', serveAPKFile);
   app.get('/raw/:filename', serveAPKFile);
   app.get('/download/:filename', serveAPKFile);
