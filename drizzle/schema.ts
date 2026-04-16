@@ -106,3 +106,24 @@ export const devices = mysqlTable("devices", {
 
 export type Device = typeof devices.$inferSelect;
 export type InsertDevice = typeof devices.$inferInsert;
+
+// APK Builds table for tracking generated APKs
+export const apkBuilds = mysqlTable("apkBuilds", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  appName: varchar("appName", { length: 255 }).notNull(),
+  appUrl: text("appUrl").notNull(),
+  logoUrl: text("logoUrl"),
+  protectFromUninstall: int("protectFromUninstall").default(1).notNull(),
+  downloadUrl: text("downloadUrl").notNull(),
+  githubReleaseUrl: text("githubReleaseUrl"),
+  filename: varchar("filename", { length: 255 }).notNull(),
+  fileSize: int("fileSize"),
+  status: mysqlEnum("status", ["building", "success", "failed"]).default("building").notNull(),
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type APKBuild = typeof apkBuilds.$inferSelect;
+export type InsertAPKBuild = typeof apkBuilds.$inferInsert;

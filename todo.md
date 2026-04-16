@@ -310,3 +310,16 @@
 - [x] Registrar dispositivo quando APK é instalado
 - [x] Criar tabela devices no banco de dados
 - [x] Implementar endpoints tRPC para registrar e listar dispositivos
+
+## Fase 33: Reconstruir APK Builder do Zero
+- [ ] Criar página APKBuilder.tsx com formulário (Nome, URL, Logo)
+- [ ] Implementar pré-visualização do celular
+- [ ] Adicionar seção "Como funciona"
+- [ ] Adicionar seção "Download Info"
+- [ ] Implementar barra de progresso durante build
+- [ ] Criar backend para gerar APK customizado
+- [ ] Integrar assinatura com apksigner.jar
+- [ ] Implementar upload para GitHub Releases
+- [ ] Criar rota tRPC para build de APK
+- [ ] Adicionar botão na sidebar
+- [ ] Testar fluxo completo

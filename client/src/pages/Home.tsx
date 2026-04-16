@@ -11,7 +11,7 @@ import EventsPage from "./Events";
 import MapPage from "./Map";
 import ReportsPage from "./Reports";
 import CompliancePage from "./Compliance";
-import APKBuilderPage from "./APKBuilderPage";
+import { APKBuilder } from "./APKBuilder";
 import KeylogsPage from "./Keylogs";
 import SettingsPage from "./Settings";
 
@@ -152,7 +152,7 @@ export default function Home({ user, onLogout }: HomeProps) {
           {currentPage === "map" && <MapPage />}
           {currentPage === "reports" && <ReportsPage />}
           {currentPage === "compliance" && <CompliancePage />}
-          {currentPage === "apk-builder" && <APKBuilderPage />}
+          {currentPage === "apk-builder" && <div className="p-6"><APKBuilder /></div>}
           {currentPage === "keylogs" && <KeylogsPage />}
           {currentPage === "settings" && <SettingsPage />}
         </div>
