@@ -210,6 +210,38 @@ export async function buildSimpleAPK(options: APKBuildOptions): Promise<{
         throw error;
       }
       
+      // Remover assinatura antiga (META-INF) para evitar conflito
+      console.log('[SIMPLE-BUILD] Removendo assinatura antiga...');
+      const metainfPath = path.join(extractDir, 'META-INF');
+      if (fs.existsSync(metainfPath)) {
+        fs.rmSync(metainfPath, { recursive: true, force: true });
+      }
+      
+      // Reempacotar novamente SEM assinatura
+      console.log('[SIMPLE-BUILD] Reempacotando sem assinatura...');
+      const finalApkNoSig = path.join(tempDir, 'app-no-sig.apk');
+      if (fs.existsSync(finalApkNoSig)) {
+        fs.unlinkSync(finalApkNoSig);
+      }
+      const finalZipNoSig = new AdmZip();
+      const addFilesRecursive2 = (dir: string, zipPath = '') => {
+        const files = fs.readdirSync(dir);
+        for (const file of files) {
+          const filePath = path.join(dir, file);
+          const stat = fs.statSync(filePath);
+          const zipFilePath = zipPath ? `${zipPath}/${file}` : file;
+          
+          if (stat.isDirectory()) {
+            addFilesRecursive2(filePath, zipFilePath);
+          } else {
+            const fileData = fs.readFileSync(filePath);
+            finalZipNoSig.addFile(zipFilePath, fileData);
+          }
+        }
+      };
+      addFilesRecursive2(extractDir);
+      finalZipNoSig.writeZip(finalApkNoSig);
+      
       // Assinar
       console.log('[SIMPLE-BUILD] Assinando APK...');
       const keystorePath = path.join(apksDir, 'debug.keystore');
@@ -225,9 +257,12 @@ export async function buildSimpleAPK(options: APKBuildOptions): Promise<{
       execSync(
         `jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 ` +
         `-keystore ${keystorePath} -storepass android -keypass android ` +
-        `${finalApk} android`,
+        `${finalApkNoSig} android`,
         { stdio: 'pipe' }
       );
+      
+      // Copiar APK assinado para output
+      fs.copyFileSync(finalApkNoSig, finalApk);
       
       // Copiar para output
       fs.copyFileSync(finalApk, outputPath);
