@@ -14,7 +14,10 @@ import { buildMemoryAPK } from "./apk-builder-memory";
 import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
 import { sdk } from "./_core/sdk";
 
-const OUTPUT_DIR = "/home/ubuntu/remote-monitor/public/apks";
+// Use correct path for both development and production
+const OUTPUT_DIR = process.env.NODE_ENV === 'production'
+  ? '/app/public/apks'
+  : '/home/ubuntu/remote-monitor/public/apks';
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
