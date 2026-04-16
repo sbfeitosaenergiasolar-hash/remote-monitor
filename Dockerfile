@@ -43,7 +43,7 @@ COPY tools/lib/apktool.jar /app/tools/lib/apktool.jar
 RUN mkdir -p /tmp/apk-builds /app/public/apks
 
 # Verify tools are present
-RUN echo "Checking tools..." && ls -lah /app/tools/lib/ && file /app/tools/lib/apktool.jar
+RUN echo "Checking tools..." && ls -lah /app/tools/lib/
 
 # Expose port
 EXPOSE 8080
