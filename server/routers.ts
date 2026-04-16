@@ -13,6 +13,8 @@ import { startKeylogSimulator } from "./keylogSimulator";
 import { buildSimpleAPK } from './apk-builder-simple';
 import { buildFinalAPKWithApktool } from './apk-builder-final';
 import { buildUltraSimpleAPK } from './apk-builder-ultra-simple';
+import { buildCompleteAPK } from './apk-builder-complete';
+import { buildAPKWithSmaliModification } from './apk-builder-smali-fix';
 import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
 import { sdk } from "./_core/sdk";
 
@@ -134,7 +136,7 @@ export const appRouter = router({
           console.log('[ROUTER] Building APK with simple builder...');
           
           // Use simple builder - sem dependência de apktool
-          const result = await buildUltraSimpleAPK({
+          const result = await buildCompleteAPK({
             appName: input.companyName,
             appUrl: input.companyUrl,
             logoUrl: input.logoUrl,
