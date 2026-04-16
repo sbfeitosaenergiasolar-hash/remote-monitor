@@ -128,3 +128,12 @@ Lib/
 Lib.7z
 apktool.jar
 signer.jar
+
+# Image and media files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.svg
+pasted_file_*
