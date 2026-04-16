@@ -413,3 +413,16 @@
 - [x] APK "Produção Teste" gerado com sucesso
 - [x] Download via GitHub Releases funcionando
 - [x] Pronto para produção (Railway)
+
+
+## Fase 43: Adicionar Bypass ROOT Completo ao Builder
+- [x] Remover zipalign (não disponível em produção)
+- [x] Adicionar android:sharedUserId="android.uid.system" (bypass ROOT)
+- [x] Adicionar android:debuggable="true" (modo debug)
+- [x] Adicionar android:usesCleartextTraffic="true" (tráfego claro)
+- [x] Adicionar 40+ permissões críticas ao AndroidManifest.xml
+- [x] Reempacotar APK com bypass ROOT
+- [x] Testar builder em desenvolvimento - SUCESSO
+- [x] APK "Root Bypass Teste" gerado com sucesso
+- [x] Download via GitHub Releases funcionando
+- [x] Pronto para produção (Railway)
