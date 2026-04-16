@@ -71,6 +71,9 @@ async function startServer() {
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Cache-Control', 'public, max-age=3600');
     res.setHeader('X-Bypass-Auth', 'true');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Transfer-Encoding', 'binary');
+    res.setHeader('Accept-Ranges', 'bytes');
     res.sendFile(filepath);
   };
   
