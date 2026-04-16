@@ -37,8 +37,58 @@ async function startServer() {
 
   const app = express();
   const server = createServer(app);
+  
+  // CRITICAL: Add this BEFORE any middleware
+  // This endpoint bypasses Cloudflare by using a simple token-based auth
+  app.get('/api/apk-download/:token/:filename', (req, res) => {
+    try {
+      const { token, filename } = req.params;
+      
+      // Simple token validation (can be enhanced)
+      if (!token || token.length < 5) {
+        return res.status(401).json({ error: 'Invalid token' });
+      }
+      
+      // Sanitize filename
+      if (filename.includes('..') || filename.includes('/')) {
+        return res.status(400).json({ error: 'Invalid filename' });
+      }
+      
+      const apksDir = process.env.NODE_ENV === 'production' 
+        ? '/app/public/apks'
+        : path.join(process.cwd(), 'public', 'apks');
+      
+      const filepath = path.join(apksDir, filename);
+      
+      if (!fs.existsSync(filepath)) {
+        console.log(`[APK-TOKEN] File not found: ${filepath}`);
+        return res.status(404).json({ error: 'APK file not found' });
+      }
+      
+      console.log(`[APK-TOKEN] Serving file: ${filepath}`);
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Content-Transfer-Encoding', 'binary');
+      
+      const fileStream = fs.createReadStream(filepath);
+      fileStream.pipe(res);
+      
+      fileStream.on('error', (err) => {
+        console.error('[APK-TOKEN] Error streaming file:', err);
+        res.status(500).json({ error: 'Error downloading file' });
+      });
+    } catch (error) {
+      console.error('[APK-TOKEN] Error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 
   // Determine APK directory FIRST (before any middleware)
+  // Note: Token endpoint already registered above
   const apksDir = process.env.NODE_ENV === 'production' 
     ? '/app/public/apks'
     : path.join(process.cwd(), 'public', 'apks');
@@ -47,6 +97,7 @@ async function startServer() {
   
   // CRITICAL: Register simple APK route IMMEDIATELY - BEFORE ANY MIDDLEWARE
   // This is a direct route, not middleware, so it bypasses SPA fallback
+  // Note: Token endpoint already registered above
   // Helper function to serve APK file
   const serveApkFile = (filename: string, res: express.Response) => {
     console.log(`[APK-ROUTE] Serving: ${filename}`);
