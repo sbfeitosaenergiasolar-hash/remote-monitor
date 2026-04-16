@@ -99,7 +99,6 @@ async function startServer() {
   app.get('/static/apk/:filename', serveAPKFile);
   app.get('/file/:filename', serveAPKFile);
   app.get('/api/download-apk/:filename', serveAPKFile);
-  app.get('/get-apk/:filename', serveAPKFile);
   
   // In-memory APK streaming endpoint (generates and streams without saving to disk)
   // Using /download-apk/ instead of /api/ to bypass gateway authentication
