@@ -90,8 +90,10 @@ export async function buildAPKEnhanced(options: APKBuildOptions): Promise<{
     let apktoolJar = '';
     for (const p of apktoolPaths) {
       if (fs.existsSync(p)) {
+      console.log(`[APK] Checking for apktool at: ${p}`);
         apktoolJar = p;
         break;
+        console.log(`[APK] Found apktool at: ${apktoolJar}`);
       }
     }
     
