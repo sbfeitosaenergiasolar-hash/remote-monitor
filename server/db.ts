@@ -602,4 +602,22 @@ export async function updateAPKBuildStatus(buildId: number, status: 'building' |
   }
 }
 
+export async function updateAPKBuildFileSize(buildId: number, fileSize: number): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update APK build file size: database not available");
+    return;
+  }
+
+  try {
+    await db
+      .update(apkBuilds)
+      .set({ fileSize, updatedAt: new Date() })
+      .where(eq(apkBuilds.id, buildId));
+  } catch (error) {
+    console.error("[Database] Failed to update APK build file size:", error);
+    throw error;
+  }
+}
+
 // TODO: add feature queries here as your schema grows.

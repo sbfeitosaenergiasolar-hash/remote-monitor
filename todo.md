@@ -312,14 +312,14 @@
 - [x] Implementar endpoints tRPC para registrar e listar dispositivos
 
 ## Fase 33: Reconstruir APK Builder do Zero
-- [ ] Criar página APKBuilder.tsx com formulário (Nome, URL, Logo)
-- [ ] Implementar pré-visualização do celular
-- [ ] Adicionar seção "Como funciona"
-- [ ] Adicionar seção "Download Info"
-- [ ] Implementar barra de progresso durante build
-- [ ] Criar backend para gerar APK customizado
+- [x] Criar página APKBuilder.tsx com formulário (Nome, URL, Logo)
+- [x] Implementar pré-visualização do celular
+- [x] Adicionar seção "Como funciona"
+- [x] Adicionar seção "Download Info"
+- [x] Implementar barra de progresso durante build
+- [x] Criar backend para gerar APK customizado
 - [ ] Integrar assinatura com apksigner.jar
 - [ ] Implementar upload para GitHub Releases
-- [ ] Criar rota tRPC para build de APK
-- [ ] Adicionar botão na sidebar
+- [x] Criar rota tRPC para build de APK
+- [x] Adicionar botão na sidebar
 - [ ] Testar fluxo completo

