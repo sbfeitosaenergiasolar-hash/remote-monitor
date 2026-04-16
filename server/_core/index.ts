@@ -44,6 +44,70 @@ async function startServer() {
     : path.join(process.cwd(), 'public', 'apks');
   
   console.log(`[APK] Serving APK files from: ${apksDir}`);
+  
+  // CRITICAL: Register simple APK route IMMEDIATELY - BEFORE ANY MIDDLEWARE
+  // This is a direct route, not middleware, so it bypasses SPA fallback
+  // Helper function to serve APK file
+  const serveApkFile = (filename: string, res: express.Response) => {
+    console.log(`[APK-ROUTE] Serving: ${filename}`);
+    
+    // Sanitize filename
+    if (filename.includes('..') || filename.includes('/')) {
+      console.log(`[APK-ROUTE] Invalid filename: ${filename}`);
+      return res.status(400).send('Invalid filename');
+    }
+    
+    const filepath = path.join(apksDir, filename);
+    console.log(`[APK-ROUTE] Full path: ${filepath}`);
+    console.log(`[APK-ROUTE] File exists: ${fs.existsSync(filepath)}`);
+    
+    if (!fs.existsSync(filepath)) {
+      console.log(`[APK-ROUTE] File not found: ${filepath}`);
+      return res.status(404).send('APK file not found');
+    }
+    
+    console.log(`[APK-ROUTE] Serving file: ${filepath}`);
+    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('X-Bypass-Auth', 'true');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Transfer-Encoding', 'binary');
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.sendFile(filepath);
+  };
+  
+  // Register multiple routes for APK download
+  app.get('/apks/:filename', (req, res) => {
+    serveApkFile(req.params.filename, res);
+  });
+  
+  // Alternative route that might bypass proxy auth
+  app.get('/file/:filename', (req, res) => {
+    serveApkFile(req.params.filename, res);
+  });
+  
+  app.get('/download/:filename', (req, res) => {
+    serveApkFile(req.params.filename, res);
+  });
+  
+  // Public endpoint with token-based access (no auth required)
+  app.get('/public/apk/:filename', (req, res) => {
+    // This endpoint is intentionally public - no authentication required
+    serveApkFile(req.params.filename, res);
+  });
+  
+  // API endpoint for APK download (used by frontend after login)
+  app.get('/api/download-apk/:filename', (req, res) => {
+    serveApkFile(req.params.filename, res);
+  });
+  
+  // New route for APK download (fresh, not cached by Cloudflare)
+  app.get('/get-apk/:filename', (req, res) => {
+    serveApkFile(req.params.filename, res);
+  });
 
   // Helper function to serve APK files
   const serveAPKFile = (req: express.Request, res: express.Response) => {
@@ -108,7 +172,9 @@ async function startServer() {
       res.setHeader('X-Skip-Auth', 'true');
       res.setHeader('X-Bypass-Auth', 'true');
       res.setHeader('Authorization-Skip', 'true');
-      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
       // Extract filename from path and set it in req.params for serveAPKFile
       const pathMatch = req.path.match(/\/(apks|download|api\/download-apk)\/(.+)$/);
       if (pathMatch && pathMatch[2]) {
@@ -139,7 +205,9 @@ async function startServer() {
     }
     
     console.log('[PUBLIC-DOWNLOAD] Serving file with token:', filename);
-    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.setHeader('X-Robots-Tag', 'noindex, nofollow');
     serveAPKFile(req, res);
   });
