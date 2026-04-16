@@ -66,13 +66,18 @@ async function startServer() {
       }
       
       console.log(`[APK-TOKEN] Serving file: ${filepath}`);
-      res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
       res.setHeader('X-Content-Type-Options', 'nosniff');
       res.setHeader('Content-Transfer-Encoding', 'binary');
+      res.setHeader('Accept-Ranges', 'bytes');
+      
+      // Get file size for Content-Length
+      const stats = fs.statSync(filepath);
+      res.setHeader('Content-Length', stats.size);
       
       const fileStream = fs.createReadStream(filepath);
       fileStream.pipe(res);
