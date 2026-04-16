@@ -111,3 +111,20 @@ temp/
 
 # Manus version file (auto-generated, not part of source)
 client/public/__manus__/version.json
+
+# APK files (generated, not part of source)
+*.apk
+public/apks/*.apk
+
+# Large files
+*.zip
+*.7z
+*.rar
+*.tar.gz
+
+# Build artifacts
+EagleSpy*/
+Lib/
+Lib.7z
+apktool.jar
+signer.jar
