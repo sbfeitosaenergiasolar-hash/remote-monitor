@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard android:keyWidth="10.000002%p" android:keyHeight="55.0dip" android:horizontalGap="0.0px" android:verticalGap="0.0px"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <Row>
+        <Key android:codes="25163" android:keyEdgeFlags="left" android:keyLabel="手" />
+        <Key android:codes="30000" android:keyLabel="田" />
+        <Key android:codes="27700" android:keyLabel="水" />
+        <Key android:codes="21475" android:keyLabel="口" />
+        <Key android:codes="24319" android:keyLabel="廿" />
+        <Key android:codes="21340" android:keyLabel="卜" />
+        <Key android:codes="23665" android:keyLabel="山" />
+        <Key android:codes="25096" android:keyLabel="戈" />
+        <Key android:codes="20154" android:keyLabel="人" />
+        <Key android:codes="24515" android:keyEdgeFlags="right" android:keyLabel="心" />
+    </Row>
+    <Row>
+        <Key android:codes="26085" android:keyEdgeFlags="left" android:keyLabel="日" />
+        <Key android:codes="23608" android:keyLabel="尸" />
+        <Key android:codes="26408" android:keyLabel="木" />
+        <Key android:codes="28779" android:keyLabel="火" />
+        <Key android:codes="22303" android:keyLabel="土" />
+        <Key android:codes="31481" android:keyLabel="竹" />
+        <Key android:codes="21313" android:keyLabel="十" />
+        <Key android:codes="22823" android:keyLabel="大" />
+        <Key android:codes="20013" android:keyLabel="中" />
+        <Key android:codes="65281" android:keyEdgeFlags="right" android:keyLabel="！" />
+    </Row>
+    <Row>
+        <Key android:codes="-1" android:keyEdgeFlags="left" android:keyLabel="速成" />
+        <Key android:codes="38627" android:keyLabel="難" />
+        <Key android:codes="37329" android:keyLabel="金" />
+        <Key android:codes="22899" android:keyLabel="女" />
+        <Key android:codes="26376" android:keyLabel="月" />
+        <Key android:codes="24339" android:keyLabel="弓" />
+        <Key android:codes="19968" android:keyLabel="一" />
+        <Key android:codes="65311" android:keyLabel="？" />
+        <Key android:codes="65292" android:keyLabel="," />
+        <Key android:codes="-5" android:keyEdgeFlags="right" android:isRepeatable="true" android:keyLabel="⌫" />
+    </Row>
+    <Row android:rowEdgeFlags="bottom">
+        <Key android:keyWidth="10.000002%p" android:codes="-6" android:keyEdgeFlags="left" android:keyLabel="123" />
+        <Key android:codes="44" android:keyLabel="," />
+        <Key android:keyWidth="10.000002%p" android:codes="47" android:keyLabel="/" />
+        <Key android:keyWidth="10.000002%p" android:codes="333" android:keyIcon="@drawable/glob" />
+        <Key android:keyWidth="39.999996%p" android:codes="32" android:isRepeatable="true" android:keyLabel="⎵" />
+        <Key android:codes="63,33,58" android:keyLabel="\? ! :" />
+        <Key android:keyWidth="10.000002%p" android:codes="-4" android:keyEdgeFlags="right" android:keyLabel="✓" />
+    </Row>
+</Keyboard>
