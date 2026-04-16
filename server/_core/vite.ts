@@ -122,6 +122,31 @@ export function serveStatic(app: Express, apksDir?: string) {
     console.log(`[Static] Serving from: ${distPath}`);
   }
 
+  // Middleware to block SPA fallback for APK routes (PRODUCTION)
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/apks/') || req.path.startsWith('/download/') || req.path.startsWith('/api/download-apk/')) {
+      console.log(`[APK-MIDDLEWARE-PROD] Blocking SPA fallback for: ${req.path}`);
+      // Extract filename from path
+      const pathMatch = req.path.match(/\/(apks|download|api\/download-apk)\/(.+)$/);
+      if (pathMatch && pathMatch[2] && apksDir) {
+        const filename = pathMatch[2];
+        const apkPath = path.join(apksDir, filename);
+        
+        if (fs.existsSync(apkPath)) {
+          console.log(`[APK-MIDDLEWARE-PROD] Serving: ${apkPath}`);
+          res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+          res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          res.setHeader('Pragma', 'no-cache');
+          res.setHeader('Expires', '0');
+          return res.sendFile(apkPath);
+        }
+      }
+      return res.status(404).json({ error: 'APK not found' });
+    }
+    next();
+  });
+  
   // Register APK handlers for production
   if (apksDir) {
     // Handle /apks/:filename
