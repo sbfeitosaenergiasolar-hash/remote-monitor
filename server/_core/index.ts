@@ -101,12 +101,13 @@ async function startServer() {
   
   // API endpoint for APK download (used by frontend after login)
   app.get('/api/download-apk/:filename', (req, res) => {
-    serveApkFile(req.params.filename, res);
+    serveAPKFile(req, res);
   });
   
   // New route for APK download (fresh, not cached by Cloudflare)
   app.get('/get-apk/:filename', (req, res) => {
-    serveApkFile(req.params.filename, res);
+    req.params = req.params || {};
+    serveAPKFile(req, res);
   });
 
   // Helper function to serve APK files
