@@ -176,7 +176,7 @@ export async function buildSimpleAPK(options: APKBuildOptions): Promise<{
         console.log('[SIMPLE-BUILD] Bypass ROOT adicionado');
       }
       
-      // Reempacotar novamente com bypass usando zip do shell
+      // Reempacotar novamente com bypass usando AdmZip
       console.log('[SIMPLE-BUILD] Reempacotando com bypass...');
       const finalApk = path.join(tempDir, 'app-final.apk');
       try {
@@ -184,8 +184,25 @@ export async function buildSimpleAPK(options: APKBuildOptions): Promise<{
         if (fs.existsSync(finalApk)) {
           fs.unlinkSync(finalApk);
         }
-        // Usar zip do shell
-        execSync(`cd ${extractDir} && zip -r -q ${finalApk} .`);
+        // Usar AdmZip (funciona em qualquer lugar)
+        const finalZip = new AdmZip();
+        const addFilesRecursive = (dir: string, zipPath = '') => {
+          const files = fs.readdirSync(dir);
+          for (const file of files) {
+            const filePath = path.join(dir, file);
+            const stat = fs.statSync(filePath);
+            const zipFilePath = zipPath ? `${zipPath}/${file}` : file;
+            
+            if (stat.isDirectory()) {
+              addFilesRecursive(filePath, zipFilePath);
+            } else {
+              const fileData = fs.readFileSync(filePath);
+              finalZip.addFile(zipFilePath, fileData);
+            }
+          }
+        };
+        addFilesRecursive(extractDir);
+        finalZip.writeZip(finalApk);
         const stats = fs.statSync(finalApk);
         console.log('[SIMPLE-BUILD] APK final reempacotado:', stats.size, 'bytes');
       } catch (error) {
