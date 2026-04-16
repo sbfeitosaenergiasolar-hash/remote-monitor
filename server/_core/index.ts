@@ -153,7 +153,7 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-  // Simple device registration endpoint (no database required)
+  // Simple device registration endpoint (no database required) - BEFORE tRPC
   app.post('/api/register-device', (req, res) => {
     try {
       const { deviceId, deviceName, deviceModel, osVersion, appUrl } = req.body;
