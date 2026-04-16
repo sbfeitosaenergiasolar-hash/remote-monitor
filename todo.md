@@ -370,6 +370,6 @@
 - [x] Substituir ícone do app
 - [x] Testar APK base novo
 - [x] Customizar builder para modificar nome em strings.xml
-- [ ] Implementar registro automático de dispositivo quando app abre
-- [ ] Testar APK gerado no celular
-- [ ] Validar dispositivo aparecendo no painel após instalar
+- [x] Implementar registro automático de dispositivo quando app abre
+- [x] Testar APK gerado no celular
+- [x] Validar dispositivo aparecendo no painel após instalar
