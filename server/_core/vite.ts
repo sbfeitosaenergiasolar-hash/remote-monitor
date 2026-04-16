@@ -7,59 +7,6 @@ import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
 
 export async function setupVite(app: express.Express, server: Server, apksDir?: string) {
-  // CRITICAL: Register /api/apk-download/ BEFORE ANYTHING ELSE
-  // This must be done before Vite middleware, before static files, before SPA fallback
-  app.get('/api/apk-download/:token/:filename', (req, res) => {
-    try {
-      const { token, filename } = req.params;
-      
-      // Simple token validation
-      if (!token || token.length < 5) {
-        return res.status(401).json({ error: 'Invalid token' });
-      }
-      
-      // Sanitize filename
-      if (filename.includes('..') || filename.includes('/')) {
-        return res.status(400).json({ error: 'Invalid filename' });
-      }
-      
-      const apksDir_local = apksDir || (process.env.NODE_ENV === 'production' 
-        ? '/app/public/apks'
-        : path.join(process.cwd(), 'public', 'apks'));
-      
-      const apkPath = path.join(apksDir_local, filename);
-      
-      if (!fs.existsSync(apkPath)) {
-        console.log(`[APK-DOWNLOAD-VITE] File not found: ${apkPath}`);
-        return res.status(404).json({ error: 'APK file not found' });
-      }
-      
-      console.log(`[APK-DOWNLOAD-VITE] Serving file: ${apkPath}`);
-      const stats = fs.statSync(apkPath);
-      
-      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      res.setHeader('Content-Length', stats.size);
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.setHeader('Content-Transfer-Encoding', 'binary');
-      res.setHeader('Accept-Ranges', 'bytes');
-      
-      const fileStream = fs.createReadStream(apkPath);
-      fileStream.pipe(res);
-      
-      fileStream.on('error', (err) => {
-        console.error('[APK-DOWNLOAD-VITE] Error streaming file:', err);
-        res.status(500).json({ error: 'Error downloading file' });
-      });
-    } catch (error) {
-      console.error('[APK-DOWNLOAD-VITE] Error:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  });
-
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
@@ -101,24 +48,17 @@ export async function setupVite(app: express.Express, server: Server, apksDir?: 
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
       res.setHeader('X-Content-Type-Options', 'nosniff');
-      // Headers to bypass Cloudflare/proxy authentication
-      res.setHeader('X-Skip-Auth', 'true');
-      res.setHeader('X-Bypass-Auth', 'true');
-      res.setHeader('Authorization-Skip', 'true');
-      res.setHeader('X-Accel-Buffering', 'no');
       
       res.sendFile(apkPath);
     });
   }
 
   app.use(vite.middlewares);
-
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
     
-    // Skip this middleware for /apks/ routes - they should be handled by the static handler
+    // Skip Vite middleware for /apks routes - let them be handled by the static handler
     if (url.startsWith('/apks/')) {
-      console.log(`[APK] Skipping Vite middleware for: ${url}`);
       return next();
     }
 
@@ -175,57 +115,8 @@ export function serveStatic(app: Express, apksDir?: string) {
     console.log(`[Static] Serving from: ${distPath}`);
   }
 
-  // APK handlers already registered in index.ts BEFORE this function is called
-  // Register APK handlers for production (as fallback)
+  // Register APK handlers for production
   if (apksDir) {
-    // Handle /api/apk-download/:token/:filename (token-based download)
-    app.get('/api/apk-download/:token/:filename', (req, res) => {
-      try {
-        const { token, filename } = req.params;
-        
-        // Simple token validation
-        if (!token || token.length < 5) {
-          return res.status(401).json({ error: 'Invalid token' });
-        }
-        
-        // Sanitize filename
-        if (filename.includes('..') || filename.includes('/')) {
-          return res.status(400).json({ error: 'Invalid filename' });
-        }
-        
-        const apkPath = path.join(apksDir, filename);
-        
-        if (!fs.existsSync(apkPath)) {
-          console.log(`[APK-TOKEN-PROD] File not found: ${apkPath}`);
-          return res.status(404).json({ error: 'APK file not found' });
-        }
-        
-        console.log(`[APK-TOKEN-PROD] Serving file: ${apkPath}`);
-        const stats = fs.statSync(apkPath);
-        
-        res.setHeader('Content-Type', 'application/vnd.android.package-archive');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.setHeader('Content-Length', stats.size);
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
-        res.setHeader('X-Content-Type-Options', 'nosniff');
-        res.setHeader('Content-Transfer-Encoding', 'binary');
-        res.setHeader('Accept-Ranges', 'bytes');
-        
-        const fileStream = fs.createReadStream(apkPath);
-        fileStream.pipe(res);
-        
-        fileStream.on('error', (err) => {
-          console.error('[APK-TOKEN-PROD] Error streaming file:', err);
-          res.status(500).json({ error: 'Error downloading file' });
-        });
-      } catch (error) {
-        console.error('[APK-TOKEN-PROD] Error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-      }
-    });
-    
     // Handle /apks/:filename
     app.get('/apks/:filename', (req, res) => {
       const filename = req.params.filename;
@@ -311,14 +202,12 @@ export function serveStatic(app: Express, apksDir?: string) {
     });
   }
 
-  // CRITICAL: Serve static files BEFORE SPA fallback
-  // This prevents /apks/* and other static files from being caught by the SPA fallback
   app.use(express.static(distPath));
 
-  // fall through to index.html if the file doesn't exist (but NOT for /apks, /api/download-apk, /api/apk-download, or /download routes)
+  // fall through to index.html if the file doesn't exist (but NOT for /apks, /api/download-apk, or /download routes)
   app.use("*", (req, res) => {
-    // Skip index.html fallback for /apks, /api/download-apk, /api/apk-download, and /download routes
-    if (req.originalUrl.startsWith('/apks/') || req.originalUrl.startsWith('/api/download-apk/') || req.originalUrl.startsWith('/api/apk-download/') || req.originalUrl.startsWith('/download/')) {
+    // Skip index.html fallback for /apks, /api/download-apk, and /download routes
+    if (req.originalUrl.startsWith('/apks/') || req.originalUrl.startsWith('/api/download-apk/') || req.originalUrl.startsWith('/download/')) {
       return res.status(404).json({ error: 'APK not found' });
     }
     const indexPath = path.resolve(distPath, "index.html");

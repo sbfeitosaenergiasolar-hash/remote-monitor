@@ -36,22 +36,11 @@ COPY --from=builder /app/package.json ./package.json
 COPY public ./public
 COPY tools ./tools
 
-# Copy apktool.jar explicitly to ensure it's included
-COPY tools/lib/apktool.jar /app/tools/lib/apktool.jar
-
 # Create necessary directories for APK generation
 RUN mkdir -p /tmp/apk-builds /app/public/apks
 
-# Download apktool.jar from official source as backup
-RUN cd /app/tools/lib && \
-    if [ ! -f apktool.jar ] || [ ! -s apktool.jar ]; then \
-      echo "Downloading apktool.jar..."; \
-      wget -q https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.8.1.jar -O apktool.jar; \
-    fi && \
-    ls -lah apktool.jar
-
 # Verify tools are present
-RUN echo "Checking tools..." && ls -lah /app/tools/lib/ && java -jar /app/tools/lib/apktool.jar --version
+RUN ls -la /app/tools/ && ls -la /app/tools/lib/
 
 # Expose port
 EXPOSE 8080

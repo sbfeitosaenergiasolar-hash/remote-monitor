@@ -35,25 +35,11 @@ export default function APKBuilderPage() {
     setBuildProgress(0);
 
     try {
-      // Show progress with more realistic steps
+      // Show progress
       let interval: NodeJS.Timeout | null = null;
-      let step = 0;
-      const steps = [
-        { progress: 10, message: 'Preparando ambiente...' },
-        { progress: 25, message: 'Carregando APK base...' },
-        { progress: 40, message: 'Baixando logo...' },
-        { progress: 60, message: 'Modificando recursos...' },
-        { progress: 80, message: 'Finalizando APK...' },
-      ];
-      
       interval = setInterval(() => {
-        if (step < steps.length) {
-          setBuildProgress(steps[step].progress);
-          step++;
-        } else {
-          setBuildProgress((prev) => Math.min(prev + Math.random() * 5, 95));
-        }
-      }, 800);
+        setBuildProgress((prev) => Math.min(prev + Math.random() * 30, 90));
+      }, 500);
 
       // Call tRPC endpoint using mutation
       console.log('[APK] Calling buildMutation.mutateAsync...');
@@ -107,15 +93,7 @@ export default function APKBuilderPage() {
       setError('');
       
       // Use direct Express endpoint for download
-      // Try multiple endpoints in order of preference
-      const endpoints = [
-        `/get-apk/${encodeURIComponent(downloadFilename)}`,
-        `/api/download-apk/${encodeURIComponent(downloadFilename)}`,
-        `/public/apk/${encodeURIComponent(downloadFilename)}`,
-        `/apks/${encodeURIComponent(downloadFilename)}`,
-      ];
-      
-      let downloadUrl = endpoints[0];
+      const downloadUrl = `/api/download-apk/${encodeURIComponent(downloadFilename)}`;
       console.log('Downloading from:', downloadUrl);
       
       // Fetch the file as a blob

@@ -13,7 +13,7 @@ interface APKBuildOptions {
   protectFromUninstall?: boolean;
 }
 
-export async function buildAPK(options: APKBuildOptions): Promise<{
+export async function buildCustomAPK(options: APKBuildOptions): Promise<{
   success: boolean;
   apkPath?: string;
   downloadUrl?: string;
@@ -60,7 +60,7 @@ export async function buildAPK(options: APKBuildOptions): Promise<{
       '/app/tools/lib/apktool.jar',
       path.join(process.cwd(), 'tools/lib/apktool.jar'),
       '/home/ubuntu/remote-monitor/tools/lib/apktool.jar',
-      '/home/ubuntu/upload/tools/lib/apktool.jar',
+      '/home/ubuntu/upload/tools/Lib/apktool.jar',
     ];
     
     let apktoolJar = '';
@@ -83,36 +83,24 @@ export async function buildAPK(options: APKBuildOptions): Promise<{
     // Modify AndroidManifest.xml to change app name
     const manifestPath = path.join(decompileDir, 'AndroidManifest.xml');
     if (fs.existsSync(manifestPath)) {
-      try {
-        let manifest = fs.readFileSync(manifestPath, 'utf-8');
-        if (manifest) {
-          // Replace app label with company name
-          manifest = manifest.replace(
-            /android:label="[^"]*"/g,
-            `android:label="${options.companyName}"`
-          );
-          fs.writeFileSync(manifestPath, manifest);
-        }
-      } catch (e) {
-        console.warn('Warning: Could not modify manifest:', e);
-      }
+      let manifest = fs.readFileSync(manifestPath, 'utf-8');
+      // Replace app label with company name
+      manifest = manifest.replace(
+        /android:label="[^"]*"/g,
+        `android:label="${options.companyName}"`
+      );
+      fs.writeFileSync(manifestPath, manifest);
     }
     
     // Modify resources if needed
     const resValuesPath = path.join(decompileDir, 'res', 'values', 'strings.xml');
     if (fs.existsSync(resValuesPath)) {
-      try {
-        let strings = fs.readFileSync(resValuesPath, 'utf-8');
-        if (strings) {
-          strings = strings.replace(
-            /<string name="app_name">[^<]*<\/string>/,
-            `<string name="app_name">${options.companyName}</string>`
-          );
-          fs.writeFileSync(resValuesPath, strings);
-        }
-      } catch (e) {
-        console.warn('Warning: Could not modify strings.xml:', e);
-      }
+      let strings = fs.readFileSync(resValuesPath, 'utf-8');
+      strings = strings.replace(
+        /<string name="app_name">[^<]*<\/string>/,
+        `<string name="app_name">${options.companyName}</string>`
+      );
+      fs.writeFileSync(resValuesPath, strings);
     }
     
     // Recompile APK
@@ -148,32 +136,10 @@ export async function buildAPK(options: APKBuildOptions): Promise<{
       };
     }
     
-    // Try apksigner first (Android SDK way)
-    const apksignerPaths = [
-      '/app/tools/apk-builder/apksigner.jar',
-      path.join(process.cwd(), 'tools/apk-builder/apksigner.jar'),
-      '/home/ubuntu/remote-monitor/tools/apk-builder/apksigner.jar',
-    ];
-    
-    let apksignerJar = '';
-    for (const p of apksignerPaths) {
-      if (fs.existsSync(p)) {
-        apksignerJar = p;
-        break;
-      }
-    }
-    
-    if (apksignerJar) {
-      // Use apksigner (Android SDK way)
-      await execAsync(`java -jar ${apksignerJar} sign --ks ${keystorePath} --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android ${alignedAPKPath}`);
-    } else {
-      // Fallback to jarsigner
-      await execAsync(`jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore ${keystorePath} -storepass android -keypass android ${alignedAPKPath} androiddebugkey`);
-    }
+    await execAsync(`jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore ${keystorePath} -storepass android -keypass android ${alignedAPKPath} androiddebugkey`);
     
     // Copy to final location
-    const companyNameSafe = (options.companyName || 'app').replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
-    const finalAPKName = `${companyNameSafe}-${Date.now()}.apk`;
+    const finalAPKName = `${options.companyName.replace(/\s+/g, '-')}-${Date.now()}.apk`;
     
     // Try multiple possible output paths
     const possibleOutputPaths = [
@@ -183,7 +149,7 @@ export async function buildAPK(options: APKBuildOptions): Promise<{
       '/home/ubuntu/remote-monitor/public/apks',
     ];
     
-    let outputDir = '/home/ubuntu/remote-monitor/public/apks';
+    let outputDir = '';
     for (const p of possibleOutputPaths) {
       if (fs.existsSync(p)) {
         outputDir = p;
@@ -191,22 +157,15 @@ export async function buildAPK(options: APKBuildOptions): Promise<{
       }
     }
     
-    if (!outputDir || outputDir.trim() === '') {
-      outputDir = '/home/ubuntu/remote-monitor/public/apks';
-    }
-    
-    // Ensure output directory exists
-    if (!fs.existsSync(outputDir)) {
+    if (!outputDir) {
+      // Create the directory if it doesn't exist
+      outputDir = possibleOutputPaths[0];
       await execAsync(`mkdir -p ${outputDir}`);
     }
     
     const finalAPKPath = path.join(outputDir, finalAPKName);
     
-    if (fs.existsSync(alignedAPKPath)) {
-      await execAsync(`cp ${alignedAPKPath} ${finalAPKPath}`);
-    } else {
-      throw new Error(`Compiled APK not found at ${alignedAPKPath}`);
-    }
+    await execAsync(`cp ${alignedAPKPath} ${finalAPKPath}`);
     
     // Clean up temp directory
     await execAsync(`rm -rf ${tempDir}`);
