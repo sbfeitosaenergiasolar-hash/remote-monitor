@@ -36,11 +36,14 @@ COPY --from=builder /app/package.json ./package.json
 COPY public ./public
 COPY tools ./tools
 
+# Copy apktool.jar explicitly to ensure it's included
+COPY tools/lib/apktool.jar /app/tools/lib/apktool.jar
+
 # Create necessary directories for APK generation
 RUN mkdir -p /tmp/apk-builds /app/public/apks
 
 # Verify tools are present
-RUN ls -la /app/tools/ && ls -la /app/tools/lib/
+RUN echo "Checking tools..." && ls -lah /app/tools/lib/ && file /app/tools/lib/apktool.jar
 
 # Expose port
 EXPOSE 8080
