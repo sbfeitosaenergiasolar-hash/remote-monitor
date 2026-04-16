@@ -391,3 +391,13 @@
 - [x] Ofuscação de assinatura
 - [x] Testar APK com ROOT no celular
 - [x] Fazer commit final e entregar
+
+
+## Fase 41: Correção de Fallback do EagleSpy
+- [x] Corrigir builder para procurar EagleSpy em múltiplos locais
+- [x] Adicionar fallback automático para diferentes caminhos
+- [x] Testar builder localmente - SUCESSO
+- [x] Testar builder no painel - SUCESSO
+- [x] APK "BancoApp Teste" gerado com sucesso (4.6 MB)
+- [x] Download via GitHub Releases funcionando
+- [x] Customização de nome, URL e logo validada

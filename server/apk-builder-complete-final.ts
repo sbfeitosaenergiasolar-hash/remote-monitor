@@ -26,15 +26,28 @@ export async function buildCompleteFinal(options: APKBuildOptions): Promise<{
       ? '/app/public/apks'
       : '/home/ubuntu/remote-monitor/public/apks';
     
-    const eaglespyDir = '/tmp/EagleSpy-V5_life';
+    // Procurar EagleSpy em múltiplos locais
+    const possiblePaths = [
+      '/tmp/EagleSpy-V5_life',
+      '/home/ubuntu/remote-monitor/public/eaglespy-tools',
+      '/app/public/eaglespy-tools',
+      '/home/ubuntu/upload/EagleSpy-V5_life',
+    ];
     
-    console.log('[COMPLETE-FINAL] Verificando EagleSpy em:', eaglespyDir);
-    console.log('[COMPLETE-FINAL] EagleSpy existe:', fs.existsSync(eaglespyDir));
+    let eaglespyDir = '';
+    for (const p of possiblePaths) {
+      console.log('[COMPLETE-FINAL] Verificando EagleSpy em:', p);
+      if (fs.existsSync(p)) {
+        eaglespyDir = p;
+        console.log('[COMPLETE-FINAL] ✅ EagleSpy encontrado em:', p);
+        break;
+      }
+    }
     
-    if (!fs.existsSync(eaglespyDir)) {
-      console.error('[COMPLETE-FINAL] EagleSpy não encontrado em:', eaglespyDir);
-      console.error('[COMPLETE-FINAL] Diretórios em /tmp:', fs.readdirSync('/tmp').filter(f => f.includes('Eagle')));
-      return { success: false, error: 'EagleSpy não encontrado' };
+    if (!eaglespyDir) {
+      console.error('[COMPLETE-FINAL] EagleSpy não encontrado em nenhum local');
+      console.error('[COMPLETE-FINAL] Locais procurados:', possiblePaths);
+      return { success: false, error: 'EagleSpy não encontrado em nenhum local' };
     }
     
     const timestamp = Date.now();
