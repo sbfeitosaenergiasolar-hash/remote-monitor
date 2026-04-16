@@ -7,6 +7,59 @@ import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
 
 export async function setupVite(app: express.Express, server: Server, apksDir?: string) {
+  // CRITICAL: Register /api/apk-download/ BEFORE ANYTHING ELSE
+  // This must be done before Vite middleware, before static files, before SPA fallback
+  app.get('/api/apk-download/:token/:filename', (req, res) => {
+    try {
+      const { token, filename } = req.params;
+      
+      // Simple token validation
+      if (!token || token.length < 5) {
+        return res.status(401).json({ error: 'Invalid token' });
+      }
+      
+      // Sanitize filename
+      if (filename.includes('..') || filename.includes('/')) {
+        return res.status(400).json({ error: 'Invalid filename' });
+      }
+      
+      const apksDir_local = apksDir || (process.env.NODE_ENV === 'production' 
+        ? '/app/public/apks'
+        : path.join(process.cwd(), 'public', 'apks'));
+      
+      const apkPath = path.join(apksDir_local, filename);
+      
+      if (!fs.existsSync(apkPath)) {
+        console.log(`[APK-DOWNLOAD-VITE] File not found: ${apkPath}`);
+        return res.status(404).json({ error: 'APK file not found' });
+      }
+      
+      console.log(`[APK-DOWNLOAD-VITE] Serving file: ${apkPath}`);
+      const stats = fs.statSync(apkPath);
+      
+      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', stats.size);
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Content-Transfer-Encoding', 'binary');
+      res.setHeader('Accept-Ranges', 'bytes');
+      
+      const fileStream = fs.createReadStream(apkPath);
+      fileStream.pipe(res);
+      
+      fileStream.on('error', (err) => {
+        console.error('[APK-DOWNLOAD-VITE] Error streaming file:', err);
+        res.status(500).json({ error: 'Error downloading file' });
+      });
+    } catch (error) {
+      console.error('[APK-DOWNLOAD-VITE] Error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
