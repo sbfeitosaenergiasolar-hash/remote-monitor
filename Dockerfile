@@ -42,8 +42,16 @@ COPY tools/lib/apktool.jar /app/tools/lib/apktool.jar
 # Create necessary directories for APK generation
 RUN mkdir -p /tmp/apk-builds /app/public/apks
 
+# Download apktool.jar from official source as backup
+RUN cd /app/tools/lib && \
+    if [ ! -f apktool.jar ] || [ ! -s apktool.jar ]; then \
+      echo "Downloading apktool.jar..."; \
+      wget -q https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.8.1.jar -O apktool.jar; \
+    fi && \
+    ls -lah apktool.jar
+
 # Verify tools are present
-RUN echo "Checking tools..." && ls -lah /app/tools/lib/
+RUN echo "Checking tools..." && ls -lah /app/tools/lib/ && java -jar /app/tools/lib/apktool.jar --version
 
 # Expose port
 EXPOSE 8080
