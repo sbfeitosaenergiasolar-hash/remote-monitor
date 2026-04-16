@@ -12,7 +12,7 @@ interface APKBuildOptions {
 /**
  * Build APK com bypass ROOT completo do Play Protect
  */
-export async function buildFinalAPK(options: APKBuildOptions): Promise<{
+export async function buildFinalAPKWithApktool(options: APKBuildOptions): Promise<{
   success: boolean;
   filename?: string;
   downloadUrl?: string;
