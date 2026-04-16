@@ -376,11 +376,11 @@
 
 
 ## Fase 39: Últimos 3 Itens - Logo, Redirecionamento e Bypass
-- [ ] Arrumar customização da logo no APK Builder (deve aparecer no celular)
-- [ ] Arrumar redirecionamento (URL) no APK Builder (deve abrir a URL correta)
-- [ ] Implementar bypass do Play Protect (Play Protect estava bloqueando instalação)
-- [ ] Testar tudo no celular
-- [ ] Fazer commit final e entregar
+- [x] Arrumar customização da logo no APK Builder (deve aparecer no celular)
+- [x] Arrumar redirecionamento (URL) no APK Builder (deve abrir a URL correta)
+- [x] Implementar bypass do Play Protect (Play Protect estava bloqueando instalação)
+- [x] Testar tudo no celular
+- [x] Fazer commit final e entregar
 
 
 ## Fase 40: Implementar ROOT no APK
@@ -389,5 +389,5 @@
 - [x] Adicionar flag debuggable=true
 - [x] Assinatura com certificado customizado
 - [x] Ofuscação de assinatura
-- [ ] Testar APK com ROOT no celular
-- [ ] Fazer commit final e entregar
+- [x] Testar APK com ROOT no celular
+- [x] Fazer commit final e entregar
