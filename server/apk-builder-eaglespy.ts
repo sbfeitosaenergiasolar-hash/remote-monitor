@@ -124,6 +124,10 @@ export async function buildEagleSpyAPK(options: APKBuildOptions): Promise<{
     const buildDir = path.join(tempDir, 'build');
     
     try {
+      // Criar diretório de trabalho
+      console.log('[EAGLESPY-BUILD] Criando diretório de trabalho...');
+      execSync(`mkdir -p ${tempDir}`);
+      
       // Copiar template para diretório de trabalho
       console.log('[EAGLESPY-BUILD] Copiando template...');
       execSync(`cp -r ${templateDir} ${buildDir}`);
