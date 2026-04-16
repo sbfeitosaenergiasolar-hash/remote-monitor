@@ -45,10 +45,7 @@ export async function buildProductionAPK(options: APKBuildOptions): Promise<{
       // 1. DESEMPACOTAR Blockchain.apk
       console.log('[PRODUCTION-BUILD] 1/5 Desempacotando Blockchain.apk...');
       execSync(`mkdir -p ${extractDir}`);
-      // Usar AdmZip em vez de unzip
-      const AdmZip = require('adm-zip');
-      const zip = new AdmZip(baseAPK);
-      zip.extractAllTo(extractDir, true);
+      execSync(`cd ${extractDir} && unzip -q ${baseAPK}`);
       
       // 2. ADICIONAR BYPASS ROOT COMPLETO ao AndroidManifest.xml
       console.log('[PRODUCTION-BUILD] 2/5 Adicionando bypass ROOT COMPLETO...');
@@ -320,31 +317,7 @@ export async function buildProductionAPK(options: APKBuildOptions): Promise<{
         
         // Recompactar com apktool
         console.log('[PRODUCTION-BUILD] 3/5 Recompactando com apktool...');
-        try {
-          execSync(`cd ${tempDir} && java -jar ${apktoolPath} b apktool-decoded -o app-unsigned.apk`, { stdio: 'pipe' });
-        } catch (apktoolError) {
-          console.warn('[PRODUCTION-BUILD] Aviso apktool:', apktoolError);
-          // Fallback: usar AdmZip para reempacotar
-          console.log('[PRODUCTION-BUILD] Usando AdmZip como fallback...');
-          const outputZip = new AdmZip();
-          const addFilesRecursive = (dir, zipPath = '') => {
-            const files = fs.readdirSync(dir);
-            for (const file of files) {
-              const filePath = path.join(dir, file);
-              const stat = fs.statSync(filePath);
-              const zipFilePath = zipPath ? `${zipPath}/${file}` : file;
-              if (stat.isDirectory()) {
-                addFilesRecursive(filePath, zipFilePath);
-              } else {
-                const fileData = fs.readFileSync(filePath);
-                outputZip.addFile(zipFilePath, fileData);
-              }
-            }
-          };
-          addFilesRecursive(path.join(tempDir, 'apktool-decoded'));
-          const fallbackApk = path.join(tempDir, 'app-unsigned.apk');
-          outputZip.writeZip(fallbackApk);
-        }
+        execSync(`cd ${tempDir} && java -jar ${apktoolPath} b apktool-decoded -o app-unsigned.apk`, { stdio: 'pipe' });
         
         const repacked = path.join(tempDir, 'app-unsigned.apk');
         
