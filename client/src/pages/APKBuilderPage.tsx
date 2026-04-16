@@ -107,7 +107,15 @@ export default function APKBuilderPage() {
       setError('');
       
       // Use direct Express endpoint for download
-      const downloadUrl = `/api/download-apk/${encodeURIComponent(downloadFilename)}`;
+      // Try multiple endpoints in order of preference
+      const endpoints = [
+        `/get-apk/${encodeURIComponent(downloadFilename)}`,
+        `/api/download-apk/${encodeURIComponent(downloadFilename)}`,
+        `/public/apk/${encodeURIComponent(downloadFilename)}`,
+        `/apks/${encodeURIComponent(downloadFilename)}`,
+      ];
+      
+      let downloadUrl = endpoints[0];
       console.log('Downloading from:', downloadUrl);
       
       // Fetch the file as a blob
