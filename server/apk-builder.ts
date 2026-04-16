@@ -60,7 +60,7 @@ export async function buildAPK(options: APKBuildOptions): Promise<{
       '/app/tools/lib/apktool.jar',
       path.join(process.cwd(), 'tools/lib/apktool.jar'),
       '/home/ubuntu/remote-monitor/tools/lib/apktool.jar',
-      '/home/ubuntu/upload/tools/Lib/apktool.jar',
+      '/home/ubuntu/upload/tools/lib/apktool.jar',
     ];
     
     let apktoolJar = '';
