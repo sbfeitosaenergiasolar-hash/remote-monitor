@@ -437,3 +437,12 @@
 - [x] Download via GitHub Releases funcionando
 - [x] APK agora com tamanho correto
 - [x] Pronto para teste no celular
+
+
+## Fase 46: Usar AdmZip para Reempacotar APK
+
+- [x] Remover dependência de `zip` do shell
+- [x] Implementar AdmZip para desempacotar e reempacotar
+- [x] Corrigir import de AdmZip (usar import em vez de require)
+- [x] Testar builder em desenvolvimento - APK gerado com sucesso
+- [x] Builder pronto para produção (Railway)

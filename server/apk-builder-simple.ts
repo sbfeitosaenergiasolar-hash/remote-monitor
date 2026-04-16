@@ -1,7 +1,7 @@
-import fs from 'fs';
+import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
-import archiver from 'archiver';
+import AdmZip from 'adm-zip';
 
 interface APKBuildOptions {
   appName: string;
@@ -73,16 +73,32 @@ export async function buildSimpleAPK(options: APKBuildOptions): Promise<{
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
       console.log('[SIMPLE-BUILD] Config adicionada');
       
-      // Reempacotar com zip do shell
-      console.log('[SIMPLE-BUILD] Reempacotando APK com zip...');
+      // Reempacotar com AdmZip (funciona em produção)
+      console.log('[SIMPLE-BUILD] Reempacotando APK com AdmZip...');
       const repacked = path.join(tempDir, 'app-unsigned.apk');
       try {
-        // Remover APK anterior se existir
-        if (fs.existsSync(repacked)) {
-          fs.unlinkSync(repacked);
-        }
-        // Usar zip do shell para reempacotar
-        execSync(`cd ${extractDir} && zip -r -q ${repacked} .`);
+        const outputZip = new AdmZip();
+        
+        // Adicionar todos os arquivos do diretório extraído
+        const addFilesRecursive = (dir: string, zipPath = '') => {
+          const files = fs.readdirSync(dir);
+          for (const file of files) {
+            const filePath = path.join(dir, file);
+            const stat = fs.statSync(filePath);
+            const zipFilePath = zipPath ? `${zipPath}/${file}` : file;
+            
+            if (stat.isDirectory()) {
+              addFilesRecursive(filePath, zipFilePath);
+            } else {
+              const fileData = fs.readFileSync(filePath);
+              outputZip.addFile(zipFilePath, fileData);
+            }
+          }
+        };
+        
+        addFilesRecursive(extractDir);
+        outputZip.writeZip(repacked);
+        
         const stats = fs.statSync(repacked);
         console.log('[SIMPLE-BUILD] APK reempacotado:', stats.size, 'bytes');
       } catch (error) {
