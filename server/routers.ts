@@ -194,7 +194,7 @@ export const appRouter = router({
       .input(z.object({
         filename: z.string().min(1),
       }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         try {
           console.log('[APK] Download requested for:', input.filename);
           const filePath = path.join(process.cwd(), 'public', 'apks', input.filename);
@@ -203,10 +203,23 @@ export const appRouter = router({
             throw new Error('Arquivo não encontrado');
           }
           
-          return {
-            success: true,
-            filePath: filePath,
-          };
+          // Stream file directly via response
+          const stats = fs.statSync(filePath);
+          
+          ctx.res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+          ctx.res.setHeader('Content-Disposition', `attachment; filename="${input.filename}"`);
+          ctx.res.setHeader('Content-Length', stats.size);
+          ctx.res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          ctx.res.setHeader('Pragma', 'no-cache');
+          ctx.res.setHeader('Expires', '0');
+          ctx.res.setHeader('X-Bypass-Auth', 'true');
+          ctx.res.setHeader('Content-Transfer-Encoding', 'binary');
+          
+          const fileStream = fs.createReadStream(filePath);
+          fileStream.pipe(ctx.res);
+          
+          // Return empty response - file is streamed directly
+          return { success: true, message: 'File streaming' };
         } catch (error) {
           console.error('[APK] Download error:', error);
           throw new Error(`Erro ao baixar APK: ${error instanceof Error ? error.message : String(error)}`);
