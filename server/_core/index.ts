@@ -93,6 +93,11 @@ async function startServer() {
     // This endpoint is intentionally public - no authentication required
     serveApkFile(req.params.filename, res);
   });
+  
+  // API endpoint for APK download (used by frontend after login)
+  app.get('/api/download-apk/:filename', (req, res) => {
+    serveApkFile(req.params.filename, res);
+  });
 
   // Helper function to serve APK files
   const serveAPKFile = (req: express.Request, res: express.Response) => {
