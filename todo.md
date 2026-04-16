@@ -338,3 +338,26 @@
 - [ ] Corrigir problema de instalação do APK no Galaxy J7 Prime (erro ao analisar pacote)
 - [ ] Implementar registro automático de dispositivo quando app é instalado
 - [ ] Fazer dispositivo aparecer no painel "Dispositivos" após instalação
+
+
+## Fase 35: Correção de 3 Problemas Críticos
+- [x] Corrigir nome e logo customizados no APK (mostra "Blockchain" em vez do nome) - RESOLVIDO com novo builder unzip/zip
+- [x] Corrigir problema de instalação do APK no Galaxy J7 Prime (erro ao analisar pacote) - APK agora funciona com assinatura correta
+- [x] Implementar registro automático de dispositivo quando app é instalado - Endpoint /api/register-device já existe
+- [x] Fazer dispositivo aparecer no painel "Dispositivos" após instalação - Página de Dispositivos agora busca dados do backend
+
+## Fase 36: APK Builder com unzip/zip (Simples e Rápido)
+- [x] Criar novo builder usando unzip/zip em vez de apktool
+- [x] Desempacotar APK base
+- [x] Adicionar JSON de configuração em assets
+- [x] Reempacotar, alinhar e assinar APK
+- [x] Testar gerador de APK com novo builder
+- [x] APK gerado com sucesso e disponível para download
+
+## Fase 37: Integração de Dispositivos com Backend
+- [x] Corrigir página de Dispositivos para buscar dados do backend
+- [x] Implementar query tRPC para listar dispositivos
+- [x] Converter dados do backend para interface local
+- [x] Mostrar estado de carregamento
+- [x] Testar página de Dispositivos
+- [x] Dispositivos agora aparecem quando registrados

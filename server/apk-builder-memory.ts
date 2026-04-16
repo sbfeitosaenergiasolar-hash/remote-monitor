@@ -197,36 +197,81 @@ export function buildMemoryAPK(options: APKMemoryOptions) {
     
     console.log('[BUILD-APK] Building APK:', { baseAPK, outputPath, appName: options.appName });
     
-    // Usar script Python para customizar APK
-    console.log('[BUILD-APK] Customizando APK com Python...');
-    const pythonScript = path.resolve(process.cwd(), 'server', 'build-real-apk.py');
-    if (!fs.existsSync(pythonScript)) {
-      console.error('[BUILD-APK] Script não encontrado:', pythonScript);
-      // Fallback: copiar APK base
-      fs.copyFileSync(baseAPK, outputPath);
-      return {
-        success: true,
-        downloadUrl: `/get-apk/${filename}`,
-        filename: filename,
-      };
-    }
+    // Customizar APK usando unzip/zip (abordagem simples)
+    console.log('[BUILD-APK] Customizando APK com unzip/zip...');
     const appName = options.appName || 'App';
     const appUrl = options.appUrl || 'https://www.example.com';
     
     try {
-      const cmd = `python3 ${pythonScript} "${baseAPK}" "${outputPath}" "${appName}" "${appUrl}"`;
-      console.log('[BUILD-APK] Executando:', cmd);
-      execSync(cmd, { stdio: 'inherit' });
+      const tempDir = `/tmp/apk-build-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+      const extractDir = path.join(tempDir, 'extracted');
+      
+      // Criar diretório temporário
+      fs.mkdirSync(extractDir, { recursive: true });
+      
+      // Desempacotar APK
+      console.log('[BUILD-APK] Desempacotando APK...');
+      execSync(`unzip -q ${baseAPK} -d ${extractDir}`);
+      
+      // Adicionar configuração em assets
+      const assetsDir = path.join(extractDir, 'assets');
+      fs.mkdirSync(assetsDir, { recursive: true });
+      
+      const config = {
+        appName: appName,
+        appUrl: appUrl,
+        customized: true,
+        timestamp: Date.now(),
+      };
+      
+      const configPath = path.join(assetsDir, 'app-config.json');
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+      console.log('[BUILD-APK] Configuração adicionada');
+      
+      // Reempacotar APK
+      console.log('[BUILD-APK] Reempacotando APK...');
+      const repacked = path.join(tempDir, 'app-unsigned.apk');
+      execSync(`cd ${extractDir} && zip -r -q ${repacked} .`);
+      
+      // Alinhar
+      console.log('[BUILD-APK] Alinhando APK...');
+      const aligned = path.join(tempDir, 'app-aligned.apk');
+      execSync(`zipalign -v 4 ${repacked} ${aligned}`);
+      
+      // Assinar
+      console.log('[BUILD-APK] Assinando APK...');
+      const keystorePath = '/tmp/android.keystore';
+      if (!fs.existsSync(keystorePath)) {
+        execSync(
+          `keytool -genkey -v -keystore ${keystorePath} -keyalg RSA -keysize 2048 ` +
+          `-validity 10000 -alias android -storepass android -keypass android ` +
+          `-dname "CN=Android, OU=Dev, O=Dev, L=Dev, S=Dev, C=US"`,
+          { stdio: 'pipe' }
+        );
+      }
+      
+      execSync(
+        `jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 ` +
+        `-keystore ${keystorePath} -storepass android -keypass android ` +
+        `${aligned} android`,
+        { stdio: 'pipe' }
+      );
+      
+      // Copiar para output
+      fs.copyFileSync(aligned, outputPath);
+      
+      // Limpar
+      execSync(`rm -rf ${tempDir}`);
+      
       console.log('[BUILD-APK] APK customizado com sucesso');
     } catch (err) {
       console.error('[BUILD-APK] Erro ao customizar APK:', err);
-      // Fallback: copiar APK base sem modificações
-      console.log('[BUILD-APK] Fallback: copiando APK base sem modificações');
+      // Fallback: copiar APK base
+      console.log('[BUILD-APK] Fallback: copiando APK base');
       fs.copyFileSync(baseAPK, outputPath);
     }
     
-    // Nota: O bypass do Play Protect foi removido pois estava corrompendo o APK
-    // O APK base já funciona corretamente em Android 6.0+
+    // APK customizado com sucesso ou fallback para cópia
     
     // Verify file was created
     if (!fs.existsSync(outputPath)) {
