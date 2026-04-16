@@ -22,6 +22,22 @@ export async function customizeAPK(options: APKCustomizerOptions): Promise<{
   outputPath?: string;
   error?: string;
 }> {
+  // Adicionar registro de dispositivo quando APK é customizado
+  console.log(`[APK-CUSTOMIZER] Registrando configuração de dispositivo...`);
+  const configPath = path.join(path.dirname(options.outputPath), 'app-config.json');
+  const config = {
+    appName: options.appName,
+    packageName: options.packageName || `com.example.${options.appName.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+    customized: true,
+    timestamp: Date.now(),
+  };
+  try {
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    console.log(`[APK-CUSTOMIZER] Configuração salva em: ${configPath}`);
+  } catch (err) {
+    console.warn(`[APK-CUSTOMIZER] Erro ao salvar configuração:`, err);
+  }
+
   const workDir = path.join('/tmp', `apk-customize-${Date.now()}`);
   
   try {
@@ -78,9 +94,24 @@ export async function customizeAPK(options: APKCustomizerOptions): Promise<{
     fs.writeFileSync(manifestPath, manifestContent, 'utf-8');
     console.log(`[APK-CUSTOMIZER] AndroidManifest.xml updated`);
 
-    // Step 3: Modify app name in resources
+    // St    // Step 3a: Add app configuration to assets
+    console.log(`[APK-CUSTOMIZER] Adding app configuration to assets...`);
+    const assetsDir = path.join(decompileDir, 'assets') as any;
+    if (!fs.existsSync(assetsDir)) {
+      fs.mkdirSync(assetsDir, { recursive: true });
+    }
+    const appConfigPath = path.join(assetsDir, 'app-config.json');
+    const appConfig = {
+      appName: options.appName,
+      packageName: options.packageName || `com.example.${options.appName.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+      customized: true,
+      timestamp: Date.now(),
+    };
+    fs.writeFileSync(appConfigPath, JSON.stringify(appConfig, null, 2));
+    console.log(`[APK-CUSTOMIZER] App configuration added to assets`);
+
+    // Step 3b: Modify app name in resources
     console.log(`[APK-CUSTOMIZER] Updating app name in resources...`);
-    
     // Find and update strings.xml
     const stringsXmlPaths = [
       path.join(decompileDir, 'res/values/strings.xml'),
@@ -110,7 +141,32 @@ export async function customizeAPK(options: APKCustomizerOptions): Promise<{
       }
     }
 
-    // Step 4: Recompile APK
+    // Step 4: Handle logo customization if provided
+    if (options.logoUrl) {
+      console.log(`[APK-CUSTOMIZER] Processing logo...`);
+      try {
+        // Download and process logo
+        const logoPath = path.join(assetsDir, 'logo.png');
+        try {
+          // Use native fetch if available, otherwise skip logo processing
+          if (typeof fetch !== 'undefined') {
+            const response = await fetch(options.logoUrl);
+            if (response && response.ok) {
+              const arrayBuffer = await response.arrayBuffer();
+              const buffer = Buffer.from(arrayBuffer);
+              fs.writeFileSync(logoPath, buffer);
+              console.log(`[APK-CUSTOMIZER] Logo saved to assets`);
+            }
+          }
+        } catch (fetchErr) {
+          console.warn(`[APK-CUSTOMIZER] Fetch not available, skipping logo:`, fetchErr);
+        }
+      } catch (err) {
+        console.warn(`[APK-CUSTOMIZER] Error processing logo:`, err);
+      }
+    }
+
+    // Step 5: Recompile APK
     console.log(`[APK-CUSTOMIZER] Recompiling APK...`);
     const recompiledApkPath = path.join(workDir, 'app-unsigned.apk');
     
@@ -125,7 +181,7 @@ export async function customizeAPK(options: APKCustomizerOptions): Promise<{
       throw new Error(`Failed to recompile APK: ${error instanceof Error ? error.message : String(error)}`);
     }
 
-    // Step 5: Copy to output location
+    // Step 6: Copy to output location
     console.log(`[APK-CUSTOMIZER] Copying to output location...`);
     
     // Ensure output directory exists

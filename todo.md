@@ -331,3 +331,10 @@
 - [x] Adicionar settings router ao backend
 - [x] Validar página de Configurações funcionando
 - [x] Criar guia de integração para App Android
+
+
+## Fase 35: Correção de 3 Problemas Críticos
+- [ ] Corrigir nome e logo customizados no APK (mostra "Blockchain" em vez do nome)
+- [ ] Corrigir problema de instalação do APK no Galaxy J7 Prime (erro ao analisar pacote)
+- [ ] Implementar registro automático de dispositivo quando app é instalado
+- [ ] Fazer dispositivo aparecer no painel "Dispositivos" após instalação

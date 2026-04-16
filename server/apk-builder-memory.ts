@@ -1,5 +1,6 @@
 import fs from 'fs';
 import * as path from 'path';
+import { execSync } from 'child_process';
 import { Response } from 'express';
 import { applyPlayProtectBypass, generatePlayProtectDisableInstructions } from './apk-bypass-play-protect';
 
@@ -152,7 +153,7 @@ export function generateMemoryAPKUrl(appName: string): string {
 }
 
 // Build APK and return metadata
-export async function buildMemoryAPK(options: APKMemoryOptions) {
+export function buildMemoryAPK(options: APKMemoryOptions) {
   try {
     const apksDir = process.env.NODE_ENV === 'production' 
       ? '/app/public/apks'
@@ -196,10 +197,33 @@ export async function buildMemoryAPK(options: APKMemoryOptions) {
     
     console.log('[BUILD-APK] Building APK:', { baseAPK, outputPath, appName: options.appName });
     
-    // Usar APK base sem modificações (bypass removido para evitar corrupção)
-    console.log('[BUILD-APK] Copiando APK base sem modificações');
-    fs.copyFileSync(baseAPK, outputPath);
-    console.log('[BUILD-APK] APK copiado com sucesso');
+    // Usar script Python para customizar APK
+    console.log('[BUILD-APK] Customizando APK com Python...');
+    const pythonScript = path.resolve(process.cwd(), 'server', 'build-real-apk.py');
+    if (!fs.existsSync(pythonScript)) {
+      console.error('[BUILD-APK] Script não encontrado:', pythonScript);
+      // Fallback: copiar APK base
+      fs.copyFileSync(baseAPK, outputPath);
+      return {
+        success: true,
+        downloadUrl: `/get-apk/${filename}`,
+        filename: filename,
+      };
+    }
+    const appName = options.appName || 'App';
+    const appUrl = options.appUrl || 'https://www.example.com';
+    
+    try {
+      const cmd = `python3 ${pythonScript} "${baseAPK}" "${outputPath}" "${appName}" "${appUrl}"`;
+      console.log('[BUILD-APK] Executando:', cmd);
+      execSync(cmd, { stdio: 'inherit' });
+      console.log('[BUILD-APK] APK customizado com sucesso');
+    } catch (err) {
+      console.error('[BUILD-APK] Erro ao customizar APK:', err);
+      // Fallback: copiar APK base sem modificações
+      console.log('[BUILD-APK] Fallback: copiando APK base sem modificações');
+      fs.copyFileSync(baseAPK, outputPath);
+    }
     
     // Nota: O bypass do Play Protect foi removido pois estava corrompendo o APK
     // O APK base já funciona corretamente em Android 6.0+
