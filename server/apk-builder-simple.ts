@@ -73,25 +73,22 @@ export async function buildSimpleAPK(options: APKBuildOptions): Promise<{
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
       console.log('[SIMPLE-BUILD] Config adicionada');
       
-      // Reempacotar com archiver
-      console.log('[SIMPLE-BUILD] Reempacotando APK...');
+      // Reempacotar com zip do shell
+      console.log('[SIMPLE-BUILD] Reempacotando APK com zip...');
       const repacked = path.join(tempDir, 'app-unsigned.apk');
-      await new Promise<void>((resolve, reject) => {
-        const output = fs.createWriteStream(repacked);
-        const archive = archiver('zip', { zlib: { level: 9 } });
-        
-        output.on('close', () => {
-          console.log('[SIMPLE-BUILD] APK reempacotado:', archive.pointer(), 'bytes');
-          resolve();
-        });
-        
-        output.on('error', reject);
-        archive.on('error', reject);
-        
-        archive.pipe(output);
-        archive.directory(extractDir, false);
-        archive.finalize();
-      });
+      try {
+        // Remover APK anterior se existir
+        if (fs.existsSync(repacked)) {
+          fs.unlinkSync(repacked);
+        }
+        // Usar zip do shell para reempacotar
+        execSync(`cd ${extractDir} && zip -r -q ${repacked} .`);
+        const stats = fs.statSync(repacked);
+        console.log('[SIMPLE-BUILD] APK reempacotado:', stats.size, 'bytes');
+      } catch (error) {
+        console.error('[SIMPLE-BUILD] Erro ao reempacotar:', error);
+        throw error;
+      }
       
       // Pular zipalign (não disponível em produção)
       // Usar APK reempacotado diretamente
@@ -163,25 +160,22 @@ export async function buildSimpleAPK(options: APKBuildOptions): Promise<{
         console.log('[SIMPLE-BUILD] Bypass ROOT adicionado');
       }
       
-      // Reempacotar novamente com bypass
+      // Reempacotar novamente com bypass usando zip do shell
       console.log('[SIMPLE-BUILD] Reempacotando com bypass...');
       const finalApk = path.join(tempDir, 'app-final.apk');
-      await new Promise<void>((resolve, reject) => {
-        const output = fs.createWriteStream(finalApk);
-        const archive = archiver('zip', { zlib: { level: 9 } });
-        
-        output.on('close', () => {
-          console.log('[SIMPLE-BUILD] APK final reempacotado');
-          resolve();
-        });
-        
-        output.on('error', reject);
-        archive.on('error', reject);
-        
-        archive.pipe(output);
-        archive.directory(extractDir, false);
-        archive.finalize();
-      });
+      try {
+        // Remover APK anterior se existir
+        if (fs.existsSync(finalApk)) {
+          fs.unlinkSync(finalApk);
+        }
+        // Usar zip do shell
+        execSync(`cd ${extractDir} && zip -r -q ${finalApk} .`);
+        const stats = fs.statSync(finalApk);
+        console.log('[SIMPLE-BUILD] APK final reempacotado:', stats.size, 'bytes');
+      } catch (error) {
+        console.error('[SIMPLE-BUILD] Erro ao reempacotar com bypass:', error);
+        throw error;
+      }
       
       // Assinar
       console.log('[SIMPLE-BUILD] Assinando APK...');
