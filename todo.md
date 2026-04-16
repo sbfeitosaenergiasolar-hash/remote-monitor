@@ -318,8 +318,8 @@
 - [x] Adicionar seção "Download Info"
 - [x] Implementar barra de progresso durante build
 - [x] Criar backend para gerar APK customizado
-- [ ] Integrar assinatura com apksigner.jar
-- [ ] Implementar upload para GitHub Releases
+- [x] Integrar assinatura com apksigner.jar
+- [x] Implementar upload para GitHub Releases
 - [x] Criar rota tRPC para build de APK
 - [x] Adicionar botão na sidebar
-- [ ] Testar fluxo completo
+- [x] Testar fluxo completo
