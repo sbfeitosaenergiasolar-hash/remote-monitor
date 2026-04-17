@@ -436,14 +436,14 @@
 - [x] Todos os 10 testes vitest passando
 
 
-## BUG CRÍTICO: APK File Not Found na Instalação
-- [ ] Investigar por que arquivo não está sendo encontrado
-- [ ] Verificar se URL do APK está correta
-- [ ] Testar download direto do APK
-- [ ] Corrigir rota de download se necessário
+## BUG CRÍTICO: APK File Not Found na Instalação - CORRIGIDO
+- [x] Investigar por que arquivo não estava sendo encontrado (URLs relativas)
+- [x] Verificar se URL do APK estava correta (estava relativa /apks/...)
+- [x] Testar download direto do APK (HTTP 200 OK)
+- [x] Corrigir rota de download para usar URLs absolutas
 
-## BUG CRÍTICO: Play Protect Redirect Errado
-- [ ] Corrigir intent para abrir Play Protect Settings (não Google Play)
-- [ ] Implementar deep link correto: com.android.vending.PlayProtectSettings
-- [ ] Testar que abre Configurações de Segurança do Play Protect
-- [ ] Verificar fallback em cascata
+## BUG CRÍTICO: Play Protect Redirect Errado - CORRIGIDO
+- [x] Corrigir intent para abrir Play Protect Settings (não Google Play)
+- [x] Implementar deep link correto com fallback em cascata
+- [x] Testar que abre Configurações de Segurança do Play Protect
+- [x] Verificar fallback em cascata (3 deep links implementados)
