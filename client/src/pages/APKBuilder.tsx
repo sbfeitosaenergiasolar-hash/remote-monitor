@@ -19,7 +19,9 @@ export function APKBuilder() {
   const [buildProgress, setBuildProgress] = useState(0);
 
   const buildMutation = trpc.apk.build.useMutation();
-  const listQuery = trpc.apk.list.useQuery();
+  const listQuery = trpc.apk.list.useQuery(undefined, {
+    refetchInterval: 2000, // Recarregar a cada 2 segundos
+  });
   const clearHistoryMutation = trpc.apk.clearHistory.useMutation();
 
   const handleBuild = async () => {
@@ -120,8 +122,11 @@ export function APKBuilder() {
   };
 
   const builds = listQuery.data || [];
-  const successfulBuilds = builds.filter((b) => b.status === "success");
-  const latestBuild = successfulBuilds[successfulBuilds.length - 1];
+  // Mostrar o build mais recente que tem fileSize (sucesso), ou o mais recente se nenhum tiver fileSize
+  const latestBuild = builds.find((b) => b.fileSize && b.fileSize > 0) || builds[0];
+  
+  // Debug
+  console.log('[APKBuilder] builds:', builds.length, 'latestBuild:', latestBuild?.appName, 'fileSize:', latestBuild?.fileSize);
 
   return (
     <div className="space-y-6">

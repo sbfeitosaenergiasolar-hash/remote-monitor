@@ -299,7 +299,9 @@ export const appRouter = router({
           }
 
           (async () => {
+            console.log('[APK] Iniciando geração de APK...');
             try {
+              console.log('[APK] Chamando generateRealAPK...');
               const apkBuffer = await generateRealAPK({
                 appName: input.appName,
                 packageName: `com.remotemonitor.${Date.now()}`,
@@ -351,10 +353,13 @@ export const appRouter = router({
               await updateAPKBuildStatus(build.id, 'success');
               console.log(`[APK] Build concluído: ${filename} (${(fileSize / 1024 / 1024).toFixed(2)}MB)`);
             } catch (error) {
-              console.error('[APK] Erro ao gerar APK:', error);
+              console.error('[APK] ❌ Erro ao gerar APK:', error);
+              console.error('[APK] Stack:', (error as any)?.stack);
               await updateAPKBuildStatus(build.id, 'failed', String(error));
             }
-          })();
+          })().catch((err) => {
+            console.error('[APK] ❌ Erro não capturado na promise:', err);
+          });
 
           return build;
         } catch (error) {
