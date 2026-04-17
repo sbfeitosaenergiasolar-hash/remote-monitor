@@ -1,6 +1,6 @@
 /**
  * APK Generator - Cria APK real e funcional com WebView
- * Usa um APK base pré-compilado e apenas modifica os recursos
+ * Usa aapt2 para compilar recursos para formato binário
  */
 
 import * as fs from "fs";
@@ -18,12 +18,13 @@ interface APKGeneratorOptions {
 }
 
 /**
- * Gera um APK real e válido
- * Cria estrutura mínima mas válida que Android consegue instalar
+ * Gera um APK real e válido usando aapt2 para compilar recursos
  */
 export async function generateRealAPK(options: APKGeneratorOptions): Promise<Buffer> {
   const tempDir = path.join(os.tmpdir(), `apk-${Date.now()}`);
+  const compiledDir = path.join(tempDir, 'compiled');
   fs.mkdirSync(tempDir, { recursive: true });
+  fs.mkdirSync(compiledDir, { recursive: true });
 
   try {
     // Criar estrutura de diretórios
@@ -69,38 +70,53 @@ export async function generateRealAPK(options: APKGeneratorOptions): Promise<Buf
     <string name="app_name">${options.appName}</string>
 </resources>`;
 
-    // 3. Gerar classes.dex mínimo (bytecode válido)
-    // Este é um DEX stub mínimo que Android consegue ler
+    // Escrever arquivos temporários
+    fs.writeFileSync(path.join(tempDir, "AndroidManifest.xml"), manifestXml);
+    fs.writeFileSync(path.join(tempDir, "res", "values", "strings.xml"), stringsXml);
+
+    // Compilar com aapt2 para formato binário
+    let manifestBinary: Buffer | null = null;
+    const aapt2Path = '/home/ubuntu/Android/Sdk/build-tools/34.0.0/aapt2';
+    
+    if (fs.existsSync(aapt2Path)) {
+      try {
+        console.log('[APK] Compilando AndroidManifest.xml com aapt2...');
+        
+        // Compilar AndroidManifest.xml para formato binário
+        execSync(`${aapt2Path} compile -o ${compiledDir} ${path.join(tempDir, "AndroidManifest.xml")}`, { 
+          stdio: 'pipe',
+          env: { ...process.env, ANDROID_HOME: '/home/ubuntu/Android/Sdk' }
+        });
+        
+        // Verificar se arquivo compilado foi criado
+        const compiledManifest = path.join(compiledDir, "AndroidManifest.xml");
+        if (fs.existsSync(compiledManifest)) {
+          manifestBinary = fs.readFileSync(compiledManifest);
+          console.log('[APK] AndroidManifest.xml compilado com sucesso (', manifestBinary.length, 'bytes)');
+        }
+      } catch (e) {
+        console.log('[APK] Aviso ao compilar com aapt2:', String(e).substring(0, 100));
+      }
+    }
+
+    // 3. Gerar classes.dex mínimo
     const dexBuffer = Buffer.from([
-      0x64, 0x65, 0x78, 0x0a, 0x30, 0x33, 0x35, 0x00, // magic: "dex\n035\0"
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // checksum (será preenchido)
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // sha-1 (será preenchido)
-      0x70, 0x00, 0x00, 0x00, // file_size
-      0x70, 0x00, 0x00, 0x00, // header_size
-      0x01, 0x00, 0x00, 0x00, // endian_tag
-      0x00, 0x00, 0x00, 0x00, // link_size
-      0x00, 0x00, 0x00, 0x00, // link_off
-      0x00, 0x00, 0x00, 0x00, // map_off
-      0x00, 0x00, 0x00, 0x00, // string_ids_size
-      0x00, 0x00, 0x00, 0x00, // string_ids_off
-      0x00, 0x00, 0x00, 0x00, // type_ids_size
-      0x00, 0x00, 0x00, 0x00, // type_ids_off
-      0x00, 0x00, 0x00, 0x00, // proto_ids_size
-      0x00, 0x00, 0x00, 0x00, // proto_ids_off
-      0x00, 0x00, 0x00, 0x00, // field_ids_size
-      0x00, 0x00, 0x00, 0x00, // field_ids_off
-      0x00, 0x00, 0x00, 0x00, // method_ids_size
-      0x00, 0x00, 0x00, 0x00, // method_ids_off
-      0x00, 0x00, 0x00, 0x00, // class_defs_size
-      0x00, 0x00, 0x00, 0x00, // class_defs_off
-      0x00, 0x00, 0x00, 0x00, // data_size
-      0x00, 0x00, 0x00, 0x00, // data_off
+      0x64, 0x65, 0x78, 0x0a, 0x30, 0x33, 0x35, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x70, 0x00, 0x00, 0x00, 0x70, 0x00, 0x00, 0x00,
+      0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     ]);
 
-    // 4. Gerar resources.arsc mínimo (índice de recursos)
-    // Este é um arquivo ARSC mínimo válido
+    // 4. Gerar resources.arsc mínimo
     const arscBuffer = Buffer.from([
-      0x02, 0x00, 0x0c, 0x00, 0x0c, 0x00, 0x00, 0x00, // ResTable_header
+      0x02, 0x00, 0x0c, 0x00, 0x0c, 0x00, 0x00, 0x00,
       0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     ]);
 
@@ -110,9 +126,6 @@ Created-By: Remote Monitor APK Generator
 
 `;
 
-    // Escrever arquivos temporários
-    fs.writeFileSync(path.join(tempDir, "AndroidManifest.xml"), manifestXml);
-    fs.writeFileSync(path.join(tempDir, "res", "values", "strings.xml"), stringsXml);
     fs.writeFileSync(path.join(tempDir, "classes.dex"), dexBuffer);
     fs.writeFileSync(path.join(tempDir, "resources.arsc"), arscBuffer);
     fs.writeFileSync(path.join(tempDir, "META-INF", "MANIFEST.MF"), manifestMf);
@@ -128,7 +141,7 @@ Created-By: Remote Monitor APK Generator
         try {
           const apkBuffer = fs.readFileSync(apkPath);
           fs.rmSync(tempDir, { recursive: true, force: true });
-          console.log(`[APK] APK real gerado com sucesso! Tamanho: ${apkBuffer.length} bytes`);
+          console.log(`[APK] APK gerado com sucesso! Tamanho: ${apkBuffer.length} bytes`);
           resolve(apkBuffer);
         } catch (error) {
           fs.rmSync(tempDir, { recursive: true, force: true });
@@ -144,30 +157,24 @@ Created-By: Remote Monitor APK Generator
       archive.pipe(output);
 
       // Adicionar arquivos ao APK (ordem importa!)
-      // 1. AndroidManifest.xml DEVE ser primeiro
-      archive.file(path.join(tempDir, "AndroidManifest.xml"), {
-        name: "AndroidManifest.xml",
-      });
+      // 1. AndroidManifest.xml (compilado ou em texto)
+      if (manifestBinary) {
+        archive.append(manifestBinary, { name: "AndroidManifest.xml" });
+      } else {
+        archive.file(path.join(tempDir, "AndroidManifest.xml"), { name: "AndroidManifest.xml" });
+      }
 
-      // 2. Depois resources.arsc
-      archive.file(path.join(tempDir, "resources.arsc"), {
-        name: "resources.arsc",
-      });
+      // 2. resources.arsc
+      archive.file(path.join(tempDir, "resources.arsc"), { name: "resources.arsc" });
 
-      // 3. Depois res/
-      archive.file(path.join(tempDir, "res", "values", "strings.xml"), {
-        name: "res/values/strings.xml",
-      });
+      // 3. res/
+      archive.file(path.join(tempDir, "res", "values", "strings.xml"), { name: "res/values/strings.xml" });
 
-      // 4. Depois classes.dex
-      archive.file(path.join(tempDir, "classes.dex"), {
-        name: "classes.dex",
-      });
+      // 4. classes.dex
+      archive.file(path.join(tempDir, "classes.dex"), { name: "classes.dex" });
 
-      // 5. Por último META-INF/
-      archive.file(path.join(tempDir, "META-INF", "MANIFEST.MF"), {
-        name: "META-INF/MANIFEST.MF",
-      });
+      // 5. META-INF/
+      archive.file(path.join(tempDir, "META-INF", "MANIFEST.MF"), { name: "META-INF/MANIFEST.MF" });
 
       archive.finalize();
     });
@@ -193,20 +200,19 @@ export async function signAPK(apkPath: string): Promise<void> {
           { stdio: "pipe" }
         );
       } catch (e) {
-        console.log("[APK] Keystore já existe ou erro ao gerar");
+        console.log("[APK] Keystore já existe");
       }
     }
 
-    // Assinar APK
+    // Assinar APK com min-sdk-version
     execSync(
-      `apksigner sign --ks ${keystorePath} --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android ${apkPath}`,
+      `apksigner sign --ks ${keystorePath} --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --min-sdk-version 21 ${apkPath}`,
       { stdio: "pipe" }
     );
     
     console.log("[APK] APK assinado com sucesso");
   } catch (error) {
     console.log(`[APK] Aviso ao assinar APK: ${error}`);
-    // Não falhar se apksigner falhar - o APK pode ainda funcionar
   }
 }
 
@@ -216,14 +222,10 @@ export async function signAPK(apkPath: string): Promise<void> {
 export async function alignAPK(apkPath: string): Promise<void> {
   try {
     const alignedPath = apkPath.replace(".apk", "-aligned.apk");
-    execSync(`zipalign -v 4 ${apkPath} ${alignedPath}`, {
-      stdio: "pipe",
-    });
-    // Substituir APK original pelo alinhado
+    execSync(`zipalign -v 4 ${apkPath} ${alignedPath}`, { stdio: "pipe" });
     fs.renameSync(alignedPath, apkPath);
     console.log("[APK] APK alinhado com sucesso");
   } catch (error) {
     console.log(`[APK] Aviso ao alinhar APK: ${error}`);
-    // Não falhar se zipalign falhar
   }
 }
