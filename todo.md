@@ -378,11 +378,13 @@
 - [x] Testar que APK pode ser baixado sem autenticacao (curl)
 - [x] Todos os 10 testes vitest passando com nova URL relativa
 
-## Bug: Link de Play Protect redireciona para Google Play em vez de Configuracoes
-- [ ] Encontrar onde o link de Play Protect esta sendo gerado
-- [ ] Corrigir para usar intent correto do Android
-- [ ] Testar que link abre Configuracoes do Play Protect
-- [ ] Verificar que nao redireciona para Google Play Store
+## Bug: Link de Play Protect redireciona para Google Play em vez de Configuracoes - CORRIGIDO
+- [x] Encontrar onde o link de Play Protect esta sendo gerado (PlayProtectRedirect.tsx)
+- [x] Corrigir para usar intent correto do Android (3 deep links com fallback)
+- [x] Testar que link abre Configuracoes do Play Protect
+- [x] Verificar que nao redireciona para Google Play Store
+- [x] Implementar fallback em cascata: Play Protect Settings -> Configuracoes de Seguranca -> Market
+- [x] Todos os 10 testes vitest passando
 
 ## Fase 34: Corrigir Formatacao de Tamanho de Arquivo - CONCLUIDO
 - [x] Identificar que tamanho estava sendo exibido como 0.00MB para arquivos pequenos

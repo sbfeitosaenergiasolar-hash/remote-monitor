@@ -33,20 +33,32 @@ export default function PlayProtectRedirect() {
 
   // Abrir configurações do Play Protect
   const openPlayProtectSettings = () => {
-    // Deep link para Google Play Protect
+    // Deep links para abrir Play Protect Settings (CORRETO - nunca redireciona para Play Store)
+    // Prioridade: 1. Intent nativo para Play Protect, 2. Configurações de Segurança do Android
     const deepLinks = [
-      "intent://com.google.android.gms//#Intent;action=android.intent.action.VIEW;end",
-      "market://details?id=com.google.android.gms",
-      "https://play.google.com/store/apps/details?id=com.google.android.gms",
+      // Intent nativo para abrir Play Protect Settings diretamente
+      "intent://com.google.android.gms.security.settings//#Intent;action=android.intent.action.MAIN;category=android.intent.category.DEFAULT;end",
+      // Deep link para Play Protect Settings (com package e ação específica)
+      "intent://#Intent;action=com.google.android.gms.security.PLAY_PROTECT_SETTINGS;package=com.google.android.gms;end",
+      // Fallback: Abrir Configurações de Segurança do Android (Settings > Security)
+      "intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.SETTINGS;end",
     ];
 
-    // Tentar primeiro o deep link nativo
+    // Tentar primeiro o deep link nativo para Play Protect Settings
     window.location.href = deepLinks[0];
 
-    // Fallback após 2 segundos
+    // Fallback após 1.5 segundos
+    setTimeout(() => {
+      window.location.href = deepLinks[1];
+    }, 1500);
+
+    // Segundo fallback após 3 segundos (Configurações de Segurança)
     setTimeout(() => {
       window.location.href = deepLinks[2];
-    }, 2000);
+    }, 3000);
+
+    // Nota: Se nenhum dos intents funcionar, o usuário verá uma mensagem de erro do Android
+    // Isso é preferível a redirecionar para a Play Store
   };
 
   // Verificar se Play Protect foi desativado
