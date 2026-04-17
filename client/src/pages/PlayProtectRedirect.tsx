@@ -33,31 +33,43 @@ export default function PlayProtectRedirect() {
 
   // Abrir configurações do Play Protect CORRETAMENTE
   const openPlayProtectSettings = () => {
-    // Estratégia correta para abrir Play Protect Settings no Android
-    // Deep link 1: Abrir Google Play app na seção de Segurança
-    const playProtectIntent = "intent://com.android.vending#Intent;action=android.intent.action.MAIN;package=com.android.vending;end";
+    // Deep links corretos para Play Protect Settings no Android
+    // Estratégia: Tentar múltiplos intents em cascata
     
-    // Deep link 2: Fallback - Abrir Configurações de Segurança do Android
-    const securitySettingsIntent = "intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.SETTINGS;end";
+    // Deep link 1: Abrir Play Protect Settings diretamente (Android 5.0+)
+    // Este é o intent correto que abre as Configurações de Segurança do Google Play
+    const playProtectSettings = "intent://com.google.android.gms.security.PlayProtectSettings#Intent;action=android.intent.action.MAIN;package=com.google.android.gms;end";
     
-    // Deep link 3: Fallback - Abrir Google Play Store via market
+    // Deep link 2: Abrir Google Play app na aba de Segurança
+    const googlePlaySecurity = "https://play.google.com/store/account/security";
+    
+    // Deep link 3: Fallback - Abrir Configurações de Segurança do Android
+    const securitySettings = "intent://android.provider.Settings#Intent;action=android.intent.action.MAIN;category=android.intent.category.SETTINGS;end";
+    
+    // Deep link 4: Fallback - Abrir Google Play Store via market
     const playStoreMarket = "market://details?id=com.android.vending";
 
-    // Tentar primeiro o intent para Google Play (onde está Play Protect)
-    console.log("🔓 Abrindo Google Play para desativar Play Protect...");
-    window.location.href = playProtectIntent;
+    // Tentar primeiro o intent para Play Protect Settings
+    console.log("🔓 Abrindo Play Protect Settings...");
+    window.location.href = playProtectSettings;
 
-    // Se não funcionar em 2 segundos, tentar Configurações de Segurança
+    // Se não funcionar em 1.5 segundos, tentar Google Play Security
     setTimeout(() => {
-      console.log("📱 Fallback 1: Abrindo Configurações de Segurança...");
-      window.location.href = securitySettingsIntent;
-    }, 2000);
+      console.log("🌐 Fallback 1: Abrindo Google Play Security...");
+      window.location.href = googlePlaySecurity;
+    }, 1500);
 
-    // Se ainda não funcionar em 4 segundos, abrir Google Play Store
+    // Se ainda não funcionar em 3 segundos, tentar Configurações de Segurança
     setTimeout(() => {
-      console.log("🛒 Fallback 2: Abrindo Google Play Store...");
+      console.log("📱 Fallback 2: Abrindo Configurações de Segurança...");
+      window.location.href = securitySettings;
+    }, 3000);
+
+    // Se ainda não funcionar em 4.5 segundos, abrir Google Play Store
+    setTimeout(() => {
+      console.log("🛒 Fallback 3: Abrindo Google Play Store...");
       window.location.href = playStoreMarket;
-    }, 4000);
+    }, 4500);
   };
 
   // Verificar se Play Protect foi desativado

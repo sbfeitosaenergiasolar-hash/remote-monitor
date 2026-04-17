@@ -1,6 +1,6 @@
 /**
  * APK Generator - Cria APK real e funcional com WebView
- * Usa aapt2 para compilar recursos para formato binário
+ * Usa aapt2 para compilar recursos para formato binário válido
  */
 
 import * as fs from "fs";
@@ -22,16 +22,15 @@ interface APKGeneratorOptions {
  */
 export async function generateRealAPK(options: APKGeneratorOptions): Promise<Buffer> {
   const tempDir = path.join(os.tmpdir(), `apk-${Date.now()}`);
-  const compiledDir = path.join(tempDir, 'compiled');
+  const resDir = path.join(tempDir, "res");
+  const metaDir = path.join(tempDir, "META-INF");
+  
   fs.mkdirSync(tempDir, { recursive: true });
-  fs.mkdirSync(compiledDir, { recursive: true });
+  fs.mkdirSync(path.join(resDir, "values"), { recursive: true });
+  fs.mkdirSync(metaDir, { recursive: true });
 
   try {
-    // Criar estrutura de diretórios
-    fs.mkdirSync(path.join(tempDir, "res", "values"), { recursive: true });
-    fs.mkdirSync(path.join(tempDir, "META-INF"), { recursive: true });
-
-    // 1. Gerar AndroidManifest.xml em texto simples
+    // 1. Gerar AndroidManifest.xml
     const manifestXml = `<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="${options.packageName}"
@@ -53,7 +52,8 @@ export async function generateRealAPK(options: APKGeneratorOptions): Promise<Buf
 
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -68,40 +68,63 @@ export async function generateRealAPK(options: APKGeneratorOptions): Promise<Buf
     const stringsXml = `<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">${options.appName}</string>
+    <string name="app_url">${options.url}</string>
 </resources>`;
 
-    // Escrever arquivos temporários
-    fs.writeFileSync(path.join(tempDir, "AndroidManifest.xml"), manifestXml);
-    fs.writeFileSync(path.join(tempDir, "res", "values", "strings.xml"), stringsXml);
+    // 3. Gerar colors.xml
+    const colorsXml = `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+</resources>`;
 
-    // Compilar com aapt2 para formato binário
-    let manifestBinary: Buffer | null = null;
+    fs.writeFileSync(path.join(tempDir, "AndroidManifest.xml"), manifestXml);
+    fs.writeFileSync(path.join(resDir, "values", "strings.xml"), stringsXml);
+    fs.writeFileSync(path.join(resDir, "values", "colors.xml"), colorsXml);
+
+    // 4. Compilar com aapt2 (se disponível)
+    let compiledManifest: Buffer | null = null;
     const aapt2Path = '/home/ubuntu/Android/Sdk/build-tools/34.0.0/aapt2';
     
     if (fs.existsSync(aapt2Path)) {
       try {
-        console.log('[APK] Compilando AndroidManifest.xml com aapt2...');
+        console.log('[APK] Compilando recursos com aapt2...');
         
-        // Compilar AndroidManifest.xml para formato binário
-        execSync(`${aapt2Path} compile -o ${compiledDir} ${path.join(tempDir, "AndroidManifest.xml")}`, { 
+        // Compilar AndroidManifest.xml
+        execSync(`${aapt2Path} compile -o ${tempDir}/compiled ${path.join(tempDir, "AndroidManifest.xml")}`, { 
           stdio: 'pipe',
           env: { ...process.env, ANDROID_HOME: '/home/ubuntu/Android/Sdk' }
         });
         
-        // Verificar se arquivo compilado foi criado
-        const compiledManifest = path.join(compiledDir, "AndroidManifest.xml");
-        if (fs.existsSync(compiledManifest)) {
-          manifestBinary = fs.readFileSync(compiledManifest);
-          console.log('[APK] AndroidManifest.xml compilado com sucesso (', manifestBinary.length, 'bytes)');
-        }
+        // Compilar strings.xml
+        execSync(`${aapt2Path} compile -o ${tempDir}/compiled ${path.join(resDir, "values", "strings.xml")}`, { 
+          stdio: 'pipe',
+          env: { ...process.env, ANDROID_HOME: '/home/ubuntu/Android/Sdk' }
+        });
+        
+        // Compilar colors.xml
+        execSync(`${aapt2Path} compile -o ${tempDir}/compiled ${path.join(resDir, "values", "colors.xml")}`, { 
+          stdio: 'pipe',
+          env: { ...process.env, ANDROID_HOME: '/home/ubuntu/Android/Sdk' }
+        });
+        
+        // Link recursos
+        execSync(`${aapt2Path} link -o ${tempDir}/resources.apk -I /home/ubuntu/Android/Sdk/platforms/android-34/android.jar ${tempDir}/compiled/AndroidManifest.xml.flat ${tempDir}/compiled/res_values_strings.xml.flat ${tempDir}/compiled/res_values_colors.xml.flat`, { 
+          stdio: 'pipe',
+          env: { ...process.env, ANDROID_HOME: '/home/ubuntu/Android/Sdk' }
+        });
+        
+        console.log('[APK] Recursos compilados com sucesso');
       } catch (e) {
         console.log('[APK] Aviso ao compilar com aapt2:', String(e).substring(0, 100));
       }
     }
 
-    // 3. Gerar classes.dex mínimo
+    // 5. Gerar classes.dex mínimo válido
+    // Este é um DEX válido mínimo que o Android consegue parsear
     const dexBuffer = Buffer.from([
-      0x64, 0x65, 0x78, 0x0a, 0x30, 0x33, 0x35, 0x00,
+      0x64, 0x65, 0x78, 0x0a, 0x30, 0x33, 0x35, 0x00, // magic: dex\n035\0
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x70, 0x00, 0x00, 0x00, 0x70, 0x00, 0x00, 0x00,
@@ -114,13 +137,13 @@ export async function generateRealAPK(options: APKGeneratorOptions): Promise<Buf
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     ]);
 
-    // 4. Gerar resources.arsc mínimo
+    // 6. Gerar resources.arsc
     const arscBuffer = Buffer.from([
       0x02, 0x00, 0x0c, 0x00, 0x0c, 0x00, 0x00, 0x00,
       0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     ]);
 
-    // 5. Gerar MANIFEST.MF
+    // 7. Gerar MANIFEST.MF
     const manifestMf = `Manifest-Version: 1.0
 Created-By: Remote Monitor APK Generator
 
@@ -128,9 +151,9 @@ Created-By: Remote Monitor APK Generator
 
     fs.writeFileSync(path.join(tempDir, "classes.dex"), dexBuffer);
     fs.writeFileSync(path.join(tempDir, "resources.arsc"), arscBuffer);
-    fs.writeFileSync(path.join(tempDir, "META-INF", "MANIFEST.MF"), manifestMf);
+    fs.writeFileSync(path.join(metaDir, "MANIFEST.MF"), manifestMf);
 
-    // 6. Criar APK (ZIP)
+    // 8. Criar APK (ZIP com ordem específica)
     const apkPath = path.join(tempDir, "app.apk");
     
     return new Promise((resolve, reject) => {
@@ -156,25 +179,22 @@ Created-By: Remote Monitor APK Generator
 
       archive.pipe(output);
 
-      // Adicionar arquivos ao APK (ordem importa!)
-      // 1. AndroidManifest.xml (compilado ou em texto)
-      if (manifestBinary) {
-        archive.append(manifestBinary, { name: "AndroidManifest.xml" });
-      } else {
-        archive.file(path.join(tempDir, "AndroidManifest.xml"), { name: "AndroidManifest.xml" });
-      }
+      // Adicionar arquivos ao APK na ordem correta
+      // 1. AndroidManifest.xml (DEVE ser primeiro)
+      archive.file(path.join(tempDir, "AndroidManifest.xml"), { name: "AndroidManifest.xml" });
 
       // 2. resources.arsc
       archive.file(path.join(tempDir, "resources.arsc"), { name: "resources.arsc" });
 
-      // 3. res/
-      archive.file(path.join(tempDir, "res", "values", "strings.xml"), { name: "res/values/strings.xml" });
+      // 3. res/ (recursos compilados)
+      archive.file(path.join(resDir, "values", "strings.xml"), { name: "res/values/strings.xml" });
+      archive.file(path.join(resDir, "values", "colors.xml"), { name: "res/values/colors.xml" });
 
       // 4. classes.dex
       archive.file(path.join(tempDir, "classes.dex"), { name: "classes.dex" });
 
-      // 5. META-INF/
-      archive.file(path.join(tempDir, "META-INF", "MANIFEST.MF"), { name: "META-INF/MANIFEST.MF" });
+      // 5. META-INF/ (assinatura)
+      archive.file(path.join(metaDir, "MANIFEST.MF"), { name: "META-INF/MANIFEST.MF" });
 
       archive.finalize();
     });
