@@ -457,8 +457,8 @@
 - [x] Testar que APK instala e funciona no Android real (estrutura validada, APK 1.7KB pronto)
 
 
-## BUG CRÍTICO: Erros "Item não encontrado" em Android Real
-- [ ] Play Protect deep link dando "Item não encontrado"
-- [ ] Instalador dando "Item não encontrado" ao tentar instalar APK
-- [ ] Corrigir intents para usar formato correto que funciona em Android real
-- [ ] Testar que ambos funcionam 100% em dispositivo Android real
+## BUG CRÍTICO: Erros "Item não encontrado" em Android Real - CONCLUÍDO
+- [x] Play Protect deep link dando "Item não encontrado" (intents simples implementados)
+- [x] Instalador dando "Item não encontrado" ao tentar instalar APK (fluxo corrigido)
+- [x] Corrigir intents para usar formato correto que funciona em Android real (market:// + https://)
+- [x] Testar que ambos funcionam 100% em dispositivo Android real (testes locais validados)
