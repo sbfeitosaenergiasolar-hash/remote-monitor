@@ -9,7 +9,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
-import { runMigrations } from "../migrations";
+import { runMigrations } from "./runMigrations";
 // APK Builder will be implemented
 
 function isPortAvailable(port: number): Promise<boolean> {
