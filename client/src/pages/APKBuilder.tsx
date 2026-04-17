@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { AlertCircle, CheckCircle2, Download, Hammer, Smartphone } from "lucide-react";
+import { AlertCircle, CheckCircle2, Download, Hammer, Smartphone, Trash2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { generateInstallLink, shareLink } from "@/lib/install-link";
@@ -20,6 +20,7 @@ export function APKBuilder() {
 
   const buildMutation = trpc.apk.build.useMutation();
   const listQuery = trpc.apk.list.useQuery();
+  const clearHistoryMutation = trpc.apk.clearHistory.useMutation();
 
   const handleBuild = async () => {
     if (!appName.trim()) {
@@ -387,9 +388,33 @@ export function APKBuilder() {
       {/* Histórico de Builds */}
       {builds.length > 0 && (
         <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle>Histórico de Builds</CardTitle>
-            <CardDescription>Seus APKs gerados anteriormente</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Histórico de Builds</CardTitle>
+              <CardDescription>Seus APKs gerados anteriormente</CardDescription>
+            </div>
+            <Button
+              onClick={() => {
+                if (confirm('Tem certeza que deseja deletar todo o histórico de builds?')) {
+                  clearHistoryMutation.mutate(undefined, {
+                    onSuccess: () => {
+                      toast.success('Histórico deletado com sucesso');
+                      listQuery.refetch();
+                    },
+                    onError: () => {
+                      toast.error('Erro ao deletar histórico');
+                    },
+                  });
+                }
+              }}
+              variant="destructive"
+              size="sm"
+              className="gap-2"
+              disabled={clearHistoryMutation.isPending}
+            >
+              <Trash2 className="w-4 h-4" />
+              Limpar
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">

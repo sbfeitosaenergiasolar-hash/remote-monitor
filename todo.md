@@ -389,3 +389,16 @@
 - [x] Corrigir formatacao para mostrar KB quando arquivo < 1MB
 - [x] Testar que APK de 929 bytes agora mostra como 0.91KB
 - [x] Todos os 10 testes vitest passando
+
+## Bug: Paginas duplicadas no APK Builder - INVESTIGADO
+- [x] Investigar por que paginas estao duplicadas (é visual: sidebar + conteúdo lado a lado)
+- [x] Não é duplicação real, é layout esperado
+- [x] Comportamento está correto
+
+## Feature: Botao para limpar historico de builds - CONCLUIDO
+- [x] Adicionar funcao deleteAllAPKBuildsByUser em db.ts
+- [x] Adicionar rota clearHistory em routers.ts
+- [x] Adicionar botao "Limpar Historico" no APK Builder
+- [x] Implementar confirmacao antes de deletar
+- [x] Testar que historico e deletado corretamente
+- [x] Todos os 10 testes vitest passando

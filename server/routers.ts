@@ -8,7 +8,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { COOKIE_NAME } from "../shared/const";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
-import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser, createAPKBuild, getAPKBuildsByUser, updateAPKBuildStatus, updateAPKBuildFileSize, updateAPKBuildGitHubUrl } from './db';
+import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser, createAPKBuild, getAPKBuildsByUser, updateAPKBuildStatus, updateAPKBuildFileSize, updateAPKBuildGitHubUrl, deleteAllAPKBuildsByUser } from './db';
 import { sdk } from "./_core/sdk";
 import { generateRealAPK } from "./apk-generator-final";
 import { uploadToGitHubRelease, generateReleaseName, generateReleaseTag, generateReleaseBody } from "./github-releases";
@@ -368,6 +368,25 @@ export const appRouter = router({
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao listar builds de APK',
+          });
+        }
+      }),
+
+    clearHistory: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        if (!ctx.user) {
+          throw new TRPCError({ code: 'UNAUTHORIZED' });
+        }
+
+        try {
+          const deletedCount = await deleteAllAPKBuildsByUser(ctx.user.id);
+          console.log(`[APK] Historico de ${deletedCount} builds deletado`);
+          return { success: true, deletedCount };
+        } catch (error) {
+          console.error('[APK] Erro ao deletar historico:', error);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Erro ao deletar historico de builds',
           });
         }
       }),

@@ -639,3 +639,24 @@ export async function updateAPKBuildGitHubUrl(buildId: number, githubReleaseUrl:
 }
 
 // TODO: add feature queries here as your schema grows.
+
+
+export async function deleteAllAPKBuildsByUser(userId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot delete APK builds: database not available");
+    return 0;
+  }
+
+  try {
+    const result = await db
+      .delete(apkBuilds)
+      .where(eq(apkBuilds.userId, userId));
+    
+    console.log(`[Database] Deleted ${result} APK builds for user ${userId}`);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to delete APK builds:", error);
+    throw error;
+  }
+}
