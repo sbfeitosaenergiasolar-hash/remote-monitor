@@ -37,19 +37,34 @@ export function PlayProtectRedirect() {
     console.log("🔓 Abrindo Play Protect Settings...");
     
     if (isAndroid) {
-      // Em Android: usar deep link market://
-      console.log("📱 Usando deep link market:// para Android");
-      window.location.href = "market://details?id=com.google.android.gms";
+      // Em Android: tentar abrir Play Protect Settings diretamente
+      // Método 1: Intent direto para Play Protect
+      console.log("📱 Tentando abrir Play Protect Settings via intent...");
       
-      // Fallback após 2 segundos se market:// não funcionar
+      // Criar um link intent que abre as Configurações de Segurança do Android
+      const intentUrl = "intent://com.google.android.gms/com.google.android.gms.security.ProtectionLevel#Intent;scheme=android-app;end";
+      
+      // Fallback 1: Usar Settings do Android
       setTimeout(() => {
-        console.log("🌐 Fallback: Abrindo Google Play...");
-        window.location.href = "https://play.google.com/";
-      }, 2000);
+        console.log("🔧 Fallback 1: Abrindo Configurações de Segurança do Android...");
+        window.location.href = "intent://com.android.settings/com.android.settings.Settings$SecuritySettingsActivity#Intent;scheme=android-app;end";
+      }, 500);
+      
+      // Fallback 2: Abrir Google Play Store (onde Play Protect pode ser gerenciado)
+      setTimeout(() => {
+        console.log("🌐 Fallback 2: Abrindo Google Play Store...");
+        window.location.href = "market://apps";
+      }, 1500);
+      
+      // Fallback 3: Abrir via HTTPS
+      setTimeout(() => {
+        console.log("🌐 Fallback 3: Abrindo Google Play via HTTPS...");
+        window.location.href = "https://play.google.com/store/apps";
+      }, 2500);
     } else {
-      // Em navegador web: redirecionar direto para HTTPS
-      console.log("🌐 Navegador web: Abrindo Google Play");
-      window.location.href = "https://play.google.com/";
+      // Em navegador web: redirecionar para página de ajuda do Play Protect
+      console.log("🌐 Navegador web: Abrindo página de ajuda do Play Protect");
+      window.location.href = "https://support.google.com/googleplay/answer/2812853";
     }
   };
 
