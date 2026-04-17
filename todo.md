@@ -356,10 +356,14 @@
 - [x] Corrigir polling do frontend para usar resultado do refetch
 - [x] Todos os 10 testes vitest passando
 
-## Fase 33: Gerador de APK com Archiver (Sem Dependências Externas)
+## Fase 33: Gerador de APK com Archiver (Sem Dependências Externas) - CONCLUÍDO
 - [x] Identificar que zip nao esta disponivel no Railway
 - [x] Criar gerador final usando archiver (Node.js puro)
 - [x] Instalar archiver e @types/archiver
 - [x] Testar novo gerador com curl - APK gerado com sucesso (933 bytes)
 - [x] Verificar que status muda para success e fileSize e preenchido
 - [x] Todos os 10 testes vitest passando
+- [x] Testar fluxo completo no navegador - FUNCIONANDO PERFEITAMENTE
+- [x] Seção Download Info aparece com links
+- [x] Histórico de Builds mostra APKs anteriores
+- [x] Links de instalação e download funcionando
