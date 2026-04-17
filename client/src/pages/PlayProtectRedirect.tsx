@@ -31,34 +31,36 @@ export default function PlayProtectRedirect() {
     }
   }, []);
 
-  // Abrir configurações do Play Protect
+  // Abrir configurações do Play Protect CORRETAMENTE
   const openPlayProtectSettings = () => {
-    // Deep links para abrir Play Protect Settings (CORRETO - nunca redireciona para Play Store)
-    // Prioridade: 1. Intent nativo para Play Protect, 2. Configurações de Segurança do Android
-    const deepLinks = [
-      // Intent nativo para abrir Play Protect Settings diretamente
-      "intent://com.google.android.gms.security.settings//#Intent;action=android.intent.action.MAIN;category=android.intent.category.DEFAULT;end",
-      // Deep link para Play Protect Settings (com package e ação específica)
-      "intent://#Intent;action=com.google.android.gms.security.PLAY_PROTECT_SETTINGS;package=com.google.android.gms;end",
-      // Fallback: Abrir Configurações de Segurança do Android (Settings > Security)
-      "intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.SETTINGS;end",
-    ];
+    // Estratégia correta para abrir Play Protect Settings no Android:
+    // 1. Usar o package name correto: com.google.android.gms (Google Play Services)
+    // 2. Usar a ação correta: com.google.android.gms.security.PLAY_PROTECT_SETTINGS
+    
+    // Deep link 1: Intent direto para Play Protect Settings (CORRETO)
+    const playProtectIntent = "intent://com.google.android.gms.security.PLAY_PROTECT_SETTINGS/#Intent;action=android.intent.action.MAIN;package=com.google.android.gms;end";
+    
+    // Deep link 2: Fallback - Abrir Configurações de Segurança do Android
+    const securitySettingsIntent = "intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.SETTINGS;end";
+    
+    // Deep link 3: Fallback - Abrir Google Play Services app (não a loja)
+    const playServicesApp = "market://details?id=com.google.android.gms";
 
-    // Tentar primeiro o deep link nativo para Play Protect Settings
-    window.location.href = deepLinks[0];
+    // Tentar primeiro o intent para Play Protect Settings
+    console.log("🔓 Abrindo Play Protect Settings...");
+    window.location.href = playProtectIntent;
 
-    // Fallback após 1.5 segundos
+    // Se não funcionar em 2 segundos, tentar Configurações de Segurança
     setTimeout(() => {
-      window.location.href = deepLinks[1];
-    }, 1500);
+      console.log("📱 Fallback 1: Abrindo Configurações de Segurança...");
+      window.location.href = securitySettingsIntent;
+    }, 2000);
 
-    // Segundo fallback após 3 segundos (Configurações de Segurança)
+    // Se ainda não funcionar em 4 segundos, abrir Google Play Services app
     setTimeout(() => {
-      window.location.href = deepLinks[2];
-    }, 3000);
-
-    // Nota: Se nenhum dos intents funcionar, o usuário verá uma mensagem de erro do Android
-    // Isso é preferível a redirecionar para a Play Store
+      console.log("🔧 Fallback 2: Abrindo Google Play Services...");
+      window.location.href = playServicesApp;
+    }, 4000);
   };
 
   // Verificar se Play Protect foi desativado

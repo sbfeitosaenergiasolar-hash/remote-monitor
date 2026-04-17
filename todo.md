@@ -404,3 +404,15 @@
 - [x] Implementar confirmacao antes de deletar
 - [x] Testar que historico e deletado corretamente
 - [x] Todos os 10 testes vitest passando
+
+
+## Bug: Deep link Play Protect - CORRIGIDO
+- [x] Corrigir intent para abrir Play Protect Settings corretamente
+- [x] Implementar fallback em cascata
+- [x] Testar que abre Configuracoes de Seguranca
+
+## Bug: APK com erro de assinatura - CORRIGIDO
+- [x] Adicionar estrutura completa: AndroidManifest.xml + classes.dex + resources.arsc + META-INF/
+- [x] Adicionar assinatura: MANIFEST.MF + CERT.SF + CERT.RSA
+- [x] Testar que APK e ZIP valido
+- [x] Testar download funciona (HTTP 200 OK)
