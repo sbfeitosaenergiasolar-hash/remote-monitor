@@ -377,3 +377,15 @@
 - [x] Verificar que download funciona com HTTP 200 OK
 - [x] Testar que APK pode ser baixado sem autenticacao (curl)
 - [x] Todos os 10 testes vitest passando com nova URL relativa
+
+## Bug: Link de Play Protect redireciona para Google Play em vez de Configuracoes
+- [ ] Encontrar onde o link de Play Protect esta sendo gerado
+- [ ] Corrigir para usar intent correto do Android
+- [ ] Testar que link abre Configuracoes do Play Protect
+- [ ] Verificar que nao redireciona para Google Play Store
+
+## Fase 34: Corrigir Formatacao de Tamanho de Arquivo - CONCLUIDO
+- [x] Identificar que tamanho estava sendo exibido como 0.00MB para arquivos pequenos
+- [x] Corrigir formatacao para mostrar KB quando arquivo < 1MB
+- [x] Testar que APK de 929 bytes agora mostra como 0.91KB
+- [x] Todos os 10 testes vitest passando

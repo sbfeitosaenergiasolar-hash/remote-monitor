@@ -369,7 +369,13 @@ export function APKBuilder() {
                 <div>
                   <p className="text-sm text-gray-400">Tamanho:</p>
                   <p className="text-white">
-                    {latestBuild.fileSize ? `${(latestBuild.fileSize / 1024 / 1024).toFixed(2)}MB` : "Calculando..."}
+                    {latestBuild.fileSize ? (
+                      latestBuild.fileSize < 1024 * 1024
+                        ? `${(latestBuild.fileSize / 1024).toFixed(2)}KB`
+                        : `${(latestBuild.fileSize / 1024 / 1024).toFixed(2)}MB`
+                    ) : (
+                      "Calculando..."
+                    )}
                   </p>
                 </div>
               </CardContent>
