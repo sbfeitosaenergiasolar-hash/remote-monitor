@@ -219,9 +219,9 @@ export const appRouter = router({
   apk: router({
     build: protectedProcedure
       .input(z.object({
-        appName: z.string().min(1),
-        appUrl: z.string().url(),
-        logoUrl: z.string().optional(),
+        appName: z.string().min(1, "Nome do app é obrigatório"),
+        appUrl: z.string().url("URL inválida").min(1),
+        logoUrl: z.string().optional().or(z.literal("")),
         protectFromUninstall: z.boolean().default(true),
       }))
       .mutation(async ({ input, ctx }) => {
@@ -230,6 +230,14 @@ export const appRouter = router({
         }
 
         try {
+          // Validação adicional
+          if (!input.appUrl.startsWith('http://') && !input.appUrl.startsWith('https://')) {
+            throw new TRPCError({ 
+              code: 'BAD_REQUEST',
+              message: 'URL deve começar com http:// ou https://'
+            });
+          }
+
           const filename = `${input.appName}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.apk`;
           
           const build = await createAPKBuild({

@@ -70,7 +70,17 @@ export function APKBuilder() {
       if (progressInterval) clearInterval(progressInterval);
       setIsBuilding(false);
       setBuildProgress(0);
-      toast.error(`Erro ao gerar APK: ${String(error)}`);
+      
+      // Extrair mensagem de erro
+      let errorMessage = "Erro ao gerar APK";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === "object" && error !== null && "message" in error) {
+        errorMessage = (error as any).message;
+      }
+      
+      console.error("Erro ao gerar APK:", error);
+      toast.error(errorMessage);
     }
   };
 
