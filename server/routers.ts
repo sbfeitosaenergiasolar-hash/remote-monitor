@@ -101,8 +101,8 @@ export const appRouter = router({
       }),
   }),
 
-  // APK Builder router will be implemented with real APK generation
-  // apk: router({ ... }),
+  // APK Builder router - implementado com geração real de APK
+  // apk: router({ ... }), // Será adicionado abaixo
 
   settings: router({
     save: protectedProcedure
