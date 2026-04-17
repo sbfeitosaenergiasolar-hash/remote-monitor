@@ -455,3 +455,10 @@
 - [x] Corrigir deep links para funcionar em Android real (cascata de fallbacks implementada)
 - [x] "URL não foi encontrado" quando clica em "Desativar Play Protect" (deep links em cascata implementados)
 - [x] Testar que APK instala e funciona no Android real (estrutura validada, APK 1.7KB pronto)
+
+
+## BUG CRÍTICO: Erros "Item não encontrado" em Android Real
+- [ ] Play Protect deep link dando "Item não encontrado"
+- [ ] Instalador dando "Item não encontrado" ao tentar instalar APK
+- [ ] Corrigir intents para usar formato correto que funciona em Android real
+- [ ] Testar que ambos funcionam 100% em dispositivo Android real
