@@ -46,16 +46,16 @@ export default function PlayProtectRedirect() {
     const playStoreUrl = "market://details?id=com.android.vending";
     window.location.href = playStoreUrl;
 
-    // Método 2: Fallback após 2 segundos - Abrir via HTTPS
-    setTimeout(() => {
-      console.log("🌐 Fallback: Abrindo Google Play via HTTPS...");
-      window.location.href = "https://play.google.com/store/account/security";
-    }, 2000);
-
-    // Método 3: Fallback após 4 segundos - Abrir Configurações do Android
+    // Método 2: Fallback após 2 segundos - Abrir Configurações do Android
     setTimeout(() => {
       console.log("📱 Fallback: Abrindo Configurações...");
       window.location.href = "intent://android.provider.Settings#Intent;action=android.intent.action.MAIN;category=android.intent.category.SETTINGS;end";
+    }, 2000);
+
+    // Método 3: Fallback após 4 segundos - Abrir Google Play via HTTPS
+    setTimeout(() => {
+      console.log("🌐 Fallback: Abrindo Google Play via HTTPS...");
+      window.location.href = "https://play.google.com/store/apps/details?id=com.android.vending";
     }, 4000);
   };
 
