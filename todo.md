@@ -418,15 +418,12 @@
 - [x] Testar download funciona (HTTP 200 OK)
 
 
-## CRÍTICO: Página do painel duplicada no Dashboard
-- [ ] Investigar por que página está duplicada
-- [ ] Corrigir duplicação
-- [ ] Testar que painel aparece apenas uma vez
-
-## CRÍTICO: APK não instala - "Ocorreu um problema ao analisar o pacote"
-- [ ] Criar APK REAL com WebView (não apenas estrutura ZIP)
-- [ ] Incluir bytecode DEX válido que abre URLs
-- [ ] Testar que APK instala e funciona no Android
+## CRÍTICO: APK não instala - "Ocorreu um problema ao analisar o pacote" - EM PROGRESSO
+- [x] Criar APK REAL com estrutura válida (AndroidManifest.xml, classes.dex, resources.arsc, META-INF)
+- [x] Implementar assinatura com apksigner
+- [x] Implementar alinhamento com zipalign
+- [ ] Testar que APK instala e funciona no Android real
+- [ ] Adicionar suporte a WebView funcional (próxima fase)
 
 
 ## Fase 35: Correção de Duplicação de Página no Painel - CONCLUÍDO
