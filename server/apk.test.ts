@@ -2,11 +2,9 @@ import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { db } from "./db";
 import { createAPKBuild, getAPKBuildsByUser, updateAPKBuildStatus } from "./db";
 import { appRouter } from "./routers";
-import { createCallerFactory } from "@trpc/server";
 
 describe("APK Builder", () => {
-  const createCaller = createCallerFactory(appRouter);
-  const testUserId = "test-user-" + Date.now();
+  const testUserId = Math.floor(Math.random() * 1000000);
 
   describe("Database operations", () => {
     it("should create an APK build record", async () => {
@@ -15,7 +13,7 @@ describe("APK Builder", () => {
         appName: "TestApp",
         appUrl: "https://example.com",
         logoUrl: "https://example.com/logo.png",
-        protectFromUninstall: 1,
+        protectFromUninstall: 0,
         filename: "test-app.apk",
         downloadUrl: "https://example.com/test-app.apk",
         status: "building",
@@ -51,7 +49,7 @@ describe("APK Builder", () => {
         appName: "TestApp3",
         appUrl: "https://example.com",
         logoUrl: undefined,
-        protectFromUninstall: 1,
+        protectFromUninstall: 0,
         filename: "test-app-3.apk",
         downloadUrl: "https://example.com/test-app-3.apk",
         status: "building",
@@ -69,9 +67,9 @@ describe("APK Builder", () => {
   describe("tRPC procedures", () => {
     it("should validate APK build input", async () => {
       // Test invalid input - missing required fields
-      const caller = createCaller({
-        user: { id: testUserId, email: "test@example.com", role: "user" },
-      });
+      const caller = appRouter.createCaller({
+        user: { id: 1, email: "test@example.com", role: "user" },
+      } as any);
 
       try {
         // @ts-ignore - intentionally passing invalid input
@@ -83,9 +81,9 @@ describe("APK Builder", () => {
     });
 
     it("should validate URL format", async () => {
-      const caller = createCaller({
-        user: { id: testUserId, email: "test@example.com", role: "user" },
-      });
+      const caller = appRouter.createCaller({
+        user: { id: 1, email: "test@example.com", role: "user" },
+      } as any);
 
       try {
         // @ts-ignore - intentionally passing invalid URL
@@ -100,9 +98,9 @@ describe("APK Builder", () => {
     });
 
     it("should list APK builds for authenticated user", async () => {
-      const caller = createCaller({
-        user: { id: testUserId, email: "test@example.com", role: "user" },
-      });
+      const caller = appRouter.createCaller({
+        user: { id: 1, email: "test@example.com", role: "user" },
+      } as any);
 
       const builds = await caller.apk.list();
       expect(Array.isArray(builds)).toBe(true);

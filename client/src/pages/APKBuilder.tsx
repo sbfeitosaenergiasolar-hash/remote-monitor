@@ -58,8 +58,29 @@ export function APKBuilder() {
 
       toast.success("APK em construção - Seu APK está sendo gerado. Você receberá o link em breve!");
 
-      // Recarregar lista de builds
-      await listQuery.refetch();
+      // Polling para recarregar lista até o APK estar pronto
+      let isReady = false;
+      let attempts = 0;
+      const maxAttempts = 60;
+      
+      while (!isReady && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        await listQuery.refetch();
+        
+        const builds = listQuery.data || [];
+        const latestBuild = builds[builds.length - 1];
+        
+        if (latestBuild && latestBuild.status === 'success' && latestBuild.fileSize) {
+          isReady = true;
+          toast.success("APK gerado com sucesso! Link disponível abaixo.");
+        }
+        
+        attempts++;
+      }
+      
+      if (!isReady) {
+        toast.warning("APK ainda está sendo processado. Tente recarregar a página em alguns instantes.");
+      }
 
       // Limpar formulário
       setTimeout(() => {

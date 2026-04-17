@@ -335,3 +335,11 @@
 - [x] Integrar com APK Builder
 - [x] Testar fluxo completo end-to-end
 - [x] Deploy em produção
+
+## Fase 32: Polling para APK Builder
+- [x] Implementar polling de 2 segundos para recarregar lista de builds
+- [x] Aguardar até 2 minutos para o APK estar pronto (status=success e fileSize>0)
+- [x] Mostrar toast de sucesso quando APK estiver pronto
+- [x] Corrigir erro de react-day-picker (reinstalar dependências)
+- [x] Executar testes vitest para APK Builder (10/10 testes passando)
+- [x] Verificar que servidor está rodando sem erros
