@@ -285,7 +285,7 @@ export const appRouter = router({
             logoUrl: input.logoUrl,
             protectFromUninstall: input.protectFromUninstall ? 1 : 0,
             filename,
-            downloadUrl: `https://remotemon-vhmaxpe6.manus.space/apks/${filename}`,
+            downloadUrl: `/apks/${filename}`, // URL relativo funciona em qualquer domínio
             status: 'building',
           });
 
@@ -314,7 +314,7 @@ export const appRouter = router({
               await updateAPKBuildFileSize(build.id, fileSize);
               
               // Tentar fazer upload para GitHub Releases
-              let downloadUrl = `https://remotemon-vhmaxpe6.manus.space/apks/${filename}`;
+              let downloadUrl = `/apks/${filename}`; // URL relativo funciona em qualquer domínio
               if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL) {
                 try {
                   const repoMatch = process.env.GITHUB_REPO_URL.match(/github\.com\/([^\/]+)\/([^\/]+)/);

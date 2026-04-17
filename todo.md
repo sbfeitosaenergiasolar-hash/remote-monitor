@@ -367,3 +367,13 @@
 - [x] Seção Download Info aparece com links
 - [x] Histórico de Builds mostra APKs anteriores
 - [x] Links de instalação e download funcionando
+
+## Bug: Download de APK requer autenticacao - CORRIGIDO
+- [x] Verificar como link de download esta sendo servido
+- [x] Identificar que URL estava hardcoded com dominio errado
+- [x] Rota publica /apks/:filename ja existia
+- [x] Trocar URL hardcoded para URL relativo /apks/...
+- [x] Testar que URL relativo funciona em qualquer dominio
+- [x] Verificar que download funciona com HTTP 200 OK
+- [x] Testar que APK pode ser baixado sem autenticacao (curl)
+- [x] Todos os 10 testes vitest passando com nova URL relativa
