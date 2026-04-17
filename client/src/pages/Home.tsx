@@ -128,15 +128,7 @@ export default function Home({ user, onLogout }: HomeProps) {
             <span className="text-sm text-slate-400">
               Usuário: <span className="text-cyan-400">{user?.name}</span>
             </span>
-            <Button
-              onClick={handleLogoutClick}
-              variant="outline"
-              size="sm"
-              className="gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              Sair
-            </Button>
+            {/* Botão Sair removido - já existe na sidebar */}
           </div>
         </div>
 

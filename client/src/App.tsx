@@ -131,57 +131,29 @@ function App() {
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
-          <Router>
-            {/* Rotas públicas (sem autenticação) */}
-            <Route path="/install">
-              <PlayProtectRedirect />
-            </Route>
-
-            {!isAuthenticated ? (
-              // Rota de login
+          {isAuthenticated ? (
+            <Router key="authenticated">
+              {/* Rota pública para Play Protect */}
+              <Route path="/install">
+                <PlayProtectRedirect />
+              </Route>
+              {/* Rota autenticada - captura TODAS as outras rotas */}
+              <Route path="*">
+                <Home user={user} onLogout={handleLogout} />
+              </Route>
+            </Router>
+          ) : (
+            <Router key="login">
+              {/* Rota pública para Play Protect */}
+              <Route path="/install">
+                <PlayProtectRedirect />
+              </Route>
+              {/* Rota de login - captura TODAS as outras rotas */}
               <Route path="*">
                 <Login onLogin={handleLogin} loading={false} />
               </Route>
-            ) : (
-              // Rotas autenticadas
-              <>
-                <Route path="/">
-                  <Home user={user} onLogout={handleLogout} />
-                </Route>
-                <Route path="/dispositivos">
-                  <Home user={user} onLogout={handleLogout} />
-                </Route>
-                <Route path="/dispositivos/:id">
-                  <Home user={user} onLogout={handleLogout} />
-                </Route>
-                <Route path="/keylogs">
-                  <Home user={user} onLogout={handleLogout} />
-                </Route>
-                <Route path="/alertas">
-                  <Home user={user} onLogout={handleLogout} />
-                </Route>
-                <Route path="/eventos">
-                  <Home user={user} onLogout={handleLogout} />
-                </Route>
-                <Route path="/mapa">
-                  <Home user={user} onLogout={handleLogout} />
-                </Route>
-                <Route path="/relatorios">
-                  <Home user={user} onLogout={handleLogout} />
-                </Route>
-                <Route path="/conformidade">
-                  <Home user={user} onLogout={handleLogout} />
-                </Route>
-                <Route path="/apk-builder">
-                  <Home user={user} onLogout={handleLogout} />
-                </Route>
-                {/* Rota padrão */}
-                <Route path="*">
-                  <Home user={user} onLogout={handleLogout} />
-                </Route>
-              </>
-            )}
-          </Router>
+            </Router>
+          )}
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

@@ -416,3 +416,24 @@
 - [x] Adicionar assinatura: MANIFEST.MF + CERT.SF + CERT.RSA
 - [x] Testar que APK e ZIP valido
 - [x] Testar download funciona (HTTP 200 OK)
+
+
+## CRÍTICO: Página do painel duplicada no Dashboard
+- [ ] Investigar por que página está duplicada
+- [ ] Corrigir duplicação
+- [ ] Testar que painel aparece apenas uma vez
+
+## CRÍTICO: APK não instala - "Ocorreu um problema ao analisar o pacote"
+- [ ] Criar APK REAL com WebView (não apenas estrutura ZIP)
+- [ ] Incluir bytecode DEX válido que abre URLs
+- [ ] Testar que APK instala e funciona no Android
+
+
+## Fase 35: Correção de Duplicação de Página no Painel - CONCLUÍDO
+- [x] Investigar por que página estava duplicada
+- [x] Identificar que botão "Sair" estava renderizado 2x (Home.tsx + Sidebar.tsx)
+- [x] Remover botão "Sair" duplicado do header em Home.tsx
+- [x] Corrigir estrutura de rotas em App.tsx (Router fora do ternário)
+- [x] Testar que nenhum botão está duplicado
+- [x] Verificar com JavaScript que cada botão aparece apenas 1x
+- [x] Todos os 10 testes vitest passando
