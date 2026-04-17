@@ -355,3 +355,11 @@
 - [x] Verificar que status muda para 'success' e fileSize é preenchido
 - [x] Corrigir polling do frontend para usar resultado do refetch
 - [x] Todos os 10 testes vitest passando
+
+## Fase 33: Gerador de APK com Archiver (Sem Dependências Externas)
+- [x] Identificar que zip nao esta disponivel no Railway
+- [x] Criar gerador final usando archiver (Node.js puro)
+- [x] Instalar archiver e @types/archiver
+- [x] Testar novo gerador com curl - APK gerado com sucesso (933 bytes)
+- [x] Verificar que status muda para success e fileSize e preenchido
+- [x] Todos os 10 testes vitest passando

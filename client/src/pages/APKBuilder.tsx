@@ -88,6 +88,13 @@ export function APKBuilder() {
         toast.warning("APK ainda está sendo processado. Tente recarregar a página em alguns instantes.");
       }
 
+      // Forçar atualização final
+      console.log("[DEBUG] Polling finalizado. isReady:", isReady);
+      console.log("[DEBUG] listQuery.data:", listQuery.data);
+      console.log("[DEBUG] builds:", builds);
+      console.log("[DEBUG] successfulBuilds:", builds.filter((b) => b.status === "success"));
+      console.log("[DEBUG] latestBuild:", latestBuild);
+
       // Limpar formulário
       setTimeout(() => {
         setIsBuilding(false);
