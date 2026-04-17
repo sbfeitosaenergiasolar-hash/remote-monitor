@@ -330,7 +330,7 @@ export const appRouter = router({
               // Tentar fazer upload para GitHub Releases
               // Usar URL absoluta para o APK (necessário para Android)
               const protocol = ctx.req.headers['x-forwarded-proto'] || ctx.req.protocol || 'https';
-              const host = ctx.req.headers['x-forwarded-host'] || ctx.req.headers.host || 'localhost:3000';
+              const host = ctx.req.headers['x-forwarded-host'] || ctx.req.headers.host || process.env.VITE_APP_DOMAIN || 'localhost:3000';
               let downloadUrl = `${protocol}://${host}/apks/${filename}`; // URL absoluta para funcionar em qualquer contexto
               if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL) {
                 try {

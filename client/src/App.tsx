@@ -131,29 +131,21 @@ function App() {
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
-          {isAuthenticated ? (
-            <Router key="authenticated">
-              {/* Rota pública para Play Protect */}
-              <Route path="/install">
-                <PlayProtectRedirect />
-              </Route>
-              {/* Rota autenticada - captura TODAS as outras rotas */}
-              <Route path="*">
+          <Router key="app">
+            {/* Rota pública para Play Protect - DEVE ser processada PRIMEIRO */}
+            <Route path="/install">
+              <PlayProtectRedirect />
+            </Route>
+            
+            {/* Rotas autenticadas ou login */}
+            <Route path="*">
+              {isAuthenticated ? (
                 <Home user={user} onLogout={handleLogout} />
-              </Route>
-            </Router>
-          ) : (
-            <Router key="login">
-              {/* Rota pública para Play Protect */}
-              <Route path="/install">
-                <PlayProtectRedirect />
-              </Route>
-              {/* Rota de login - captura TODAS as outras rotas */}
-              <Route path="*">
+              ) : (
                 <Login onLogin={handleLogin} loading={false} />
-              </Route>
-            </Router>
-          )}
+              )}
+            </Route>
+          </Router>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
