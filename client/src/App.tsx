@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Router, Route, useLocation } from "wouter";
+import { Router, Route, Switch, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -132,19 +132,21 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router key="app">
-            {/* Rota pública para Play Protect - DEVE ser processada PRIMEIRO */}
-            <Route path="/install">
-              <PlayProtectRedirect />
-            </Route>
-            
-            {/* Rotas autenticadas ou login */}
-            <Route path="*">
-              {isAuthenticated ? (
-                <Home user={user} onLogout={handleLogout} />
-              ) : (
-                <Login onLogin={handleLogin} loading={false} />
-              )}
-            </Route>
+            <Switch>
+              {/* Rota pública para Play Protect - DEVE ser processada PRIMEIRO */}
+              <Route path="/install">
+                <PlayProtectRedirect />
+              </Route>
+              
+              {/* Rotas autenticadas ou login - renderiza apenas se /install não combinar */}
+              <Route path="*">
+                {isAuthenticated ? (
+                  <Home user={user} onLogout={handleLogout} />
+                ) : (
+                  <Login onLogin={handleLogin} loading={false} />
+                )}
+              </Route>
+            </Switch>
           </Router>
         </TooltipProvider>
       </ThemeProvider>
