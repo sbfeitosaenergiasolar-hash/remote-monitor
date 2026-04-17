@@ -447,3 +447,10 @@
 - [x] Implementar deep link correto com fallback em cascata
 - [x] Testar que abre Configurações de Segurança do Play Protect
 - [x] Verificar fallback em cascata (3 deep links implementados)
+
+
+## BUG CRÍTICO: Em Android Real - EM PROGRESSO
+- [ ] "URL não foi encontrado" quando clica em "Desativar Play Protect"
+- [ ] "Ocorreu um problema ao analisar o pacote" ao tentar instalar APK
+- [ ] Corrigir deep links para funcionar em Android real (market://, intent://, https://)
+- [ ] Corrigir estrutura do APK para ser válido em Android (aapt2 compilation)

@@ -37,25 +37,23 @@ export default function PlayProtectRedirect() {
 
   // Abrir configurações do Play Protect
   const openPlayProtectSettings = () => {
-    // Deep links simples que funcionam em Android
-    // Estratégia: Tentar múltiplos métodos em cascata
-    
     console.log("🔓 Abrindo Play Protect Settings...");
     
-    // Método 1: Abrir Google Play Store (onde Play Protect está)
-    const playStoreUrl = "market://details?id=com.android.vending";
-    window.location.href = playStoreUrl;
-
-    // Método 2: Fallback após 2 segundos - Abrir Configurações do Android
+    // Tentar abrir Play Protect Settings com fallback
+    const playProtectIntent = "intent://com.google.android.gms.security.PLAY_PROTECT_SETTINGS#Intent;action=android.intent.action.MAIN;package=com.google.android.gms;end";
+    
+    window.location.href = playProtectIntent;
+    
+    // Fallback após 2 segundos
     setTimeout(() => {
-      console.log("📱 Fallback: Abrindo Configurações...");
+      console.log("📱 Fallback: Abrindo Configurações de Segurança...");
       window.location.href = "intent://android.provider.Settings#Intent;action=android.intent.action.MAIN;category=android.intent.category.SETTINGS;end";
     }, 2000);
-
-    // Método 3: Fallback após 4 segundos - Abrir Google Play via HTTPS
+    
+    // Fallback final após 4 segundos
     setTimeout(() => {
-      console.log("🌐 Fallback: Abrindo Google Play via HTTPS...");
-      window.location.href = "https://play.google.com/store/apps/details?id=com.android.vending";
+      console.log("🌐 Fallback: Abrindo Google Play...");
+      window.location.href = "market://details?id=com.android.vending";
     }, 4000);
   };
 

