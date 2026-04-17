@@ -32,15 +32,14 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
-# Copy public and tools directories
-COPY public ./public
-COPY tools ./tools
+# Copy public directory if it exists
+RUN mkdir -p /app/public /app/tools
+
+# Copy tools directory from builder
+COPY --from=builder /app/tools /app/tools
 
 # Create necessary directories for APK generation
 RUN mkdir -p /tmp/apk-builds /app/public/apks
-
-# Verify tools are present
-RUN ls -la /app/tools/ && ls -la /app/tools/lib/
 
 # Expose port
 EXPOSE 8080
