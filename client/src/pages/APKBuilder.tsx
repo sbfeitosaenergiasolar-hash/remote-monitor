@@ -125,6 +125,16 @@ export function APKBuilder() {
   // Mostrar o build mais recente que tem fileSize (sucesso), ou o mais recente se nenhum tiver fileSize
   const latestBuild = builds.find((b) => b.fileSize && b.fileSize > 0) || builds[0];
   
+  // Debug detalhado
+  const { useEffect } = require('react');
+  useEffect(() => {
+    if (builds.length > 0) {
+      console.log('[APKBuilder] Total builds:', builds.length);
+      console.log('[APKBuilder] First 3 builds:', builds.slice(0, 3).map(b => ({ appName: b.appName, fileSize: b.fileSize, status: b.status })));
+      console.log('[APKBuilder] Selected latestBuild:', { appName: latestBuild?.appName, fileSize: latestBuild?.fileSize, status: latestBuild?.status });
+    }
+  }, [builds, latestBuild]);
+  
   // Debug
   console.log('[APKBuilder] builds:', builds.length, 'latestBuild:', latestBuild?.appName, 'fileSize:', latestBuild?.fileSize);
 

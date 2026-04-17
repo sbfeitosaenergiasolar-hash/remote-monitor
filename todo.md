@@ -462,3 +462,10 @@
 - [x] Instalador dando "Item não encontrado" ao tentar instalar APK (fluxo corrigido)
 - [x] Corrigir intents para usar formato correto que funciona em Android real (market:// + https://)
 - [x] Testar que ambos funcionam 100% em dispositivo Android real (testes locais validados)
+
+
+## BUG: APK base não encontrado - CORRIGIDO
+- [x] Criar script para gerar APK base mínimo
+- [x] Executar script para criar apk-base.apk
+- [x] Testar gerador de APK com arquivo base
+- [x] Verificar que fileSize é preenchido corretamente
