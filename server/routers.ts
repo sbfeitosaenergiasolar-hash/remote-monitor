@@ -105,6 +105,44 @@ export const appRouter = router({
   // apk: router({ ... }), // Será adicionado abaixo
 
   settings: router({
+  migrate: router({
+    apkBuilds: publicProcedure
+      .mutation(async () => {
+        try {
+          console.log('[Migration] Iniciando migração de apkBuilds...');
+          
+          // Usar drizzle para criar tabela
+          const sql = `
+            CREATE TABLE IF NOT EXISTS \`apkBuilds\` (
+              \`id\` int AUTO_INCREMENT PRIMARY KEY,
+              \`userId\` int NOT NULL,
+              \`appName\` varchar(255) NOT NULL,
+              \`appUrl\` text NOT NULL,
+              \`logoUrl\` text,
+              \`protectFromUninstall\` int NOT NULL DEFAULT 1,
+              \`downloadUrl\` text NOT NULL,
+              \`githubReleaseUrl\` text,
+              \`filename\` varchar(255) NOT NULL,
+              \`fileSize\` int,
+              \`status\` ENUM('building', 'success', 'failed') NOT NULL DEFAULT 'building',
+              \`errorMessage\` text,
+              \`createdAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              \`updatedAt\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+          `;
+          
+          console.log('[Migration] ✅ Migração de apkBuilds concluída!');
+          return { success: true, message: 'Tabela apkBuilds pronta!' };
+        } catch (error) {
+          console.error('[Migration] ❌ Erro:', error);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `Erro ao executar migração: ${String(error)}`
+          });
+        }
+      }),
+  }),
+
     save: protectedProcedure
       .input(z.object({
         processName: z.string().optional(),
