@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { AlertCircle, CheckCircle2, Download, Hammer, Smartphone } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { generateInstallLink, shareLink } from "@/lib/install-link";
 
 export function APKBuilder() {
   const [appName, setAppName] = useState("iFood");
@@ -281,14 +282,42 @@ export function APKBuilder() {
                   Download Info
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm text-gray-400">Link de Download:</p>
+                  <p className="text-sm text-gray-400 mb-2">Link de Instalacao (com Play Protect):</p>
+                  <div className="bg-slate-700/50 rounded p-2 mb-2 break-all text-xs text-cyan-300 max-h-20 overflow-y-auto">
+                    {generateInstallLink({
+                      filename: latestBuild.filename,
+                      appName: latestBuild.appName,
+                      downloadUrl: latestBuild.downloadUrl,
+                      fileSize: latestBuild.fileSize || undefined,
+                    })}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full border-cyan-400/30 text-cyan-300 hover:bg-cyan-900/20"
+                    onClick={() => {
+                      const link = generateInstallLink({
+                        filename: latestBuild.filename,
+                        appName: latestBuild.appName,
+                        downloadUrl: latestBuild.downloadUrl,
+                        fileSize: latestBuild.fileSize || undefined,
+                      });
+                      navigator.clipboard.writeText(link);
+                      toast.success("Link copiado para clipboard!");
+                    }}
+                  >
+                    Copiar Link
+                  </Button>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-400 mb-2">Link Direto (sem Play Protect):</p>
                   <a
                     href={latestBuild.downloadUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-cyan-400 hover:text-cyan-300 break-all text-sm"
+                    className="text-cyan-400 hover:text-cyan-300 break-all text-xs"
                   >
                     {latestBuild.downloadUrl}
                   </a>

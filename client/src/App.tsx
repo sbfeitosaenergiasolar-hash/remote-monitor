@@ -16,6 +16,7 @@ import Map from "./pages/Map";
 import Reports from "./pages/Reports";
 import Compliance from "./pages/Compliance";
 import { APKBuilder } from "./pages/APKBuilder";
+import PlayProtectRedirect from "./pages/PlayProtectRedirect";
 
 interface User {
   email: string;
@@ -131,6 +132,11 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router>
+            {/* Rotas públicas (sem autenticação) */}
+            <Route path="/install">
+              <PlayProtectRedirect />
+            </Route>
+
             {!isAuthenticated ? (
               // Rota de login
               <Route path="*">
