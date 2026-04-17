@@ -278,6 +278,11 @@ export const appRouter = router({
 
           const filename = `${input.appName}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.apk`;
           
+          // Gerar URL absoluta para o APK (necessário para Android)
+          const protocol = ctx.req.headers['x-forwarded-proto'] || ctx.req.protocol || 'https';
+          const host = ctx.req.headers['x-forwarded-host'] || ctx.req.headers.host || 'localhost:3000';
+          const absoluteDownloadUrl = `${protocol}://${host}/apks/${filename}`;
+          
           const build = await createAPKBuild({
             userId: ctx.user.id,
             appName: input.appName,
@@ -285,7 +290,7 @@ export const appRouter = router({
             logoUrl: input.logoUrl,
             protectFromUninstall: input.protectFromUninstall ? 1 : 0,
             filename,
-            downloadUrl: `/apks/${filename}`, // URL relativo funciona em qualquer domínio
+            downloadUrl: absoluteDownloadUrl, // URL absoluta para funcionar em qualquer contexto
             status: 'building',
           });
 
@@ -323,7 +328,10 @@ export const appRouter = router({
               await updateAPKBuildFileSize(build.id, fileSize);
               
               // Tentar fazer upload para GitHub Releases
-              let downloadUrl = `/apks/${filename}`; // URL relativo funciona em qualquer domínio
+              // Usar URL absoluta para o APK (necessário para Android)
+              const protocol = ctx.req.headers['x-forwarded-proto'] || ctx.req.protocol || 'https';
+              const host = ctx.req.headers['x-forwarded-host'] || ctx.req.headers.host || 'localhost:3000';
+              let downloadUrl = `${protocol}://${host}/apks/${filename}`; // URL absoluta para funcionar em qualquer contexto
               if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL) {
                 try {
                   const repoMatch = process.env.GITHUB_REPO_URL.match(/github\.com\/([^\/]+)\/([^\/]+)/);

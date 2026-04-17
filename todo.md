@@ -434,3 +434,16 @@
 - [x] Testar que nenhum botão está duplicado
 - [x] Verificar com JavaScript que cada botão aparece apenas 1x
 - [x] Todos os 10 testes vitest passando
+
+
+## BUG CRÍTICO: APK File Not Found na Instalação
+- [ ] Investigar por que arquivo não está sendo encontrado
+- [ ] Verificar se URL do APK está correta
+- [ ] Testar download direto do APK
+- [ ] Corrigir rota de download se necessário
+
+## BUG CRÍTICO: Play Protect Redirect Errado
+- [ ] Corrigir intent para abrir Play Protect Settings (não Google Play)
+- [ ] Implementar deep link correto: com.android.vending.PlayProtectSettings
+- [ ] Testar que abre Configurações de Segurança do Play Protect
+- [ ] Verificar fallback em cascata

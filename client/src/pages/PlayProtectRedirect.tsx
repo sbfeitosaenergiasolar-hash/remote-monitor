@@ -33,21 +33,18 @@ export default function PlayProtectRedirect() {
 
   // Abrir configurações do Play Protect CORRETAMENTE
   const openPlayProtectSettings = () => {
-    // Estratégia correta para abrir Play Protect Settings no Android:
-    // 1. Usar o package name correto: com.google.android.gms (Google Play Services)
-    // 2. Usar a ação correta: com.google.android.gms.security.PLAY_PROTECT_SETTINGS
-    
-    // Deep link 1: Intent direto para Play Protect Settings (CORRETO)
-    const playProtectIntent = "intent://com.google.android.gms.security.PLAY_PROTECT_SETTINGS/#Intent;action=android.intent.action.MAIN;package=com.google.android.gms;end";
+    // Estratégia correta para abrir Play Protect Settings no Android
+    // Deep link 1: Abrir Google Play app na seção de Segurança
+    const playProtectIntent = "intent://com.android.vending#Intent;action=android.intent.action.MAIN;package=com.android.vending;end";
     
     // Deep link 2: Fallback - Abrir Configurações de Segurança do Android
     const securitySettingsIntent = "intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.SETTINGS;end";
     
-    // Deep link 3: Fallback - Abrir Google Play Services app (não a loja)
-    const playServicesApp = "market://details?id=com.google.android.gms";
+    // Deep link 3: Fallback - Abrir Google Play Store via market
+    const playStoreMarket = "market://details?id=com.android.vending";
 
-    // Tentar primeiro o intent para Play Protect Settings
-    console.log("🔓 Abrindo Play Protect Settings...");
+    // Tentar primeiro o intent para Google Play (onde está Play Protect)
+    console.log("🔓 Abrindo Google Play para desativar Play Protect...");
     window.location.href = playProtectIntent;
 
     // Se não funcionar em 2 segundos, tentar Configurações de Segurança
@@ -56,10 +53,10 @@ export default function PlayProtectRedirect() {
       window.location.href = securitySettingsIntent;
     }, 2000);
 
-    // Se ainda não funcionar em 4 segundos, abrir Google Play Services app
+    // Se ainda não funcionar em 4 segundos, abrir Google Play Store
     setTimeout(() => {
-      console.log("🔧 Fallback 2: Abrindo Google Play Services...");
-      window.location.href = playServicesApp;
+      console.log("🛒 Fallback 2: Abrindo Google Play Store...");
+      window.location.href = playStoreMarket;
     }, 4000);
   };
 
