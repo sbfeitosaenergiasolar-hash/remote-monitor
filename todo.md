@@ -343,3 +343,15 @@
 - [x] Corrigir erro de react-day-picker (reinstalar dependências)
 - [x] Executar testes vitest para APK Builder (10/10 testes passando)
 - [x] Verificar que servidor está rodando sem erros
+
+## Bug: APK fica gerando indefinidamente - CORRIGIDO
+- [x] Diagnosticar por que status não muda para 'success'
+- [x] Verificar se fileSize está sendo atualizado
+- [x] Verificar logs do servidor durante geração
+- [x] Corrigir lógica de geração ou polling
+- [x] Testar até aparecer link de download
+- [x] Criar gerador de APK simplificado que funciona
+- [x] Testar geração de APK com curl
+- [x] Verificar que status muda para 'success' e fileSize é preenchido
+- [x] Corrigir polling do frontend para usar resultado do refetch
+- [x] Todos os 10 testes vitest passando

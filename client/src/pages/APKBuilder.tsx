@@ -65,12 +65,18 @@ export function APKBuilder() {
       
       while (!isReady && attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 2000));
-        await listQuery.refetch();
         
-        const builds = listQuery.data || [];
+        // Refetch retorna o resultado diretamente
+        const refetchResult = await listQuery.refetch();
+        const builds = refetchResult.data || [];
         const latestBuild = builds[builds.length - 1];
         
-        if (latestBuild && latestBuild.status === 'success' && latestBuild.fileSize) {
+        // Verificar se o build mais recente é o que acabamos de criar
+        if (latestBuild && 
+            latestBuild.appName === appName && 
+            latestBuild.status === 'success' && 
+            latestBuild.fileSize && 
+            latestBuild.fileSize > 0) {
           isReady = true;
           toast.success("APK gerado com sucesso! Link disponível abaixo.");
         }
