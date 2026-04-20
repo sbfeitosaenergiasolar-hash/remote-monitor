@@ -638,6 +638,24 @@ export async function updateAPKBuildGitHubUrl(buildId: number, githubReleaseUrl:
   }
 }
 
+export async function updateAPKBuildDownloadUrl(buildId: number, downloadUrl: string): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update APK build download URL: database not available");
+    return;
+  }
+
+  try {
+    await db
+      .update(apkBuilds)
+      .set({ downloadUrl, updatedAt: new Date() })
+      .where(eq(apkBuilds.id, buildId));
+  } catch (error) {
+    console.error("[Database] Failed to update APK build download URL:", error);
+    throw error;
+  }
+}
+
 // TODO: add feature queries here as your schema grows.
 
 
