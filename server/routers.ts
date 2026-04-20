@@ -330,11 +330,23 @@ export const appRouter = router({
               const fileSize = fs.statSync(apkPath).size;
               await updateAPKBuildFileSize(build.id, fileSize);
               
-              // Tentar fazer upload para GitHub Releases
-              // Usar URL absoluta para o APK (necessário para Android)
+              // Definir protocol e host para URLs
               const protocol = ctx.req.headers['x-forwarded-proto'] || ctx.req.protocol || 'https';
               const host = ctx.req.headers['x-forwarded-host'] || ctx.req.headers.host || process.env.VITE_APP_DOMAIN || 'localhost:3000';
-              let downloadUrl = `${protocol}://${host}/apks/${filename}`; // URL absoluta para funcionar em qualquer contexto
+              
+              // Fazer upload para S3 (Manus Storage)
+              let downloadUrl = `${protocol}://${host}/apks/${filename}`; // URL padrão (local)
+              try {
+                console.log('[APK] Fazendo upload para S3...');
+                const s3Result = await storagePut(`apks/${filename}`, apkBuffer, 'application/vnd.android.package-archive');
+                downloadUrl = s3Result.url; // Usar URL do S3
+                console.log('[APK] Upload para S3 concluído! URL:', downloadUrl);
+              } catch (error) {
+                console.warn('[APK] Aviso ao fazer upload para S3:', error);
+                // Continuar com URL local se S3 falhar
+              }
+              
+              // Tentar fazer upload para GitHub Releases
               if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO_URL) {
                 try {
                   const repoMatch = process.env.GITHUB_REPO_URL.match(/github\.com\/([^\/]+)\/([^\/]+)/);
