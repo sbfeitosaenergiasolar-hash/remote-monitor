@@ -64,6 +64,13 @@
       "when": 1776382189444,
       "tag": "0008_aspiring_nemesis",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1776723014967,
+      "tag": "0009_wakeful_spot",
+      "breakpoints": true
     }
   ]
 }
