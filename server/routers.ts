@@ -406,6 +406,52 @@ export const appRouter = router({
           });
         }
       }),
+
+    runtimeConfig: publicProcedure
+      .input(z.object({
+        buildId: z.number().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        try {
+          // Se não houver buildId, retornar configuração padrão
+          if (!input?.buildId) {
+            return {
+              success: true,
+              config: {
+                panelUrl: process.env.VITE_APP_DOMAIN ? `https://${process.env.VITE_APP_DOMAIN}` : 'https://remotemonitor-production.up.railway.app',
+              },
+            };
+          }
+
+          // Buscar build específico
+          const build = await getAPKBuildsByUser(0); // Usar ID 0 para buscar todos
+          const targetBuild = build.find((b: any) => b.id === input.buildId);
+
+          if (!targetBuild) {
+            return {
+              success: false,
+              config: {
+                panelUrl: process.env.VITE_APP_DOMAIN ? `https://${process.env.VITE_APP_DOMAIN}` : 'https://remotemonitor-production.up.railway.app',
+              },
+            };
+          }
+
+          return {
+            success: true,
+            config: {
+              panelUrl: targetBuild.appUrl,
+            },
+          };
+        } catch (error) {
+          console.error('[APK] Erro ao buscar runtime-config:', error);
+          return {
+            success: false,
+            config: {
+              panelUrl: process.env.VITE_APP_DOMAIN ? `https://${process.env.VITE_APP_DOMAIN}` : 'https://remotemonitor-production.up.railway.app',
+            },
+          };
+        }
+      }),
   }),
 });
 

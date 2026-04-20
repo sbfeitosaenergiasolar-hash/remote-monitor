@@ -118,6 +118,30 @@ async function startServer() {
     next();
   });
 
+  // REST API para APK runtime-config
+  app.get('/api/apk/runtime-config', (req: express.Request, res: express.Response) => {
+    try {
+      const panelUrl = process.env.VITE_APP_DOMAIN 
+        ? `https://${process.env.VITE_APP_DOMAIN}` 
+        : 'https://remotemonitor-production.up.railway.app';
+      
+      res.json({
+        success: true,
+        config: {
+          panelUrl: panelUrl,
+        },
+      });
+    } catch (error) {
+      console.error('[APK] Erro ao buscar runtime-config:', error);
+      res.status(500).json({
+        success: false,
+        config: {
+          panelUrl: 'https://remotemonitor-production.up.railway.app',
+        },
+      });
+    }
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",
