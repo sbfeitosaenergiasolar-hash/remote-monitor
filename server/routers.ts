@@ -332,14 +332,13 @@ export const appRouter = router({
               const fileSize = fs.statSync(apkPath).size;
               await updateAPKBuildFileSize(build.id, fileSize);
               
-              // Definir protocol e host para URLs
-              const protocol = ctx.req.headers['x-forwarded-proto'] || ctx.req.protocol || 'https';
-              const host = ctx.req.headers['x-forwarded-host'] || ctx.req.headers.host || process.env.VITE_APP_DOMAIN || 'localhost:3000';
-              
-              // Usar URL local para download (APK já foi salvo em public/apks/)
-              const downloadUrl = `${protocol}://${host}/apks/${filename}`;
-              console.log('[APK] URL de download:', downloadUrl);
+              // Usar URL relativa para download (funciona em qualquer domínio)
+              // URL relativa é mais segura e evita problemas de mixed content
+              const downloadUrl = `/apks/${filename}`;
+              console.log('[APK] URL de download relativa:', downloadUrl);
               console.log('[APK] Tamanho do APK:', (apkBuffer.length / 1024 / 1024).toFixed(2), 'MB');
+              console.log('[APK] Arquivo salvo em:', apkPath);
+              console.log('[APK] Será acessível em:', downloadUrl);
               
               // Atualizar downloadUrl no banco de dados
               try {
