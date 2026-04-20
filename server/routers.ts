@@ -334,18 +334,18 @@ export const appRouter = router({
               const protocol = ctx.req.headers['x-forwarded-proto'] || ctx.req.protocol || 'https';
               const host = ctx.req.headers['x-forwarded-host'] || ctx.req.headers.host || process.env.VITE_APP_DOMAIN || 'localhost:3000';
               
-              // Fazer upload para S3 (Manus Storage)
-              let downloadUrl = `${protocol}://${host}/apks/${filename}`; // URL padrão (local)
+              // Usar URL local para download (APK já foi salvo em public/apks/)
+              const downloadUrl = `${protocol}://${host}/apks/${filename}`;
+              console.log('[APK] URL de download:', downloadUrl);
+              console.log('[APK] Tamanho do APK:', (apkBuffer.length / 1024 / 1024).toFixed(2), 'MB');
+              
+              // Atualizar downloadUrl no banco de dados
               try {
-                console.log('[APK] Fazendo upload para S3...');
-                const s3Result = await storagePut(`apks/${filename}`, apkBuffer, 'application/vnd.android.package-archive');
-                downloadUrl = s3Result.url; // Usar URL do S3
-                console.log('[APK] Upload para S3 concluído! URL:', downloadUrl);
-                // Atualizar downloadUrl no banco de dados
+                console.log('[APK] Atualizando downloadUrl no banco de dados...');
                 await updateAPKBuildDownloadUrl(build.id, downloadUrl);
+                console.log('[APK] downloadUrl atualizado no banco de dados!');
               } catch (error) {
-                console.warn('[APK] Aviso ao fazer upload para S3:', error);
-                // Continuar com URL local se S3 falhar
+                console.error('[APK] ❌ Erro ao atualizar downloadUrl:', error);
               }
               
               // Tentar fazer upload para GitHub Releases
