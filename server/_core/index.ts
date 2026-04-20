@@ -10,6 +10,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { runMigrations } from "./runMigrations";
+import { getAPKBuildByFilename } from "../db";
 // APK Builder will be implemented
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -125,7 +126,6 @@ async function startServer() {
       
       // Se houver filename, buscar a URL customizada do APK
       if (filename && typeof filename === 'string') {
-        const { getAPKBuildByFilename } = await import('../db');
         const build = await getAPKBuildByFilename(filename);
         
         if (build && build.appUrl) {
