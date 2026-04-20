@@ -26,9 +26,12 @@ export async function generateRealAPK(options: APKGeneratorOptions): Promise<Buf
   // Procurar APK base em múltiplos locais
   const possiblePaths = [
     path.join(__dirname, "apk-base.apk"),
+    path.join(__dirname, "../apk-base.apk"), // Em produção, está em dist/
+    "/app/apk-base.apk", // Railway root
     "/app/server/apk-base.apk",
     "/home/ubuntu/remote-monitor/server/apk-base.apk",
     "./server/apk-base.apk",
+    "./dist/apk-base.apk",
   ];
 
   let baseAPK = "";
