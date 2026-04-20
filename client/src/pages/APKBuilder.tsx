@@ -333,70 +333,7 @@ export function APKBuilder() {
             </CardContent>
           </Card>
 
-          {/* Download Info */}
-          {latestBuild && (
-            <Card className="bg-slate-800 border-slate-700 border-cyan-600">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-cyan-400">
-                  <CheckCircle2 className="w-5 h-5" />
-                  Download Info
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm text-gray-400 mb-2">Link de Instalacao (com Play Protect):</p>
-                  <div className="bg-slate-700/50 rounded p-2 mb-2 break-all text-xs text-cyan-300 max-h-20 overflow-y-auto">
-                    {generateInstallLink({
-                      filename: latestBuild.filename,
-                      appName: latestBuild.appName,
-                      downloadUrl: latestBuild.downloadUrl,
-                      fileSize: latestBuild.fileSize || undefined,
-                    })}
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full border-cyan-400/30 text-cyan-300 hover:bg-cyan-900/20"
-                    onClick={() => {
-                      const link = generateInstallLink({
-                        filename: latestBuild.filename,
-                        appName: latestBuild.appName,
-                        downloadUrl: latestBuild.downloadUrl,
-                        fileSize: latestBuild.fileSize || undefined,
-                      });
-                      navigator.clipboard.writeText(link);
-                      toast.success("Link copiado para clipboard!");
-                    }}
-                  >
-                    Copiar Link
-                  </Button>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400 mb-2">Link Direto (sem Play Protect):</p>
-                  <a
-                    href={latestBuild.downloadUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-cyan-400 hover:text-cyan-300 break-all text-xs"
-                  >
-                    {latestBuild.downloadUrl}
-                  </a>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400">Tamanho:</p>
-                  <p className="text-white">
-                    {latestBuild.fileSize ? (
-                      latestBuild.fileSize < 1024 * 1024
-                        ? `${(latestBuild.fileSize / 1024).toFixed(2)}KB`
-                        : `${(latestBuild.fileSize / 1024 / 1024).toFixed(2)}MB`
-                    ) : (
-                      "Calculando..."
-                    )}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+
         </div>
       </div>
 
