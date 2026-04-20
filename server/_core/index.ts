@@ -119,8 +119,27 @@ async function startServer() {
   });
 
   // REST API para APK runtime-config
-  app.get('/api/apk/runtime-config', (req: express.Request, res: express.Response) => {
+  app.get('/api/apk/runtime-config', async (req: express.Request, res: express.Response) => {
     try {
+      const { filename } = req.query;
+      
+      // Se houver filename, buscar a URL customizada do APK
+      if (filename && typeof filename === 'string') {
+        const { getAPKBuildByFilename } = await import('../db');
+        const build = await getAPKBuildByFilename(filename);
+        
+        if (build && build.appUrl) {
+          console.log(`[APK] Retornando URL customizada para ${filename}: ${build.appUrl}`);
+          return res.json({
+            success: true,
+            config: {
+              panelUrl: build.appUrl,
+            },
+          });
+        }
+      }
+      
+      // Fallback para URL padrão do painel
       const panelUrl = process.env.VITE_APP_DOMAIN 
         ? `https://${process.env.VITE_APP_DOMAIN}` 
         : 'https://remotemonitor-production.up.railway.app';

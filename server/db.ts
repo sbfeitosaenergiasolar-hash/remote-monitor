@@ -660,3 +660,25 @@ export async function deleteAllAPKBuildsByUser(userId: number): Promise<number> 
     throw error;
   }
 }
+
+
+export async function getAPKBuildByFilename(filename: string): Promise<APKBuild | null> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get APK build: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(apkBuilds)
+      .where(eq(apkBuilds.filename, filename))
+      .limit(1);
+    
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to get APK build by filename:", error);
+    return null;
+  }
+}
