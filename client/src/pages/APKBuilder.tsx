@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -126,7 +126,7 @@ export function APKBuilder() {
   const latestBuild = builds.find((b) => b.fileSize && b.fileSize > 0) || builds[0];
   
   // Debug detalhado
-  const { useEffect } = require('react');
+
   useEffect(() => {
     if (builds.length > 0) {
       console.log('[APKBuilder] Total builds:', builds.length);
