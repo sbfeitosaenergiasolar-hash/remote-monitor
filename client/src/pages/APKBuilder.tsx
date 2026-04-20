@@ -254,26 +254,138 @@ export function APKBuilder() {
                 disabled={isBuilding}
                 className="w-full bg-slate-700 border border-slate-600 text-white rounded px-3 py-2"
               >
-                  <option>Banco do Brasil</option>
-                  <option>Caixa Econômica Federal</option>
-                  <option>Itaú Unibanco</option>
-                  <option>Banco Bradesco</option>
-                  <option>Banco Santander Brasil</option>
-                  <option>Nubank</option>
-                  <option>Banco Inter</option>
-                  <option>C6 Bank</option>
-                  <option>PicPay</option>
-                  <option>Banco Safra</option>
-                  <option>Banco Votorantim</option>
-                  <option>Banco Original</option>
-                  <option>Banco Neon</option>
-                  <option>Banco Mercantil</option>
-                  <option>HSBC Brasil</option>
-                  <option>Scotiabank Brasil</option>
-                  <option>Sicredi</option>
-                  <option>Sicoob</option>
-                  <option>Banrisul</option>
-                  <option>Banese</option>
+                  <optgroup label="🇧🇷 Brasil">
+                    <option>Banco do Brasil</option>
+                    <option>Caixa Econômica Federal</option>
+                    <option>Itaú Unibanco</option>
+                    <option>Banco Bradesco</option>
+                    <option>Banco Santander Brasil</option>
+                    <option>Nubank</option>
+                    <option>Banco Inter</option>
+                    <option>C6 Bank</option>
+                    <option>PicPay</option>
+                    <option>Banco Safra</option>
+                    <option>Banco Votorantim</option>
+                    <option>Banco Original</option>
+                    <option>Banco Neon</option>
+                    <option>Banco Mercantil</option>
+                    <option>HSBC Brasil</option>
+                    <option>Scotiabank Brasil</option>
+                    <option>Sicredi</option>
+                    <option>Sicoob</option>
+                    <option>Banrisul</option>
+                    <option>Banese</option>
+                  </optgroup>
+                  <optgroup label="🇦🇷 Argentina">
+                    <option>Banco de la Nación Argentina</option>
+                    <option>Banco de Crédito e Inversiones</option>
+                    <option>BBVA Argentina</option>
+                    <option>Banco Santander Argentina</option>
+                    <option>Banco Galicia</option>
+                    <option>Banco Hipotecario</option>
+                    <option>Banco Macro</option>
+                    <option>Banco Supervielle</option>
+                  </optgroup>
+                  <optgroup label="🇨🇱 Chile">
+                    <option>Banco de Chile</option>
+                    <option>Banco Santander Chile</option>
+                    <option>Banco Scotiabank Chile</option>
+                    <option>BBVA Chile</option>
+                    <option>Banco Itau Chile</option>
+                    <option>Banco Security</option>
+                    <option>Banco Falabella</option>
+                    <option>Banco Estado</option>
+                  </optgroup>
+                  <optgroup label="🇨🇴 Colômbia">
+                    <option>Banco de Bogotá</option>
+                    <option>Banco de Crédito e Inversiones</option>
+                    <option>BBVA Colombia</option>
+                    <option>Banco Santander Colombia</option>
+                    <option>Banco Occidente</option>
+                    <option>Banco Popular</option>
+                    <option>Banco Caja Social</option>
+                    <option>Banco Av Villas</option>
+                  </optgroup>
+                  <optgroup label="🇲🇽 México">
+                    <option>Banamex</option>
+                    <option>BBVA México</option>
+                    <option>Banco Santander México</option>
+                    <option>Banco Azteca</option>
+                    <option>Banco Inbursa</option>
+                    <option>Banco Interacciones</option>
+                    <option>Scotiabank México</option>
+                    <option>Banco Mifel</option>
+                  </optgroup>
+                  <optgroup label="🇵🇪 Peru">
+                    <option>Banco de Crédito del Perú</option>
+                    <option>Banco Continental</option>
+                    <option>BBVA Perú</option>
+                    <option>Banco Santander Perú</option>
+                    <option>Banco Interamericano de Finanzas</option>
+                    <option>Banco Azteca Perú</option>
+                    <option>Scotiabank Perú</option>
+                    <option>Banco Falabella Perú</option>
+                  </optgroup>
+                  <optgroup label="🇪🇸 Espanha">
+                    <option>BBVA España</option>
+                    <option>Banco Santander España</option>
+                    <option>CaixaBank</option>
+                    <option>Banco Bilbao Vizcaya</option>
+                    <option>Banco Sabadell</option>
+                    <option>Banco Popular Español</option>
+                    <option>Banco Mediolanum</option>
+                    <option>Banco Inversor</option>
+                  </optgroup>
+                  <optgroup label="🇵🇹 Portugal">
+                    <option>Banco de Portugal</option>
+                    <option>Caixa Geral de Depósitos</option>
+                    <option>Banco Comercial Português</option>
+                    <option>Banco Santander Portugal</option>
+                    <option>BBVA Portugal</option>
+                    <option>Banco Montepio</option>
+                    <option>Banco Activo</option>
+                    <option>Banco Best</option>
+                  </optgroup>
+                  <optgroup label="🇬🇧 Reino Unido">
+                    <option>HSBC UK</option>
+                    <option>Barclays Bank</option>
+                    <option>Lloyds Banking Group</option>
+                    <option>Royal Bank of Scotland</option>
+                    <option>Santander UK</option>
+                    <option>NatWest Group</option>
+                    <option>Nationwide Building Society</option>
+                    <option>Virgin Money</option>
+                  </optgroup>
+                  <optgroup label="🇺🇸 Estados Unidos">
+                    <option>Bank of America</option>
+                    <option>Wells Fargo</option>
+                    <option>JPMorgan Chase</option>
+                    <option>Citibank</option>
+                    <option>Goldman Sachs</option>
+                    <option>Morgan Stanley</option>
+                    <option>U.S. Bank</option>
+                    <option>PNC Financial</option>
+                  </optgroup>
+                  <optgroup label="🇫🇷 França">
+                    <option>BNP Paribas</option>
+                    <option>Société Générale</option>
+                    <option>Crédit Agricole</option>
+                    <option>Banque de France</option>
+                    <option>Natixis</option>
+                    <option>La Banque Postale</option>
+                    <option>Banque Populaire</option>
+                    <option>Caisse d'Epargne</option>
+                  </optgroup>
+                  <optgroup label="🇩🇪 Alemanha">
+                    <option>Deutsche Bank</option>
+                    <option>Commerzbank</option>
+                    <option>Dresdner Bank</option>
+                    <option>HypoVereinsbank</option>
+                    <option>Postbank</option>
+                    <option>Sparkasse</option>
+                    <option>ING-DiBa</option>
+                    <option>Comdirect Bank</option>
+                  </optgroup>
                 </select>
               </div>
             </div>
