@@ -298,9 +298,10 @@ export const appRouter = router({
             filename,
             downloadUrl,
             status: 'building',
-            banco: input.banco || 'Banco do Brasil',
-            pais: input.pais || 'Brasil',
-            origemLink: input.origemLink || 'Automatico',
+            // TODO: Adicionar banco, pais, origemLink após migração SQL em produção
+            // banco: input.banco || 'Banco do Brasil',
+            // pais: input.pais || 'Brasil',
+            // origemLink: input.origemLink || 'Automatico',
           });
 
           if (!build) {
