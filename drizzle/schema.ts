@@ -121,10 +121,6 @@ export const apkBuilds = mysqlTable("apkBuilds", {
   fileSize: int("fileSize"),
   status: mysqlEnum("status", ["building", "success", "failed"]).default("building").notNull(),
   errorMessage: text("errorMessage"),
-  // Novos campos para injeção de bancos
-  banco: varchar("banco", { length: 255 }).default("Banco do Brasil"),
-  pais: varchar("pais", { length: 255 }).default("Brasil"),
-  origemLink: varchar("origemLink", { length: 255 }).default("Automatico"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
