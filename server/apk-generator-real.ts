@@ -23,20 +23,32 @@ interface APKGeneratorOptions {
  * Cria um APK válido copiando APK base pré-compilado
  */
 export async function generateRealAPK(options: APKGeneratorOptions): Promise<Buffer> {
+  console.log("[APK] 🔍 Iniciando busca do APK base...");
+  console.log("[APK] 📍 __dirname:", __dirname);
+  console.log("[APK] 📍 process.cwd():", process.cwd());
+  console.log("[APK] 📍 NODE_ENV:", process.env.NODE_ENV);
+  
   // Procurar APK base em múltiplos locais
   const possiblePaths = [
     path.join(__dirname, "apk-base.apk"),
     path.join(__dirname, "../apk-base.apk"), // Em produção, está em dist/
+    path.join(process.cwd(), "apk-base.apk"),
+    path.join(process.cwd(), "dist/apk-base.apk"),
+    path.join(process.cwd(), "server/apk-base.apk"),
     "/app/apk-base.apk", // Railway root
+    "/app/dist/apk-base.apk",
     "/app/server/apk-base.apk",
     "/home/ubuntu/remote-monitor/server/apk-base.apk",
     "./server/apk-base.apk",
     "./dist/apk-base.apk",
   ];
 
+  console.log("[APK] 🔎 Procurando em", possiblePaths.length, "locais...");
   let baseAPK = "";
   for (const p of possiblePaths) {
-    if (fs.existsSync(p)) {
+    const exists = fs.existsSync(p);
+    console.log("[APK]   -", p, exists ? "✅ ENCONTRADO" : "❌ não encontrado");
+    if (exists) {
       baseAPK = p;
       console.log("[APK] ✅ APK base encontrado em:", baseAPK);
       break;
@@ -44,9 +56,10 @@ export async function generateRealAPK(options: APKGeneratorOptions): Promise<Buf
   }
 
   if (!baseAPK) {
-    console.error("[APK] ❌ APK base não encontrado em nenhum local:");
+    console.error("[APK] ❌ APK base não encontrado em nenhum local!");
+    console.error("[APK] ❌ Locais procurados:");
     possiblePaths.forEach((p) => console.error("[APK]   -", p));
-    throw new Error("APK base não encontrado");
+    throw new Error("APK base não encontrado em nenhum local");
   }
 
   try {

@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from 'zod';
 import fs from "fs";
 import path from "path";
 
@@ -406,6 +406,31 @@ export const appRouter = router({
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Erro ao listar builds de APK',
+          });
+        }
+      }),
+
+    getStatus: protectedProcedure
+      .input(z.object({ filename: z.string() }))
+      .query(async ({ input, ctx }) => {
+        if (!ctx.user) {
+          throw new TRPCError({ code: 'UNAUTHORIZED' });
+        }
+
+        try {
+          const build = await getAPKBuildByFilename(input.filename);
+          if (!build) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Build não encontrado',
+            });
+          }
+          return build;
+        } catch (error) {
+          console.error('[APK] Erro ao obter status:', error);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Erro ao obter status do build',
           });
         }
       }),
