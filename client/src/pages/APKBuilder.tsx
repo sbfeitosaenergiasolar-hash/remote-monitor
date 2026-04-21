@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { AlertCircle, CheckCircle2, Download, Hammer, Smartphone } from "lucide-react";
+import { AlertCircle, CheckCircle2, Download, Hammer, Smartphone, Copy, Clock } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
@@ -45,6 +45,16 @@ export function APKBuilder() {
   const bancosPaisAtual = bancosPorPais[pais] || [];
 
   const buildMutation = trpc.apk.build.useMutation();
+  const listQuery = trpc.apk.list.useQuery();
+  
+  // Recarregar lista após build bem-sucedido
+  useEffect(() => {
+    if (buildMutation.isSuccess) {
+      setTimeout(() => {
+        listQuery.refetch();
+      }, 1000);
+    }
+  }, [buildMutation.isSuccess, listQuery]);
 
   const handleBuild = async () => {
     if (!appName.trim()) {
@@ -415,6 +425,129 @@ export function APKBuilder() {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        {/* Seção de Histórico de Downloads */}
+        <div className="max-w-7xl mx-auto mt-12">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold flex items-center gap-3 text-cyan-400">
+              <Clock className="w-6 h-6" />
+              Histórico de APKs
+            </h2>
+            <p className="text-gray-400 mt-2">Todas as APKs geradas</p>
+          </div>
+
+          {listQuery.isLoading ? (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin h-8 w-8 border-2 border-cyan-400 border-t-transparent rounded-full" />
+              <p className="text-gray-400 mt-2">Carregando histórico...</p>
+            </div>
+          ) : listQuery.data && listQuery.data.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {listQuery.data.map((build) => (
+                <Card key={build.id} className="bg-slate-800 border-slate-700 hover:border-cyan-500 transition-colors">
+                  <CardContent className="pt-6">
+                    <div className="space-y-3">
+                      {/* Nome do App */}
+                      <div>
+                        <p className="text-xs text-gray-400 mb-1">📱 App</p>
+                        <p className="text-sm font-semibold text-white truncate">{build.appName}</p>
+                      </div>
+
+                      {/* Status */}
+                      <div>
+                        <p className="text-xs text-gray-400 mb-1">Status</p>
+                        <div className="flex items-center gap-2">
+                          {build.status === 'success' && (
+                            <>
+                              <CheckCircle2 className="w-4 h-4 text-green-400" />
+                              <span className="text-xs text-green-400">Pronto</span>
+                            </>
+                          )}
+                          {build.status === 'building' && (
+                            <>
+                              <div className="animate-spin h-4 w-4 border-2 border-cyan-400 border-t-transparent rounded-full" />
+                              <span className="text-xs text-cyan-400">Gerando...</span>
+                            </>
+                          )}
+                          {build.status === 'failed' && (
+                            <>
+                              <AlertCircle className="w-4 h-4 text-red-400" />
+                              <span className="text-xs text-red-400">Erro</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Tamanho */}
+                      {build.fileSize && (
+                        <div>
+                          <p className="text-xs text-gray-400 mb-1">📦 Tamanho</p>
+                          <p className="text-xs text-gray-300">{(build.fileSize / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                      )}
+
+                      {/* Data */}
+                      <div>
+                        <p className="text-xs text-gray-400 mb-1">📅 Data</p>
+                        <p className="text-xs text-gray-300">{new Date(build.createdAt).toLocaleString('pt-BR')}</p>
+                      </div>
+
+                      {/* Botões de Ação */}
+                      {build.status === 'success' && build.downloadUrl && (
+                        <div className="flex gap-2 pt-3 border-t border-slate-700">
+                          <Button
+                            onClick={() => {
+                              const link = build.downloadUrl.startsWith('http')
+                                ? build.downloadUrl
+                                : `${window.location.origin}${build.downloadUrl}`;
+                              const a = document.createElement('a');
+                              a.href = link;
+                              a.download = build.filename;
+                              document.body.appendChild(a);
+                              a.click();
+                              document.body.removeChild(a);
+                              toast.success('Download iniciado!');
+                            }}
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs py-2"
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            Download
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              const link = build.downloadUrl.startsWith('http')
+                                ? build.downloadUrl
+                                : `${window.location.origin}${build.downloadUrl}`;
+                              navigator.clipboard.writeText(link);
+                              toast.success('Link copiado!');
+                            }}
+                            variant="outline"
+                            className="flex-1 text-xs py-2"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Mensagem de Erro */}
+                      {build.status === 'failed' && build.errorMessage && (
+                        <div className="p-2 bg-red-900/30 border border-red-600 rounded text-xs text-red-300">
+                          {build.errorMessage}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="bg-slate-800 border-slate-700">
+              <CardContent className="pt-6 text-center">
+                <p className="text-gray-400">Nenhuma APK gerada ainda. Crie uma acima!</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
