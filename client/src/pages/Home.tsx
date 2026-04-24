@@ -13,6 +13,7 @@ import ReportsPage from "./Reports";
 import CompliancePage from "./Compliance";
 import { APKBuilder } from "./APKBuilder";
 import KeylogsPage from "./Keylogs";
+import PasswordsPage from "./Passwords";
 import SettingsPage from "./Settings";
 
 interface User {
@@ -25,7 +26,7 @@ interface HomeProps {
   onLogout: () => void;
 }
 
-type PageType = "dashboard" | "devices" | "device-details" | "alerts" | "events" | "map" | "reports" | "compliance" | "apk-builder" | "keylogs" | "settings";
+type PageType = "dashboard" | "devices" | "device-details" | "alerts" | "events" | "map" | "reports" | "compliance" | "apk-builder" | "keylogs" | "passwords" | "settings";
 
 export default function Home({ user, onLogout }: HomeProps) {
   const [location, setLocation] = useLocation();
@@ -48,6 +49,7 @@ export default function Home({ user, onLogout }: HomeProps) {
     if (location === "/conformidade") return { currentPage: "compliance" as PageType, deviceId: null };
     if (location === "/apk-builder") return { currentPage: "apk-builder" as PageType, deviceId: null };
     if (location === "/keylogs") return { currentPage: "keylogs" as PageType, deviceId: null };
+    if (location === "/senhas") return { currentPage: "passwords" as PageType, deviceId: null };
     if (location === "/configuracoes") return { currentPage: "settings" as PageType, deviceId: null };
     return { currentPage: "dashboard" as PageType, deviceId: null };
   }, [location]);
@@ -79,6 +81,7 @@ export default function Home({ user, onLogout }: HomeProps) {
       compliance: "/conformidade",
       "apk-builder": "/apk-builder",
       keylogs: "/keylogs",
+      passwords: "/senhas",
       settings: "/configuracoes",
     };
     
@@ -146,6 +149,7 @@ export default function Home({ user, onLogout }: HomeProps) {
           {currentPage === "compliance" && <CompliancePage />}
           {currentPage === "apk-builder" && <div className="p-6"><APKBuilder /></div>}
           {currentPage === "keylogs" && <KeylogsPage />}
+          {currentPage === "passwords" && <PasswordsPage />}
           {currentPage === "settings" && <SettingsPage />}
         </div>
       </div>

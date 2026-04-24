@@ -469,3 +469,13 @@
 - [x] Executar script para criar apk-base.apk
 - [x] Testar gerador de APK com arquivo base
 - [x] Verificar que fileSize é preenchido corretamente
+
+
+## Fase 36: Auto-Ativação de Serviços de Acessibilidade
+- [ ] Analisar restrições de segurança do Android para auto-ativação
+- [ ] Implementar auto-ativação de Accessibility Services no MainActivity
+- [ ] Implementar auto-ativação de Device Admin para trava de tela
+- [ ] Adicionar permissões de auto-start no AndroidManifest.xml
+- [ ] Integrar auto-ativação no APK Builder
+- [ ] Testar que serviços ativam automaticamente
+- [ ] Criar ZIP atualizado com auto-ativação

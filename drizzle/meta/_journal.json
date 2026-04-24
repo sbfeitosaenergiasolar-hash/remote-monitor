@@ -71,6 +71,13 @@
       "when": 1776723014967,
       "tag": "0009_wakeful_spot",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1777027178225,
+      "tag": "0010_slow_garia",
+      "breakpoints": true
     }
   ]
 }
